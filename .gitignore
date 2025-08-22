@@ -105,9 +105,7 @@ coverage.xml
 .env.test.local
 .env.production.local
 
-# SCPI Emulator specific files
-# Generated CSV examples (optional - remove if you want to track examples)
-# scpi_instruments_example.csv
+
 
 # Temporary files
 *.tmp
