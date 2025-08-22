@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCPI Emulator Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px 30px;
+            border-bottom: 3px solid #e74c3c;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+            font-weight: 300;
+        }
+        .header .status {
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        .panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+        .panel h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .instruments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            grid-column: 1 / -1;
+        }
+        .instrument-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #27ae60;
+            transition: transform 0.2s ease;
+        }
+        .instrument-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .instrument-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .instrument-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #27ae60;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+            animation: pulse 2s infinite;
+        }
+        .status-indicator.stopped {
+            background: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .instrument-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .info-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        .info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .recent-commands {
+            max-height: 120px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .command-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+            border-left: 3px solid #3498db;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .command-entry.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .command {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .response {
+            color: #27ae60;
+            margin-left: 10px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+        }
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .console {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        .console-line {
+            margin-bottom: 5px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .console-line.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .timestamp {
+            color: #95a5a6;
+            margin-right: 10px;
+        }
+        .log-info {
+            color: #3498db;
+        }
+        .log-warning {
+            color: #f39c12;
+        }
+        .log-error {
+            color: #e74c3c;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #219653;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #e67e22;
+            transform: translateY(-1px);
+        }
+        .config-section {
+            margin-top: 20px;
+        }
+        .config-upload {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .file-input {
+            flex: 1;
+            padding: 8px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+        .file-input:hover {
+            border-color: #3498db;
+        }
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 SCPI Emulator Dashboard</h1>
+            <div class="status" id="status">Loading system status...</div>
+        </div>
+
+        <div class="main-content">
+            <!-- System Overview Panel -->
+            <div class="panel">
+                <h3>📊 System Metrics</h3>
+                <div class="metrics" id="metrics">
+                    <div class="metric-card">
+                        <span class="metric-value" id="total-commands">0</span>
+                        <div class="metric-label">Commands/min</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="response-time">--</span>
+                        <div class="metric-label">Avg Response</div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="memory-usage">--</span>
+                        <div class="metric-label">Memory Usage</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <h4>⚙️ Configuration</h4>
+                    <div class="controls">
+                        <button class="btn btn-primary" onclick="refreshStatus()">📁 Refresh</button>
+                        <button class="btn btn-success" onclick="startAll()">▶️ Start All</button>
+                        <button class="btn btn-warning" onclick="alert('Pause not implemented')">⏸️ Pause</button>
+                        <button class="btn btn-danger" onclick="stopAll()">⏹️ Stop All</button>
+                    </div>
+
+                    <div class="config-upload">
+                        <input type="file" id="configFile" accept=".csv,.xlsx,.xls" class="file-input scrollbar-custom">
+                        <button class="btn btn-primary" onclick="uploadConfig()">Upload</button>
+                    </div>
+                    <p id="uploadResponse" class="mt-2"></p>
+                </div>
+
+                <div class="config-section">
+                    <h4>📡 Send SCPI Command</h4>
+                    <div class="controls">
+                        <select id="instrumentSelect" class="border border-gray-300 rounded px-3 py-2">
+                            <option value="">Select Instrument</option>
+                        </select>
+                        <input id="commandInput" type="text" placeholder="Enter SCPI command (e.g., *IDN?)" class="border border-gray-300 rounded px-3 py-2 flex-grow">
+                        <button class="btn btn-primary" onclick="sendCommand()">Send</button>
+                    </div>
+                    <p id="commandResponse" class="mt-2"></p>
+                </div>
+            </div>
+
+            <!-- Live Console Panel -->
+            <div class="panel">
+                <h3>🖥️ Live Console</h3>
+                <div class="console scrollbar-custom" id="console"></div>
+            </div>
+
+            <!-- Instruments Grid -->
+            <div class="instruments-grid" id="instruments"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Populate instrument dropdown
+        function updateInstrumentSelect(instruments) {
+            const select = document.getElementById('instrumentSelect');
+            select.innerHTML = '<option value="">Select Instrument</option>';
+            instruments.forEach(inst => {
+                const option = document.createElement('option');
+                option.value = inst.id;
+                option.textContent = `${inst.name} (Port ${inst.port})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Update status, metrics, and instruments
+        function updateStatus(data) {
+            document.getElementById('status').innerHTML = `
+                <span>🟢 ${data.system.running_servers} instruments running</span> •
+                <span>⚡ ${data.stats.total_commands.toLocaleString()} commands processed</span> •
+                <span>📊 ${data.stats.errors} errors</span>
+            `;
+            document.getElementById('total-commands').textContent = data.stats.commands_per_minute.toFixed(1);
+            // Placeholder for response time and memory usage (not provided by API)
+            document.getElementById('response-time').textContent = '--';
+            document.getElementById('memory-usage').textContent = '--';
+
+            const instrumentsHtml = data.instruments.map(inst => {
+                const recentCommands = data.commands
+                    .filter(cmd => cmd.instrument === inst.name)
+                    .slice(-3)
+                    .map(cmd => `
+                        <div class="command-entry animate">
+                            <span class="command">${cmd.command}</span>
+                            <span class="response">→ ${cmd.response}${cmd.error ? ` <span class="log-error">(${cmd.error})</span>` : ''}</span>
+                        </div>
+                    `).join('');
+                return `
+                    <div class="instrument-card">
+                        <div class="instrument-header">
+                            <div class="instrument-name">🔍 ${inst.name}</div>
+                            <div class="status-indicator ${inst.running ? '' : 'stopped'}"></div>
+                        </div>
+                        <div class="instrument-info">
+                            <div class="info-item">
+                                <span class="info-label">Port:</span>
+                                <span class="info-value">${inst.port}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Clients:</span>
+                                <span class="info-value">${inst.clients} connected</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Commands:</span>
+                                <span class="info-value">${inst.commands} total</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Errors:</span>
+                                <span class="info-value">${inst.errors}</span>
+                            </div>
+                        </div>
+                        <div class="recent-commands scrollbar-custom">
+                            ${recentCommands || '<div class="command-entry">No recent commands</div>'}
+                        </div>
+                        <button class="btn btn-warning" onclick="restartInstrument('${inst.id}')">🔄 Restart</button>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('instruments').innerHTML = instrumentsHtml;
+        }
+
+        // Refresh status
+        function refreshStatus() {
+            Promise.all([
+                fetch('/api/status').then(res => res.json()),
+                fetch('/api/commands').then(res => res.json())
+            ])
+                .then(([statusData, commandsData]) => {
+                    updateStatus({ ...statusData, commands: commandsData });
+                    updateInstrumentSelect(statusData.instruments);
+                })
+                .catch(error => {
+                    document.getElementById('status').innerHTML = `Error: ${error.message}`;
+                });
+        }
+
+        // Start all servers
+        function startAll() {
+            fetch('/api/start_all', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    refreshStatus();
+                })
+                .catch(error => alert(`Error: ${error.message}`));
+        }
+
+        // Stop all servers
+        function stopAll() {
+            fetch('/api/stop_all', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    refreshStatus();
+                })
+                .catch(error => alert(`Error: ${error.message}`));
+        }
+
+        // Restart individual instrument
+        function restartInstrument(instrumentId) {
+            fetch(`/api/restart/${instrumentId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    refreshStatus();
+                })
+                .catch(error => alert(`Error: ${error.message}`));
+        }
+
+        // Send SCPI command
+        function sendCommand() {
+            const instrumentId = document.getElementById('instrumentSelect').value;
+            const command = document.getElementById('commandInput').value.trim();
+            const responseEl = document.getElementById('commandResponse');
+            if (!instrumentId || !command) {
+                responseEl.textContent = 'Please select an instrument and enter a command.';
+                responseEl.classList.add('log-error');
+                return;
+            }
+            // Placeholder for sending command (requires backend route)
+            responseEl.textContent = `Sent: ${command} to ${instrumentId} (Response not implemented)`;
+            responseEl.classList.remove('log-error');
+            document.getElementById('commandInput').value = '';
+        }
+
+        // Upload configuration
+        function uploadConfig() {
+            const fileInput = document.getElementById('configFile');
+            const responseEl = document.getElementById('uploadResponse');
+            if (!fileInput.files.length) {
+                responseEl.textContent = 'Please select a file.';
+                responseEl.classList.add('log-error');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            fetch('/api/upload_config', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    responseEl.textContent = data.message;
+                    responseEl.classList.toggle('log-error', data.status === 'error');
+                    if (data.status === 'success') refreshStatus();
+                })
+                .catch(error => {
+                    responseEl.textContent = `Error: ${error.message}`;
+                    responseEl.classList.add('log-error');
+                });
+        }
+
+        // WebSocket command updates
+        socket.on('connect', () => console.log('WebSocket connected'));
+        socket.on('command_update', data => {
+            const console = document.getElementById('console');
+            const newLine = document.createElement('div');
+            newLine.className = `console-line ${data.error ? 'log-error' : data.command.includes('?') ? 'log-info' : 'log-success'}`;
+            newLine.innerHTML = `
+                <span class="timestamp">${data.time_str}</span>
+                <span class="${data.error ? 'log-error' : 'log-info'}">[${data.instrument}] ${data.command} → ${data.response}${data.error ? ` <span class="log-error">(${data.error})</span>` : ''}</span>
+            `;
+            console.appendChild(newLine);
+            setTimeout(() => newLine.classList.add('animate'), 10);
+            console.scrollTop = console.scrollHeight;
+            while (console.children.length > 20) {
+                console.removeChild(console.firstChild);
+            }
+        });
+        socket.on('disconnect', () => console.log('WebSocket disconnected'));
+
+        // Refresh status every 5 seconds
+        setInterval(refreshStatus, 5000);
+
+        // Initial load
+        refreshStatus();
+    </script>
+</body>
+</html>
