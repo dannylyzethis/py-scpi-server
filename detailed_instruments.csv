@@ -1,0 +1,263 @@
+    Equipment,Port,Command,Response,Validation
+    Keysight 34461A DMM,5555,MEAS:VOLT:DC?,1.234567E+00,
+    ,,MEAS:VOLT:AC?,0.987654E+00,
+    ,,MEAS:CURR:DC?,1.234567E-03,
+    ,,MEAS:CURR:AC?,9.876543E-04,
+    ,,MEAS:RES?,1.000000E+03,
+    ,,MEAS:FRES?,1.000123E+03,
+    ,,MEAS:CAP?,1.234567E-09,
+    ,,MEAS:FREQ?,1.000000E+03,
+    ,,MEAS:PER?,1.000000E-03,
+    ,,CONF:VOLT:DC (.+),OK,range:0.1,1000
+    ,,CONF:VOLT:DC?,"VOLT +1.000000E+01,+3.000000E-06",
+    ,,CONF:CURR:DC (.+),OK,range:0.0001,10
+    ,,CONF:CURR:DC?,"CURR +1.000000E+00,+3.000000E-05",
+    ,,CONF:RES (.+),OK,range:100,100e6
+    ,,CONF:RES?,"RES +1.000000E+06,+1.000000E+02",
+    ,,SAMP:COUN (.+),OK,range:1,10000
+    ,,SAMP:COUN?,10,
+    ,,TRIG:SOUR (.+),OK,enum:IMM,EXT,BUS,INT
+    ,,TRIG:SOUR?,IMM,
+    ,,TRIG:DEL (.+),OK,range:0,3600
+    ,,TRIG:DEL?,0.0,
+    ,,READ?,+1.234567890E+00,
+    ,,INIT,OK,
+    ,,ABOR,OK,
+    ,,CAL:SEC:STAT?,ON,
+    ,,SYST:BEEP,OK,
+    Keysight E36312A PSU,5556,OUTP (.+),OK,bool
+    ,,OUTP?,1,
+    ,,VOLT (.+),OK,range:0,30
+    ,,VOLT?,5.000000E+00,
+    ,,CURR (.+),OK,range:0.001,3.0
+    ,,CURR?,1.000000E+00,
+    ,,VOLT:PROT (.+),OK,range:0,32
+    ,,VOLT:PROT?,6.000000E+00,
+    ,,CURR:PROT (.+),OK,range:0.001,3.2
+    ,,CURR:PROT?,1.100000E+00,
+    ,,MEAS:VOLT?,4.987654E+00,
+    ,,MEAS:CURR?,9.876543E-01,
+    ,,MEAS:POW?,4.865432E+00,
+    ,,OUTP:PROT:CLE,OK,
+    ,,STAT:OPER?,0,
+    ,,STAT:QUES?,0,
+    ,,SYST:ERR:COUN?,0,
+    ,,VOLT:RANG (.+),OK,enum:LOW,HIGH
+    ,,VOLT:RANG?,HIGH,
+    ,,CURR:RANG (.+),OK,enum:LOW,HIGH
+    ,,CURR:RANG?,HIGH,
+    Tektronix TDS2024B Scope,5557,ACQ:MODE (.+),OK,enum:SAMPLE,PEAKDETECT,HIRES,AVERAGE
+    ,,ACQ:MODE?,SAMPLE,
+    ,,ACQ:STOPA (.+),OK,enum:RUNST,STOP
+    ,,ACQ:STOPA?,RUNST,
+    ,,ACQ:STATE (.+),OK,bool
+    ,,ACQ:STATE?,1,
+    ,,CH1:SCAL (.+),OK,range:0.002,10
+    ,,CH1:SCAL?,1.0E+0,
+    ,,CH1:POS (.+),OK,range:-5,5
+    ,,CH1:POS?,0.0E+0,
+    ,,CH1:COUP (.+),OK,enum:AC,DC,GND
+    ,,CH1:COUP?,DC,
+    ,,CH1:IMP (.+),OK,enum:1E6,50
+    ,,CH1:IMP?,1.0E+6,
+    ,,CH2:SCAL (.+),OK,range:0.002,10
+    ,,CH2:SCAL?,1.0E+0,
+    ,,CH2:POS (.+),OK,range:-5,5
+    ,,CH2:POS?,0.0E+0,
+    ,,CH2:COUP (.+),OK,enum:AC,DC,GND
+    ,,CH2:COUP?,DC,
+    ,,TRIG:MAIN:EDGE:SOUR (.+),OK,enum:CH1,CH2,CH3,CH4,EXT,EXT5,LINE
+    ,,TRIG:MAIN:EDGE:SOUR?,CH1,
+    ,,TRIG:MAIN:EDGE:SLO (.+),OK,enum:RIS,FALL
+    ,,TRIG:MAIN:EDGE:SLO?,RIS,
+    ,,TRIG:MAIN:LEV (.+),OK,range:-5.0,5.0
+    ,,TRIG:MAIN:LEV?,0.0E+0,
+    ,,HOR:MAIN:SCAL (.+),OK,range:1e-9,10
+    ,,HOR:MAIN:SCAL?,1.0E-3,
+    ,,HOR:MAIN:POS (.+),OK,range:-100,100
+    ,,HOR:MAIN:POS?,0.0E+0,
+    ,,MEAS:FREQ? (.+),1.000000E+03,
+    ,,MEAS:AMPL? (.+),2.500000E+00,
+    ,,MEAS:MEAN? (.+),1.250000E+00,
+    ,,MEAS:PK2PK? (.+),5.000000E+00,
+    ,,MEAS:RMS? (.+),1.767767E+00,
+    ,,CURV?,#42000-127,-126,-125,-124,-123,-122,-121,-120,
+    ,,DAT:SOUR (.+),OK,enum:CH1,CH2,CH3,CH4,MATH,REF1,REF2
+    ,,DAT:SOUR?,CH1,
+    ,,DAT:START (.+),OK,range:1,10000
+    ,,DAT:START?,1,
+    ,,DAT:STOP (.+),OK,range:1,10000
+    ,,DAT:STOP?,2500,
+    ,,WFMP:XIN?,1.0E-5,
+    ,,WFMP:XOFF?,0.0E+0,
+    ,,WFMP:YMU?,2.0E-2,
+    ,,WFMP:YOFF?,0.0E+0,
+    Agilent 33220A Generator,5558,FREQ (.+),OK,range:1e-6,50e6
+    ,,FREQ?,1.000000E+03,
+    ,,VOLT (.+),OK,range:0.001,10.0
+    ,,VOLT?,1.000000E+00,
+    ,,VOLT:OFFS (.+),OK,range:-5.0,5.0
+    ,,VOLT:OFFS?,0.000000E+00,
+    ,,VOLT:HIGH (.+),OK,range:-5.0,5.0
+    ,,VOLT:HIGH?,5.000000E-01,
+    ,,VOLT:LOW (.+),OK,range:-5.0,5.0
+    ,,VOLT:LOW?,-5.000000E-01,
+    ,,FUNC (.+),OK,enum:SIN,SQU,RAMP,PULS,NOIS,DC,USER
+    ,,FUNC?,SIN,
+    ,,FUNC:PULS:WIDT (.+),OK,range:8e-9,2000
+    ,,FUNC:PULS:WIDT?,1.0E-4,
+    ,,FUNC:PULS:DCYC (.+),OK,range:0.1,99.9
+    ,,FUNC:PULS:DCYC?,50.0,
+    ,,FUNC:RAMP:SYMM (.+),OK,range:0.1,99.9
+    ,,FUNC:RAMP:SYMM?,50.0,
+    ,,PHAS (.+),OK,range:-180,180
+    ,,PHAS?,0.0,
+    ,,OUTP (.+),OK,bool
+    ,,OUTP?,1,
+    ,,OUTP:LOAD (.+),OK,range:1,10000
+    ,,OUTP:LOAD?,50.0,
+    ,,OUTP:POL (.+),OK,enum:NORM,INV
+    ,,OUTP:POL?,NORM,
+    ,,OUTP:SYNC (.+),OK,bool
+    ,,OUTP:SYNC?,1,
+    ,,AM:STAT (.+),OK,bool
+    ,,AM:STAT?,0,
+    ,,AM:DEPT (.+),OK,range:0,120
+    ,,AM:DEPT?,50.0,
+    ,,AM:FREQ (.+),OK,range:2e-3,20e3
+    ,,AM:FREQ?,1.0E+2,
+    ,,FM:STAT (.+),OK,bool
+    ,,FM:STAT?,0,
+    ,,FM:DEV (.+),OK,range:0,50e6
+    ,,FM:DEV?,1.0E+2,
+    ,,BURS:STAT (.+),OK,bool
+    ,,BURS:STAT?,0,
+    ,,BURS:NCYC (.+),OK,range:1,1000000
+    ,,BURS:NCYC?,1,
+    ,,TRIG:SOUR (.+),OK,enum:IMM,EXT,BUS
+    ,,TRIG:SOUR?,IMM,
+    ,,SYST:BEEP,OK,
+    Keysight N5222B VNA,5559,SENS:FREQ:START (.+),OK,range:10e3,26.5e9
+    ,,SENS:FREQ:START?,1.0E+9,
+    ,,SENS:FREQ:STOP (.+),OK,range:10e3,26.5e9
+    ,,SENS:FREQ:STOP?,2.0E+9,
+    ,,SENS:FREQ:CENT (.+),OK,range:10e3,26.5e9
+    ,,SENS:FREQ:CENT?,1.5E+9,
+    ,,SENS:FREQ:SPAN (.+),OK,range:1,26.5e9
+    ,,SENS:FREQ:SPAN?,1.0E+9,
+    ,,SENS:SWE:POIN (.+),OK,range:2,100001
+    ,,SENS:SWE:POIN?,201,
+    ,,SENS:SWE:TIME (.+),OK,range:0,1e6
+    ,,SENS:SWE:TIME?,1.0E-1,
+    ,,SENS:BAND (.+),OK,range:1,1.5e6
+    ,,SENS:BAND?,1.0E+3,
+    ,,SENS:AVER (.+),OK,range:1,65536
+    ,,SENS:AVER?,1,
+    ,,SENS:AVER:STAT (.+),OK,bool
+    ,,SENS:AVER:STAT?,0,
+    ,,SOUR:POW (.+),OK,range:-85,13
+    ,,SOUR:POW?,-10.0,
+    ,,CALC:PAR:DEF (.+),OK,
+    ,,CALC:PAR:SEL (.+),OK,
+    ,,CALC:DATA? FDATA,"1.0,-45.0,0.8,-90.0,0.6,-135.0",
+    ,,CALC:DATA? SDATA,"1.0,0.0,0.8,-0.2,0.6,-0.4",
+    ,,CALC:FORM (.+),OK,enum:MLOG,PHAS,GDEL,SLIN,SLOG,SCOM,SMIT,SADM,POLAR,MLIN,SWR,REAL,IMAG
+    ,,CALC:FORM?,MLOG,
+    ,,DISP:WIND:TRAC:Y:SCAL:AUTO,OK,
+    ,,INIT:IMM,OK,
+    ,,INIT:CONT (.+),OK,bool
+    ,,INIT:CONT?,1,
+    ,,TRIG:SOUR (.+),OK,enum:INT,EXT,MAN,BUS
+    ,,TRIG:SOUR?,INT,
+    ,,MMEM:STOR (.+),OK,
+    ,,MMEM:LOAD (.+),OK,
+    Fluke 8846A DMM,5561,MEAS? (.+),1.234567890E+00,
+    ,,CONF (.+),OK,
+    ,,CONF?,"VOLT:DC 10,0.001",
+    ,,SENS:VOLT:DC:RANG (.+),OK,range:0.1,1000
+    ,,SENS:VOLT:DC:RANG?,1.0E+1,
+    ,,SENS:VOLT:DC:RES (.+),OK,range:1e-7,1e-3
+    ,,SENS:VOLT:DC:RES?,1.0E-6,
+    ,,SENS:VOLT:DC:NPLC (.+),OK,range:0.02,100
+    ,,SENS:VOLT:DC:NPLC?,1.0,
+    ,,SENS:VOLT:DC:APER (.+),OK,range:100e-6,1
+    ,,SENS:VOLT:DC:APER?,1.67E-2,
+    ,,SAMP:COUN (.+),OK,range:1,50000
+    ,,SAMP:COUN?,1,
+    ,,TRIG:COUN (.+),OK,range:1,50000
+    ,,TRIG:COUN?,1,
+    ,,TRIG:DEL (.+),OK,range:0,3600
+    ,,TRIG:DEL?,0.0,
+    ,,TRIG:SOUR (.+),OK,enum:IMM,EXT,BUS,INT
+    ,,TRIG:SOUR?,IMM,
+    ,,DISP (.+),OK,bool
+    ,,DISP?,1,
+    ,,DISP:TEXT (.+),OK,
+    ,,DISP:TEXT?,"HELLO WORLD",
+    ,,ZERO:AUTO (.+),OK,bool
+    ,,ZERO:AUTO?,1,
+    ,,CAL:PROT:STAT?,0,
+    ,,CAL:SEC:STAT?,0,
+    ,,MEM:STAT:NAME? (.+),TEST_STATE,
+    ,,MEM:STAT:REC (.+),OK,
+    ,,MEM:STAT:DEL (.+),OK,
+    Keysight E5071C VNA,5562,SENS1:FREQ:START (.+),OK,range:9e3,8.5e9
+    ,,SENS1:FREQ:START?,1.0E+6,
+    ,,SENS1:FREQ:STOP (.+),OK,range:9e3,8.5e9
+    ,,SENS1:FREQ:STOP?,8.5E+9,
+    ,,SENS1:SWE:POIN (.+),OK,range:2,20001
+    ,,SENS1:SWE:POIN?,1601,
+    ,,SENS1:BAND (.+),OK,range:1,30e3
+    ,,SENS1:BAND?,1.0E+3,
+    ,,SOUR1:POW (.+),OK,range:-55,13
+    ,,SOUR1:POW?,0.0,
+    ,,CALC1:PAR1:DEF (.+),OK,
+    ,,CALC1:PAR1:SEL,OK,
+    ,,CALC1:DATA:FMEM?,1.0,-45.0,0.8,-90.0,
+    ,,CALC1:MARK1 (.+),OK,bool
+    ,,CALC1:MARK1:X (.+),OK,range:9e3,8.5e9
+    ,,CALC1:MARK1:X?,1.0E+9,
+    ,,CALC1:MARK1:Y?,0.5,-30.0,
+    ,,CALC1:MARK1:FUNC:EXEC FMAX,OK,
+    ,,CALC1:MARK1:FUNC:EXEC FMIN,OK,
+    ,,SENS1:CORR:STAT (.+),OK,bool
+    ,,SENS1:CORR:STAT?,0,
+    ,,SENS1:CORR:COLL:METH:SOLT1 1,2,OK,
+    ,,SENS1:CORR:COLL:SAVE,OK,
+    ,,MMEM:STOR:FDAT (.+),OK,
+    ,,MMEM:LOAD:FDAT (.+),OK,
+    ,,DISP:WIND1:STAT (.+),OK,bool
+    ,,DISP:WIND1:STAT?,1,
+    HP 8753D VNA,5563,FREQ (.+),OK,range:30e3,6e9
+    ,,FREQ?,1.0E+9,
+    ,,STAR (.+),OK,range:30e3,6e9
+    ,,STAR?,3.0E+5,
+    ,,STOP (.+),OK,range:30e3,6e9
+    ,,STOP?,3.0E+9,
+    ,,POIN (.+),OK,range:3,1633
+    ,,POIN?,201,
+    ,,IFBW (.+),OK,range:10,3.7e3
+    ,,IFBW?,1.0E+3,
+    ,,POWE (.+),OK,range:-85,20
+    ,,POWE?,0.0,
+    ,,S11,OK,
+    ,,S12,OK,
+    ,,S21,OK,
+    ,,S22,OK,
+    ,,LOGM,OK,
+    ,,PHAS,OK,
+    ,,LINM,OK,
+    ,,SWR,OK,
+    ,,REAL,OK,
+    ,,IMAG,OK,
+    ,,POLA,OK,
+    ,,SMIT,OK,
+    ,,AUTO,OK,
+    ,,SING,OK,
+    ,,CONT (.+),OK,bool
+    ,,CONT?,1,
+    ,,OPC?,1,
+    ,,CLES,OK,
+    ,,PRES,OK,
+    ,,OUTPFORM4,OK,
+    ```

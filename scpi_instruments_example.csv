@@ -1,0 +1,8 @@
+Equipment,Port,Command,Response,Validation
+Keysight 34461A DMM,5555,MEAS:VOLT:DC?,1.234567E+00,
+,,VOLT (.+),OK,"range:0,10"
+,,VOLT?,5.0,
+Debug Test Instrument,5559,TEST_RANGE (.+),Range OK: {value},"range:1,10"
+,,TEST_RANGE?,5,
+,,TEST_ENUM (.+),Enum OK: {value},"enum:A,B,C"
+,,TEST_ENUM?,A,

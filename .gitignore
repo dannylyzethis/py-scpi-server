@@ -117,11 +117,7 @@ coverage.xml
 docs/_build/
 site/
 
-# Data files (if storing large data files)
-*.csv
-*.xlsx
-*.xls
-!scpi_instruments_example.csv  # Keep the example file
+
 
 # Configuration files with sensitive information
 config_local.py
