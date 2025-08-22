@@ -4,7 +4,7 @@ SCPI Equipment Emulator - VERSION 2.3
 ADDED: Web Dashboard with real-time monitoring and control
 
 New Features:
-- Web dashboard on http://localhost:8080
+- Web dashboard on http://localhost:8081
 - Real-time command/response monitoring
 - Remote instrument control
 - Performance metrics visualization
@@ -469,8 +469,9 @@ class SCPIInstrument:
 class SCPIServer:
     """TCP server for a single SCPI instrument"""
 
-    def __init__(self, instrument, host='localhost', port=5555):
+    def __init__(self, instrument, manager, host='localhost', port=5555):
         self.instrument = instrument
+        self.manager = manager  # Store the manager
         self.host = host
         self.port = port
         self.socket = None
@@ -578,6 +579,17 @@ class SCPIServer:
                                         error
                                     )
                                     
+                                    # Emit to web clients
+                                    if HAS_FLASK and hasattr(self.manager, 'web_dashboard') and self.manager.web_dashboard:
+                                        self.manager.web_dashboard.socketio.emit('command_update', {
+                                            'timestamp': time.time(),
+                                            'time_str': datetime.fromtimestamp(time.time()).strftime('%H:%M:%S'),
+                                            'instrument': self.instrument.name,
+                                            'command': command,
+                                            'response': response or '(no response)',
+                                            'error': error
+                                        })
+                                    
                                     if response:
                                         response_msg = response + '\n'
                                         client_socket.sendall(response_msg.encode('utf-8'))
@@ -623,6 +635,17 @@ class SCPIServer:
                                     error
                                 )
                                 
+                                # Emit to web clients
+                                if HAS_FLASK and hasattr(self.manager, 'web_dashboard') and self.manager.web_dashboard:
+                                    self.manager.web_dashboard.socketio.emit('command_update', {
+                                        'timestamp': time.time(),
+                                        'time_str': datetime.fromtimestamp(time.time()).strftime('%H:%M:%S'),
+                                        'instrument': self.instrument.name,
+                                        'command': command,
+                                        'response': response or '(no response)',
+                                        'error': error
+                                    })
+                                
                                 if response:
                                     response_msg = response + '\n'
                                     client_socket.sendall(response_msg.encode('utf-8'))
@@ -647,7 +670,7 @@ class SCPIServer:
 class WebDashboard:
     """Flask-based web dashboard for SCPI emulator"""
     
-    def __init__(self, emulator_manager, host='0.0.0.0', port=8080):
+    def __init__(self, emulator_manager, host='0.0.0.0', port=8081):
         if not HAS_FLASK:
             logger.error("Flask not available. Web dashboard disabled.")
             return
@@ -744,6 +767,24 @@ class WebDashboard:
                     return jsonify({'status': 'error', 'message': 'Failed to start some servers'}), 500
             except Exception as e:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
+            
+        @self.app.route('/api/send_command/<instrument_id>', methods=['POST'])
+        def api_send_command(instrument_id):
+            try:
+                if instrument_id not in self.manager.servers:
+                    return jsonify({'status': 'error', 'message': f'Instrument {instrument_id} not found'}), 404
+                command = request.json.get('command', '').strip()
+                if not command:
+                    return jsonify({'status': 'error', 'message': 'No command provided'}), 400
+                server = self.manager.servers[instrument_id]
+                response = server.instrument.process_command(command)
+                error = server.instrument.error_queue[-1] if server.instrument.error_queue else None
+                self.manager.web_dashboard.emit_command_update(server.instrument.name, command, response or '(no response)', error)
+                return jsonify({'status': 'success', 'message': 'Command sent', 'response': response, 'error': error})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
     
     def _setup_socketio(self):
         """Setup WebSocket events for real-time updates"""
@@ -915,7 +956,7 @@ class SCPIEmulatorManager:
             instrument = inst_data['instrument']
             port = inst_data['port']
             
-            server = SCPIServer(instrument, host, port)
+            server = SCPIServer(instrument, self, host, port)
             if server.start():
                 self.servers[inst_id] = server
                 success_count += 1
@@ -939,7 +980,7 @@ class SCPIEmulatorManager:
         self.running = False
         logger.info("All servers stopped")
 
-    def start_web_dashboard(self, host='0.0.0.0', port=8080):
+    def start_web_dashboard(self, host='0.0.0.0', port=8081):
         """Start the web dashboard"""
         if not HAS_FLASK:
             logger.warning("Flask not available. Cannot start web dashboard.")
@@ -999,7 +1040,7 @@ class SCPIEmulatorManager:
                 
                 elif command == 'web':
                     if self.start_web_dashboard():
-                        print("✅ Web dashboard started at http://localhost:8080")
+                        print("✅ Web dashboard started at http://localhost:8081")
                     else:
                         print("❌ Failed to start web dashboard")
                 
@@ -1010,7 +1051,7 @@ class SCPIEmulatorManager:
                             print(f"   {server.instrument.name}: {server.host}:{server.port}")
                         
                         if self.web_dashboard:
-                            print(f"   Web dashboard: http://localhost:8080")
+                            print(f"   Web dashboard: http://localhost:8081")
                     else:
                         print("❌ No servers running")
                 
@@ -1187,7 +1228,7 @@ def main():
     parser.add_argument('--load', '-l', help='Load instrument definitions (.csv, .xlsx, .xls)')
     parser.add_argument('--start', '-s', action='store_true', help='Start TCP servers immediately')
     parser.add_argument('--web', '-w', action='store_true', help='Start web dashboard')
-    parser.add_argument('--web-port', type=int, default=8080, help='Web dashboard port (default: 8080)')
+    parser.add_argument('--web-port', type=int, default=8081, help='Web dashboard port (default: 8081)')
     parser.add_argument('--port', '-p', type=int, default=5555, help='Starting port for instruments (default: 5555)')
     parser.add_argument('--host', default='localhost', help='Server host (default: localhost)')
     parser.add_argument('--create-example', action='store_true', help='Create example CSV file')

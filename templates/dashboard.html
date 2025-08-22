@@ -218,7 +218,6 @@
             gap: 15px;
             align-items: center;
             flex-wrap: wrap;
-            margin-bottom: 20px;
         }
         .btn {
             padding: 10px 20px;
@@ -356,7 +355,7 @@
             <!-- Live Console Panel -->
             <div class="panel">
                 <h3>🖥️ Live Console</h3>
-                <div class="console scrollbar-custom" id="console"></div>
+                <div class="console scrollbar-custom" id="commands"></div>
             </div>
 
             <!-- Instruments Grid -->
@@ -364,7 +363,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script>
         const socket = io();
 
@@ -494,10 +492,23 @@
                 responseEl.classList.add('log-error');
                 return;
             }
-            // Placeholder for sending command (requires backend route)
-            responseEl.textContent = `Sent: ${command} to ${instrumentId} (Response not implemented)`;
-            responseEl.classList.remove('log-error');
-            document.getElementById('commandInput').value = '';
+            fetch(`/api/send_command/${instrumentId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                responseEl.textContent = data.status === 'success' ? 
+                    `Response: ${data.response}${data.error ? ` (Error: ${data.error})` : ''}` : 
+                    `Error: ${data.message}`;
+                responseEl.classList.toggle('log-error', data.status === 'error');
+                document.getElementById('commandInput').value = '';
+            })
+            .catch(error => {
+                responseEl.textContent = `Error: ${error.message}`;
+                responseEl.classList.add('log-error');
+            });
         }
 
         // Upload configuration
@@ -527,7 +538,7 @@
         // WebSocket command updates
         socket.on('connect', () => console.log('WebSocket connected'));
         socket.on('command_update', data => {
-            const console = document.getElementById('console');
+            const console = document.getElementById('commands');
             const newLine = document.createElement('div');
             newLine.className = `console-line ${data.error ? 'log-error' : data.command.includes('?') ? 'log-info' : 'log-success'}`;
             newLine.innerHTML = `
