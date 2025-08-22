@@ -1,0 +1,44 @@
+# SCPI Equipment Emulator Requirements
+# ====================================
+
+# Core Dependencies
+# -----------------
+# This project is designed to work with pure Python 3.6+ with no external dependencies
+# for basic CSV functionality.
+
+# Optional Dependencies
+# --------------------
+
+# Excel file support (.xlsx, .xls)
+# Install with: pip install openpyxl
+openpyxl>=3.0.0; extra == "excel"
+
+# Development Dependencies
+# ------------------------
+
+# Testing
+pytest>=6.0.0; extra == "dev"
+pytest-cov>=2.10.0; extra == "dev"
+
+# Code quality
+black>=21.0.0; extra == "dev"
+flake8>=3.8.0; extra == "dev"
+mypy>=0.800; extra == "dev"
+
+# Documentation
+sphinx>=3.0.0; extra == "docs"
+sphinx-rtd-theme>=0.5.0; extra == "docs"
+
+# Installation Examples:
+# ---------------------
+# Basic usage (CSV only):
+#   No additional packages needed!
+#
+# With Excel support:
+#   pip install ".[excel]"
+#
+# Development setup:
+#   pip install ".[dev,excel]"
+#
+# Full installation:
+#   pip install ".[dev,excel,docs]"
