@@ -271,6 +271,7 @@ SYST:ERR?        # Check error queue
 ```bash
 # Install Flask dependencies
 pip install flask flask-socketio
+>>>requirement python 3.13 or later
 
 # Check dashboard port
 python server-py-ver2.3.py --web --web-port 8082
