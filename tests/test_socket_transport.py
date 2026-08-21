@@ -108,3 +108,25 @@ def test_opc_query_waits_for_prior_socket_operation_without_setting_event(runnin
         assert receive_lines(client, 1) == ["1"]
         client.sendall(b"*ESR?\n")
         assert receive_lines(client, 1) == ["0"]
+
+
+def test_bus_triggered_acquisition_drives_real_opc_handshake(running_server) -> None:
+    _, port = running_server
+    with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as client:
+        client.settimeout(2)
+        client.sendall(b"*IDN?\n")
+        assert receive_lines(client, 1)[0].startswith("SCPI_Emulator,")
+
+        client.sendall(
+            b"TRIG:SOUR BUS\n"
+            b"SENS:SWE:TIME 0.02\n"
+            b"*ESE 1\n"
+            b"*SRE 32\n"
+            b"INIT:IMM\n"
+            b"*OPC\n"
+            b"*STB?\n"
+        )
+        assert receive_lines(client, 1) == ["0"]
+
+        client.sendall(b"*TRG\n*OPC?\n*STB?\n*ESR?\n*STB?\n")
+        assert receive_lines(client, 4) == ["1", "96", "1", "0"]

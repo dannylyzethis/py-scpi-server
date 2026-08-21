@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from threading import Condition, RLock
@@ -70,6 +71,7 @@ class OperationManager:
         self._states: dict[int, OperationState] = {}
         self._names: dict[int, str] = {}
         self._opc_fences: list[_CompletionFence] = []
+        self._abort_listeners: list[Callable[[], None]] = []
         self._condition = Condition(RLock())
 
     @property
@@ -134,7 +136,15 @@ class OperationManager:
                 self._states[identifier] = OperationState.CANCELLED
             self._resolve_opc_fences(set(identifiers))
             self._condition.notify_all()
-            return identifiers
+            listeners = tuple(self._abort_listeners)
+        for listener in listeners:
+            listener()
+        return identifiers
+
+    def add_abort_listener(self, listener: Callable[[], None]) -> None:
+        with self._condition:
+            if listener not in self._abort_listeners:
+                self._abort_listeners.append(listener)
 
     def _finish(self, identifier: int, state: OperationState) -> bool:
         if state is OperationState.PENDING:

@@ -28,6 +28,7 @@ from collections.abc import Sequence
 
 from . import __version__
 from .scpi import (
+    AcquisitionController,
     CommandRegistry,
     OperationManager,
     SCPICommandError,
@@ -35,6 +36,7 @@ from .scpi import (
     StatusSystem,
     parse_program_message,
     register_operation_commands,
+    register_acquisition_commands,
     register_status_commands,
 )
 
@@ -242,9 +244,11 @@ class SCPIInstrument:
         self.status = StatusSystem()
         self.error_queue = self.status.error_queue
         self.operation_manager = OperationManager(self.status)
+        self.acquisition = AcquisitionController(self.operation_manager, self.status)
         self.core_registry = CommandRegistry()
         register_status_commands(self.core_registry, self.status)
         register_operation_commands(self.core_registry, self.operation_manager)
+        register_acquisition_commands(self.core_registry, self.acquisition)
         self.last_command = ""
         self.command_count = 0
         
@@ -328,6 +332,10 @@ class SCPIInstrument:
     def begin_operation(self, name):
         """Start overlapped work that participates in OPC, OPC?, WAI, and ABORt."""
         return self.operation_manager.begin(name)
+
+    def external_trigger(self, channel=None):
+        """Inject an external trigger edge into one channel or all waiting channels."""
+        return self.acquisition.external_trigger(channel)
 
     def add_command(self, command, response, validation=None):
         """Add a command-response pair"""

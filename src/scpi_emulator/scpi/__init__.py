@@ -1,5 +1,14 @@
 """SCPI language primitives."""
 
+from .acquisition import (
+    AcquisitionChannel,
+    AcquisitionController,
+    AcquisitionState,
+    OperationConditionBit,
+    SweepMode,
+    TriggerSource,
+    register_acquisition_commands,
+)
 from .errors import (
     ErrorCategory,
     ErrorQueue,
@@ -51,6 +60,9 @@ from .status import (
 
 __all__ = [
     "BinaryBlock",
+    "AcquisitionChannel",
+    "AcquisitionController",
+    "AcquisitionState",
     "Command",
     "CommandRegistry",
     "CommandSpec",
@@ -63,6 +75,7 @@ __all__ = [
     "NumericValue",
     "NO_ERROR",
     "OperationHandle",
+    "OperationConditionBit",
     "OperationManager",
     "OperationState",
     "OperationStateError",
@@ -82,10 +95,13 @@ __all__ = [
     "StatusByteBit",
     "StatusRegisterGroup",
     "StatusSystem",
+    "SweepMode",
+    "TriggerSource",
     "classify_error",
     "mnemonic_matches",
     "parse_program_message",
     "register_status_commands",
     "register_operation_commands",
+    "register_acquisition_commands",
     "standard_error",
 ]
