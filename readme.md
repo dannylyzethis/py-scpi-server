@@ -91,7 +91,11 @@ My DMM,5555,*IDN?,MY_DMM,MODEL123,SERIAL456,1.0,
 ### Excel Support
 - Open the CSV in Excel and save as `.xlsx`
 - Or install the Excel extra: `python -m pip install -e ".[excel]"`
-- Supports `.xlsx`, `.xls`, and `.csv` formats
+- Supports `.xlsx` and `.csv` formats
+
+Configuration files must contain exactly the five documented columns. Quote responses and
+validation rules containing commas. Duplicate equipment identifiers, ports, or commands are
+rejected instead of being silently overwritten.
 
 ### Validation Rules
 
@@ -107,7 +111,7 @@ My DMM,5555,*IDN?,MY_DMM,MODEL123,SERIAL456,1.0,
 scpi-emulator [OPTIONS]
 
 Options:
-  --load, -l FILE          Load instrument definitions (.csv, .xlsx, .xls)
+  --load, -l FILE          Load instrument definitions (.csv, .xlsx)
   --start, -s              Start TCP servers immediately
   --web, -w                Start web dashboard (requires Flask)
   --web-port PORT          Web dashboard port (default: 8081)

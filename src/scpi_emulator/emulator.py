@@ -116,84 +116,109 @@ class CommandLogger:
 # Global command logger instance
 command_logger = CommandLogger()
 
-class ExcelReader:
-    """Simple Excel reader using only standard library"""
 
-    @staticmethod
-    def read_excel_as_csv(excel_path):
-        """Convert Excel to CSV format and read it"""
+class ConfigurationError(ValueError):
+    """Raised when an instrument definition file is structurally invalid."""
+
+
+class ExcelReader:
+    """Read and structurally validate CSV or XLSX configuration rows."""
+
+    COLUMNS = ("Equipment", "Port", "Command", "Response", "Validation")
+
+    @classmethod
+    def _normalize_headers(cls, headers, source):
+        normalized = [str(header or '').strip() for header in headers]
+        if not normalized or all(not header for header in normalized):
+            raise ConfigurationError(f"{source}: missing header row")
+        if any(not header for header in normalized):
+            raise ConfigurationError(f"{source}: header contains an unnamed column")
+        if len(set(normalized)) != len(normalized):
+            raise ConfigurationError(f"{source}: header contains duplicate columns")
+
+        missing = [column for column in cls.COLUMNS if column not in normalized]
+        unknown = [column for column in normalized if column not in cls.COLUMNS]
+        if missing:
+            raise ConfigurationError(f"{source}: missing required columns: {missing}")
+        if unknown:
+            raise ConfigurationError(f"{source}: unsupported columns: {unknown}")
+        return normalized
+
+    @classmethod
+    def read_excel_as_csv(cls, excel_path):
+        """Read the active worksheet of an XLSX definition file."""
         try:
             try:
                 import openpyxl
             except ImportError:
-                logger.error("openpyxl not available. Please convert Excel to CSV format.")
-                logger.info("To install openpyxl: pip install openpyxl")
-                return []
-            
+                raise ConfigurationError(
+                    "XLSX support requires the 'excel' project extra"
+                ) from None
+
             workbook = openpyxl.load_workbook(excel_path, read_only=True)
             worksheet = workbook.active
-            
-            headers = []
-            for cell in worksheet[1]:
-                headers.append(cell.value or '')
-            
+            headers = cls._normalize_headers(
+                [cell.value for cell in worksheet[1]], excel_path
+            )
+
             data = []
             for row in worksheet.iter_rows(min_row=2, values_only=True):
-                row_dict = {}
-                for i, value in enumerate(row):
-                    if i < len(headers):
-                        row_dict[headers[i]] = str(value) if value is not None else ''
+                values = list(row)
+                if len(values) > len(headers) and any(values[len(headers):]):
+                    raise ConfigurationError(
+                        f"{excel_path}: worksheet row has data beyond the declared columns"
+                    )
+                row_dict = {
+                    header: str(values[index]).strip()
+                    if index < len(values) and values[index] is not None
+                    else ''
+                    for index, header in enumerate(headers)
+                }
                 data.append(row_dict)
-            
+
             workbook.close()
             return data
+        except ConfigurationError:
+            raise
         except Exception as e:
-            logger.error(f"Error reading Excel file: {e}")
-            return []
+            raise ConfigurationError(f"{excel_path}: unable to read XLSX file: {e}") from e
 
-    @staticmethod
-    def read_csv(csv_path):
-        """Read CSV file using standard library"""
+    @classmethod
+    def read_csv(cls, csv_path):
+        """Read a CSV file and reject rows whose fields spill past the header."""
         try:
             data = []
-            with open(csv_path, 'r', newline='', encoding='utf-8') as csvfile:
-                sample = csvfile.read(1024)
+            with open(csv_path, 'r', newline='', encoding='utf-8-sig') as csvfile:
+                sample = csvfile.read(4096)
                 csvfile.seek(0)
-                
-                if '\t' in sample:
-                    delimiter = '\t'
-                elif ';' in sample:
-                    delimiter = ';'
-                elif ',' in sample:
+
+                try:
+                    delimiter = csv.Sniffer().sniff(sample, delimiters=',;\t').delimiter
+                except csv.Error:
                     delimiter = ','
-                else:
-                    delimiter = ','
-                
+
                 logger.debug(f"Using delimiter: '{delimiter}'")
-                
                 reader = csv.DictReader(csvfile, delimiter=delimiter)
+                reader.fieldnames = cls._normalize_headers(reader.fieldnames or [], csv_path)
+
                 for row_num, row in enumerate(reader, 2):
-                    try:
-                        clean_row = {}
-                        for key, value in row.items():
-                            clean_key = key.strip() if key else ''
-                            if value is None:
-                                clean_value = ''
-                            elif isinstance(value, str):
-                                clean_value = value.strip()
-                            else:
-                                clean_value = str(value).strip()
-                            clean_row[clean_key] = clean_value
+                    extras = row.pop(None, [])
+                    if extras:
+                        raise ConfigurationError(
+                            f"{csv_path}: row {row_num} has fields beyond the declared columns; "
+                            "quote values containing commas"
+                        )
+                    clean_row = {
+                        key: str(value or '').strip() for key, value in row.items()
+                    }
+                    if any(clean_row.values()):
                         data.append(clean_row)
-                    except Exception as e:
-                        logger.error(f"Error processing row {row_num}: {e}")
-                        continue
-            
+
             return data
-        
+        except ConfigurationError:
+            raise
         except Exception as e:
-            logger.error(f"Error reading CSV file: {e}")
-            return []
+            raise ConfigurationError(f"{csv_path}: unable to read CSV file: {e}") from e
 
 
 class SCPIInstrument:
@@ -863,6 +888,43 @@ class SCPIEmulatorManager:
         self.stop_all_servers()
         sys.exit(0)
 
+    @staticmethod
+    def _instrument_id(name):
+        instrument_id = re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
+        if not instrument_id:
+            raise ConfigurationError("equipment name must contain a letter or number")
+        return instrument_id
+
+    @staticmethod
+    def _validate_rule(rule, row_num):
+        if not rule or rule == 'bool':
+            return
+        if rule.startswith('range:'):
+            values = rule.split(':', 1)[1].split(',')
+            if len(values) != 2:
+                raise ConfigurationError(
+                    f"row {row_num}: range validation requires exactly two bounds"
+                )
+            try:
+                lower, upper = map(float, values)
+            except ValueError as error:
+                raise ConfigurationError(
+                    f"row {row_num}: range bounds must be numeric"
+                ) from error
+            if lower > upper:
+                raise ConfigurationError(
+                    f"row {row_num}: range lower bound exceeds upper bound"
+                )
+            return
+        if rule.startswith('enum:'):
+            values = [value.strip() for value in rule.split(':', 1)[1].split(',')]
+            if not values or any(not value for value in values):
+                raise ConfigurationError(
+                    f"row {row_num}: enum validation requires non-empty values"
+                )
+            return
+        raise ConfigurationError(f"row {row_num}: unsupported validation rule '{rule}'")
+
     def load_from_file(self, file_path, port_start=5555):
         """Load instrument definitions from Excel or CSV file"""
         try:
@@ -873,7 +935,7 @@ class SCPIEmulatorManager:
                 return False
             
             # Read data based on file type
-            if file_path_obj.suffix.lower() in ['.xlsx', '.xls']:
+            if file_path_obj.suffix.lower() == '.xlsx':
                 data = ExcelReader.read_excel_as_csv(file_path)
             elif file_path_obj.suffix.lower() == '.csv':
                 data = ExcelReader.read_csv(file_path)
@@ -885,71 +947,104 @@ class SCPIEmulatorManager:
                 logger.error("No data found in file")
                 return False
             
-            # Validate required columns
-            required_cols = ['Equipment', 'Command', 'Response']
-            if not all(col in data[0].keys() for col in required_cols):
-                available_cols = list(data[0].keys())
-                logger.error(f"File missing required columns: {required_cols}")
-                logger.error(f"Available columns: {available_cols}")
-                return False
-            
-            has_port_col = 'Port' in data[0].keys()
-            has_validation_col = 'Validation' in data[0].keys()
-            
-            self.instruments.clear()
+            loaded_instruments = {}
+            used_ports = set()
             current_instrument = None
+            current_commands = set()
             current_port = port_start
             commands_added = 0
             
             logger.info(f"Processing {len(data)} rows from {file_path}")
             
-            for row_num, row in enumerate(data, 1):
+            for row_num, row in enumerate(data, 2):
                 equipment_name = row.get('Equipment', '').strip()
+                port_text = row.get('Port', '').strip()
+                command = row.get('Command', '').strip()
+                response = row.get('Response', '').strip()
+                validation = row.get('Validation', '').strip()
+
+                if not equipment_name and port_text:
+                    raise ConfigurationError(
+                        f"row {row_num}: port is only allowed when declaring equipment"
+                    )
+                if not command and (response or validation):
+                    raise ConfigurationError(
+                        f"row {row_num}: response or validation provided without a command"
+                    )
+
                 if equipment_name:
-                    instrument_id = equipment_name.lower().replace(' ', '_').replace('-', '_')
-                    
-                    if has_port_col and row.get('Port', '').strip():
+                    instrument_id = self._instrument_id(equipment_name)
+                    if instrument_id in loaded_instruments:
+                        raise ConfigurationError(
+                            f"row {row_num}: duplicate equipment identifier '{instrument_id}'"
+                        )
+
+                    if port_text:
                         try:
-                            port = int(row['Port'])
-                        except ValueError:
-                            port = current_port
-                            current_port += 1
+                            port = int(port_text)
+                        except ValueError as error:
+                            raise ConfigurationError(
+                                f"row {row_num}: port must be an integer"
+                            ) from error
                     else:
+                        while current_port in used_ports:
+                            current_port += 1
                         port = current_port
                         current_port += 1
-                    
+
+                    if not 1 <= port <= 65535:
+                        raise ConfigurationError(
+                            f"row {row_num}: port must be between 1 and 65535"
+                        )
+                    if port in used_ports:
+                        raise ConfigurationError(f"row {row_num}: duplicate port {port}")
+
                     current_instrument = SCPIInstrument(equipment_name, instrument_id)
-                    self.instruments[instrument_id] = {
+                    loaded_instruments[instrument_id] = {
                         'instrument': current_instrument,
                         'port': port
                     }
-                    
+                    used_ports.add(port)
+                    current_commands = set()
                     logger.info(f"Row {row_num}: Created instrument: {equipment_name} (Port: {port})")
 
-                if (current_instrument and 
-                    row.get('Command', '').strip() and row.get('Response', '').strip()):
-                    
-                    command = row['Command'].strip()
-                    response = row['Response'].strip()
-                    validation = row.get('Validation','').strip() if has_validation_col else None
-
+                if command:
+                    if current_instrument is None:
+                        raise ConfigurationError(
+                            f"row {row_num}: command appears before any equipment declaration"
+                        )
+                    command_key = command.upper()
+                    if command_key in current_commands:
+                        raise ConfigurationError(
+                            f"row {row_num}: duplicate command '{command}' for "
+                            f"'{current_instrument.name}'"
+                        )
+                    if validation and '(.+)' not in command and '{value}' not in command:
+                        raise ConfigurationError(
+                            f"row {row_num}: validation requires a parameterized command"
+                        )
+                    self._validate_rule(validation, row_num)
                     current_instrument.add_command(command, response, validation)
+                    current_commands.add(command_key)
                     commands_added += 1
-            
+
             # Link stateful commands
-            for instrument_id, instrument_data in self.instruments.items():
+            for instrument_data in loaded_instruments.values():
                 instrument = instrument_data['instrument']
                 instrument.link_stateful_commands()
-            
-            if self.instruments:
-                logger.info(f"Successfully loaded {len(self.instruments)} instruments with {commands_added} commands")
+
+            if loaded_instruments:
+                self.instruments = loaded_instruments
+                logger.info(f"Successfully loaded {len(loaded_instruments)} instruments with {commands_added} commands")
                 return True
-            else:
-                logger.error("No valid instruments found in file")
-                return False
-                
+
+            logger.error("No valid instruments found in file")
+            return False
+        except ConfigurationError as e:
+            logger.error(f"Invalid instrument configuration: {e}")
+            return False
         except Exception as e:
-            logger.error(f"Error loading file: {e}")
+            logger.exception(f"Error loading file: {e}")
             return False
 
     def start_all_servers(self, host='localhost'):
@@ -1226,7 +1321,7 @@ def build_parser():
         description='Stateful SCPI instrument emulator for automation development and testing'
     )
 
-    parser.add_argument('--load', '-l', help='Load instrument definitions (.csv, .xlsx, .xls)')
+    parser.add_argument('--load', '-l', help='Load instrument definitions (.csv, .xlsx)')
     parser.add_argument('--start', '-s', action='store_true', help='Start TCP servers immediately')
     parser.add_argument('--web', '-w', action='store_true', help='Start web dashboard')
     parser.add_argument('--web-port', type=int, default=8081, help='Web dashboard port (default: 8081)')
