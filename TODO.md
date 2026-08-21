@@ -14,12 +14,13 @@ These four tasks can proceed independently and establish the baseline for the re
 ## Milestones
 
 - [x] `scpi-m0` — Maintainable emulator foundation
-- [ ] `scpi-m1` — SCPI and IEEE 488.2 core
+- [x] `scpi-m1` — SCPI and IEEE 488.2 core
 - [ ] `scpi-m2` — Versioned PNA/PNA-X capability system
 - [ ] `scpi-m3` — Base PNA measurement engine
 - [ ] `scpi-m4` — All selected PNA application command families
 - [ ] `scpi-m5` — VISA/LXI-compatible transports
 - [ ] `scpi-m6` — Dashboard, operations, CI, and releases
+- [ ] `scpi-m7` — Virtual bench composition and deterministic DUT scenarios
 
 ## Critical path
 
@@ -31,6 +32,27 @@ These four tasks can proceed independently and establish the baseline for the re
 6. Base PNA engine: `scpi-301` → `scpi-302` → `scpi-303` → `scpi-304`
 7. Application modules: `scpi-401` through `scpi-405`
 8. Transports: `scpi-501` → `scpi-502` → `scpi-503`
+9. Virtual bench and scenario engine: `scpi-701` → (`scpi-702` and `scpi-703`) →
+   (`scpi-704` and `scpi-705`) → `scpi-706`
+
+## Product destination
+
+The finished product should let a user discover instrument families that have an available emulator
+driver, select models and options, assign addresses, and save the result as a reusable virtual ATE
+bench. Automation development can then begin before procurement, rack space, or physical access is
+available. The target is to complete roughly 80–90% of ordinary driver and test-sequence development
+before final validation against real hardware.
+
+Bench scenarios must be able to supply deterministic DUT-facing data. A DMM might return an ordered
+queue of readings that moves from nominal operation through drift, failure, and recovery. A PNA or
+PNA application might return successive scalar results, complex traces, or gain-compression data.
+Scenario streams must define when they advance, what happens at the end, and how they reset so test
+runs are reproducible locally, in CI, and from remote development environments.
+
+This repository emulates test instruments and the measurements they expose. Digital DUT behavior,
+development-board interfaces, and firmware-facing protocols belong in a separate companion project.
+The two projects may later share scenario timing and orchestration, but their cores should remain
+independent.
 
 ## Daily workflow
 

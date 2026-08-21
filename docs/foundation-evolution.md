@@ -324,6 +324,52 @@ server. A user should be able to choose a model, firmware snapshot, physical har
 installed options, and fault scenario, then connect existing automation software with minimal or no
 special cases.
 
+At the product level, users should be able to browse the instrument families for which an emulator
+driver is available and assemble them into a reusable virtual bench. A bench definition will name
+each instrument, model, options, resource address, and scenario. The same definition should run on a
+developer's computer, a remote host, or a CI worker. This lets ATE software development begin before
+equipment is procured, before rack space is ready, and without requiring every developer to be
+physically near the lab.
+
+The practical target is to get ordinary driver and test-sequence development roughly 80–90% of the
+way to completion. Physical instruments will still be required for final validation, timing,
+electrical behavior, undocumented quirks, and measurement correlation. The emulator's value is to
+move most software work earlier, make it parallel with hardware procurement, and make failures easy
+to reproduce.
+
+### Scenario-driven measurement data
+
+The emulator will support deterministic DUT scenarios rather than returning only constants or
+procedurally generated data. A scenario contains named streams of values and defines when each stream
+advances. For example:
+
+- a DMM can return queued readings representing nominal voltage, gradual drift, a limit failure, and
+  recovery;
+- a power meter or supply can return ordered scalar measurements and status changes;
+- a base PNA measurement can return successive complex traces with their stimulus axes;
+- PNA applications such as gain compression can return coherent traces, scalar summaries, markers,
+  and status for each scenario step;
+- a scenario can inject an error, timeout, overload, unlock, or other instrument-visible condition at
+  a defined point.
+
+The shared scenario engine will support scalar values, vectors/traces, tables, events, and errors.
+Each stream will have an explicit consumption policy, such as advance on read, advance after a
+triggered operation, hold the final value, loop, or report exhaustion. Playback position, reset,
+timing, and random seeds will be controlled so the same automation run can be reproduced.
+
+Instrument drivers remain responsible for instrument semantics. For example, a DMM adapter maps a
+scenario value into `READ?`, `FETCh?`, and status behavior, while a PNA adapter maps trace data into
+the selected channel, measurement, format, byte order, trigger model, and OPC handshake. This keeps
+scenario data generic without weakening the behavior of each emulated instrument.
+
+### Scope boundary: instrument versus DUT emulation
+
+This repository emulates test equipment and what that equipment observes. A separate companion
+project can emulate a DUT's digital behavior, development-board interfaces, registers, buses, and
+firmware-facing protocols. Keeping these as separate systems prevents either core from becoming tied
+to one DUT or one bench, while still allowing future orchestration to start both systems with a
+shared scenario and timeline.
+
 For PNA and PNA-X profiles, completion means:
 
 - identity, options, licenses, ports, sources, receivers, and command availability agree;
