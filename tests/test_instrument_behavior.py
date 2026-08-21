@@ -61,6 +61,26 @@ def test_reset_restores_linked_query_defaults(instrument: SCPIInstrument) -> Non
     assert instrument.process_command("VOLT?") == "5"
 
 
+def test_cls_clears_status_without_losing_values_or_command_responsiveness(
+    instrument: SCPIInstrument,
+) -> None:
+    assert instrument.process_command("VOLT 7.5") == "OK"
+    assert instrument.process_command("MODE AC") == "OK"
+    instrument.state.update({"ese": 32, "sre": 4, "esr": 48, "stb": 36})
+    assert instrument.process_command("NOT:A:COMMAND") == ""
+
+    assert instrument.process_command("*CLS") == ""
+
+    assert instrument.process_command("VOLT?") == "7.5"
+    assert instrument.process_command("MODE?") == "AC"
+    assert instrument.process_command("*IDN?").startswith("SCPI_Emulator,")
+    assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+    assert instrument.state["ese"] == 32
+    assert instrument.state["sre"] == 4
+    assert "esr" not in instrument.state
+    assert "stb" not in instrument.state
+
+
 @pytest.mark.xfail(
     strict=True,
     reason="Legacy exact matching does not parse parameters for IEEE *ESE and *SRE setters",
@@ -88,4 +108,3 @@ def test_semicolon_inside_quoted_parameter_is_not_a_command_separator() -> None:
     instrument = SCPIInstrument("Test", "test")
     instrument.add_command("LABEL (.+)", "{value}")
     assert instrument.process_command('LABEL "A;B"') == '"A;B"'
-

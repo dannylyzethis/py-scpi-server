@@ -261,8 +261,10 @@ class SCPIInstrument:
         })
 
     def _clear_status(self):
+        """Clear status events and errors without changing instrument configuration."""
         self.error_queue.clear()
-        self.state.clear()
+        self.state.pop('esr', None)
+        self.state.pop('stb', None)
         return ''
 
     def visa_device_clear(self):

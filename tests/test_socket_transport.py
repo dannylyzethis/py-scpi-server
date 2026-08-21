@@ -19,6 +19,9 @@ def receive_lines(client: socket.socket, count: int) -> list[str]:
 @pytest.fixture
 def running_server():
     instrument = SCPIInstrument("Socket Test", "socket_test")
+    instrument.add_command("VOLT (.+)", "OK", "range:0,10")
+    instrument.add_command("VOLT?", "5")
+    instrument.link_stateful_commands()
     manager = SimpleNamespace(web_dashboard=None)
     server = SCPIServer(instrument, manager, host="127.0.0.1", port=0)
     assert server.start()
@@ -52,3 +55,20 @@ def test_legacy_timeout_processes_unterminated_command(running_server) -> None:
         responses = receive_lines(client, 1)
 
     assert responses == ["1999.0"]
+
+
+def test_cls_preserves_values_and_connection_remains_responsive(running_server) -> None:
+    _, port = running_server
+    with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as client:
+        client.settimeout(2)
+        client.sendall(b"VOLT 7.5\n")
+        assert receive_lines(client, 1) == ["OK"]
+
+        client.sendall(b"NOT:A:COMMAND\n*CLS\nVOLT?\nSYST:ERR?\n*IDN?\n")
+        responses = receive_lines(client, 3)
+
+    assert responses == [
+        "7.5",
+        '0,"No error"',
+        "SCPI_Emulator,Socket Test,socket_test,2.3.0",
+    ]
