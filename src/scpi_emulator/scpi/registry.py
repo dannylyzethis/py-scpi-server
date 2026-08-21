@@ -147,6 +147,11 @@ class CommandRegistry:
         self._specifications.append(specification)
         return specification
 
+    @property
+    def specifications(self) -> tuple[CommandSpec, ...]:
+        """Return an immutable view used by diagnostics and coverage tooling."""
+        return tuple(self._specifications)
+
     def resolve(self, command: Command) -> ResolvedCommand:
         matches: list[ResolvedCommand] = []
         unavailable = False

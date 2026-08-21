@@ -52,4 +52,20 @@ configuration, synthesizer revision, and serial prefix remain capability gates.
 - [N5242B product page](https://www.keysight.com/us/en/product/N5242B/pna-x-microwave-network-analyzer-900-hz-10-mhz-26-5-ghz.html)
 
 These sources are vendor-controlled and can change. The snapshot fields preserve the context used to
-build the matrix; a future manifest pipeline will retain command-level provenance.
+build the matrix, and the command manifest retains command-level provenance.
+
+## Command manifest and coverage
+
+[`pna_commands.v1.json`](../src/scpi_emulator/profiles/pna_commands.v1.json) is the first validated
+command snapshot. Every entry carries documented syntax, model and firmware applicability, parameter
+and response types, defaults, supersession metadata, and an official source identifier.
+
+Generate a report against the runtime's typed registry and literal built-in commands with:
+
+```powershell
+python tools/pna_manifest.py --model N5222B --firmware A.20.25.04
+```
+
+The command exits with status 1 while documented gaps remain, making it suitable for an intentional
+CI coverage gate. Add `--allow-gaps --output reports/pna-coverage-N5222B-A.20.25.04.json` to refresh a
+checked-in report while preserving known gaps.

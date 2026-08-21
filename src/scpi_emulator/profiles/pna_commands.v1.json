@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "snapshot": {
+    "date": "2026-08-20",
+    "help_revision": "A.20.25.xx",
+    "firmware_pattern": "^A\\.20\\.25\\.[0-9]{2}$"
+  },
+  "sources": {
+    "common": {
+      "title": "N52xxB Common Commands",
+      "url": "https://helpfiles.keysight.com/csg/N52xxB/Programming/GP-IB_Command_Finder/Common_Commands.htm"
+    },
+    "command_finder": {
+      "title": "N52xxB SCPI Command Finder",
+      "url": "https://helpfiles.keysight.com/csg/N52xxB/Programming/GP-IB_Command_Finder/Command_Finder.htm"
+    },
+    "sweep_complete": {
+      "title": "Poll for Sweep Complete",
+      "url": "https://helpfiles.keysight.com/csg/N52xxB/Programming/GPIB_Example_Programs/_ESR__Sweep_Complete.htm"
+    }
+  },
+  "commands": [
+    {"id": "common.cls", "syntax": "*CLS", "implementation_key": "*CLS", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.ese.set", "syntax": "*ESE <enable>", "implementation_key": "*ESE", "models": ["N5222B", "N5242B"], "parameters": [{"name": "enable", "type": "integer", "minimum": 0, "maximum": 255}], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.ese.query", "syntax": "*ESE?", "implementation_key": "*ESE?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer", "minimum": 0, "maximum": 255}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.esr.query", "syntax": "*ESR?", "implementation_key": "*ESR?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer", "minimum": 0, "maximum": 255, "destructive_read": true}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.idn.query", "syntax": "*IDN?", "implementation_key": "*IDN?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "string", "format": "manufacturer,model,serial,firmware"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.opc.event", "syntax": "*OPC", "implementation_key": "*OPC", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none", "effect": "set SESR OPC bit after prior operations complete"}, "defaults": {}, "supersedes": [], "source_id": "sweep_complete"},
+    {"id": "common.opc.query", "syntax": "*OPC?", "implementation_key": "*OPC?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer", "constant": 1, "blocking": true}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.opt.query", "syntax": "*OPT?", "implementation_key": "*OPT?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "string", "format": "comma-separated installed option identifiers"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.rst", "syntax": "*RST", "implementation_key": "*RST", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.sre.set", "syntax": "*SRE <enable>", "implementation_key": "*SRE", "models": ["N5222B", "N5242B"], "parameters": [{"name": "enable", "type": "integer", "minimum": 0, "maximum": 255}], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.sre.query", "syntax": "*SRE?", "implementation_key": "*SRE?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer", "minimum": 0, "maximum": 255}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.stb.query", "syntax": "*STB?", "implementation_key": "*STB?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer", "minimum": 0, "maximum": 255}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.trg", "syntax": "*TRG", "implementation_key": "*TRG", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.tst.query", "syntax": "*TST?", "implementation_key": "*TST?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer", "zero_means": "pass"}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "common.wai", "syntax": "*WAI", "implementation_key": "*WAI", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none", "blocking": true}, "defaults": {}, "supersedes": [], "source_id": "common"},
+    {"id": "abort", "syntax": "ABORt", "implementation_key": "ABORT", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "system.error.query", "syntax": "SYSTem:ERRor?", "implementation_key": "SYST:ERR?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "error", "format": "code,message", "destructive_read": true}, "defaults": {"empty": "0,No error"}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "system.version.query", "syntax": "SYSTem:VERSion?", "implementation_key": "SYST:VERS?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "number"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "format.data.set", "syntax": "FORMat:DATA <format>[,<length>]", "implementation_key": "FORMAT:DATA", "models": ["N5222B", "N5242B"], "parameters": [{"name": "format", "type": "enum", "choices": ["ASCii", "REAL"]}, {"name": "length", "type": "integer", "required": false, "choices": [32, 64]}], "response": {"type": "none"}, "defaults": {"length": 64}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "format.data.query", "syntax": "FORMat:DATA?", "implementation_key": "FORMAT:DATA?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "string"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "format.border.set", "syntax": "FORMat:BORDer <border>", "implementation_key": "FORMAT:BORDER", "models": ["N5222B", "N5242B"], "parameters": [{"name": "border", "type": "enum", "choices": ["NORMal", "SWAPped"]}], "response": {"type": "none"}, "defaults": {"border": "NORMal"}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "format.border.query", "syntax": "FORMat:BORDer?", "implementation_key": "FORMAT:BORDER?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "string"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "initiate.immediate", "syntax": "INITiate<ch>[:IMMediate]", "implementation_key": "INITIATE<channel>:IMMEDIATE", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "initiate.continuous.set", "syntax": "INITiate<ch>:CONTinuous <state>", "implementation_key": "INITIATE<channel>:CONTINUOUS", "models": ["N5222B", "N5242B"], "parameters": [{"name": "state", "type": "boolean"}], "response": {"type": "none"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "initiate.continuous.query", "syntax": "INITiate<ch>:CONTinuous?", "implementation_key": "INITIATE<channel>:CONTINUOUS?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "boolean"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.average.set", "syntax": "SENSe<ch>:AVERage <state>", "implementation_key": "SENSE<channel>:AVERAGE", "models": ["N5222B", "N5242B"], "parameters": [{"name": "state", "type": "boolean"}], "response": {"type": "none"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.average.query", "syntax": "SENSe<ch>:AVERage?", "implementation_key": "SENSE<channel>:AVERAGE?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "boolean"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.average.count.set", "syntax": "SENSe<ch>:AVERage:COUNt <count>", "implementation_key": "SENSE<channel>:AVERAGE:COUNT", "models": ["N5222B", "N5242B"], "parameters": [{"name": "count", "type": "integer", "minimum": 1, "maximum": 65536}], "response": {"type": "none"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.average.count.query", "syntax": "SENSe<ch>:AVERage:COUNt?", "implementation_key": "SENSE<channel>:AVERAGE:COUNT?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "integer"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.sweep.time.set", "syntax": "SENSe<ch>:SWEep:TIME <seconds>", "implementation_key": "SENSE<channel>:SWEEP:TIME", "models": ["N5222B", "N5242B"], "parameters": [{"name": "seconds", "type": "number", "minimum": 0, "maximum": 1000000, "units": ["S"]}], "response": {"type": "none"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.sweep.time.query", "syntax": "SENSe<ch>:SWEep:TIME?", "implementation_key": "SENSE<channel>:SWEEP:TIME?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "number", "units": "S"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "sense.sweep.mode.set", "syntax": "SENSe<ch>:SWEep:MODE <mode>", "implementation_key": "SENSE<channel>:SWEEP:MODE", "models": ["N5222B", "N5242B"], "parameters": [{"name": "mode", "type": "enum", "choices": ["HOLD", "SINGle", "GROups", "CONTinuous"]}], "response": {"type": "none"}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "sweep_complete"},
+    {"id": "sense.sweep.mode.query", "syntax": "SENSe<ch>:SWEep:MODE?", "implementation_key": "SENSE<channel>:SWEEP:MODE?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "enum", "choices": ["HOLD", "SING", "GRO", "CONT"]}, "defaults": {"ch": 1}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "trigger.source.set", "syntax": "TRIGger:SOURce <source>", "implementation_key": "TRIGGER:SOURCE", "models": ["N5222B", "N5242B"], "parameters": [{"name": "source", "type": "enum", "choices": ["INTernal", "MANual", "EXTernal", "BUS"]}], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "trigger.source.query", "syntax": "TRIGger:SOURce?", "implementation_key": "TRIGGER:SOURCE?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "enum", "choices": ["INT", "MAN", "EXT", "BUS"]}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "trigger.delay.set", "syntax": "TRIGger:DELay <seconds>", "implementation_key": "TRIGGER:DELAY", "models": ["N5222B", "N5242B"], "parameters": [{"name": "seconds", "type": "number", "minimum": 0, "maximum": 3600, "units": ["S"]}], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "trigger.delay.query", "syntax": "TRIGger:DELay?", "implementation_key": "TRIGGER:DELAY?", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "number", "units": "S"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"},
+    {"id": "trigger.immediate", "syntax": "TRIGger:IMMediate", "implementation_key": "TRIGGER:IMMEDIATE", "models": ["N5222B", "N5242B"], "parameters": [], "response": {"type": "none"}, "defaults": {}, "supersedes": [], "source_id": "command_finder"}
+  ]
+}
