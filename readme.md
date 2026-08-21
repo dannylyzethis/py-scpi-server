@@ -20,7 +20,8 @@ see [From command responder to instrument emulator](docs/foundation-evolution.md
 - A bounded FIFO error queue connected to IEEE 488.2 event and status registers.
 - Active `*CLS`, `*OPC`, `*OPC?`, `*WAI`, ESE/SRE/status-byte, trigger, and acquisition behavior.
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
-- Versioned N5222B PNA and N5242B PNA-X hardware, option, license, and capability profiles.
+- Versioned N5222B PNA and N5242B PNA-X hardware, option, license, and capability profiles,
+  including model-faithful and all-applications developer modes.
 - Optional Flask/Socket.IO monitoring dashboard.
 - A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 

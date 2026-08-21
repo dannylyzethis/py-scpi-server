@@ -81,3 +81,17 @@ The default profiles are N5222B-200 and N5242B-201. Explicit profiles reject mod
 hardware, missing application prerequisites, excluded configurations, and port/source constraints.
 `*OPT?` reports traditional three-digit option aliases while `SYST:CAP:LIC:CAT?` reports installed
 product-qualified licenses, matching the distinction made by Keysight firmware.
+
+Profiles have two explicit compatibility policies:
+
+- `model-faithful` is the default. Only application licenses named by the user are enabled, and an
+  impossible license/hardware combination is rejected.
+- `all-applications` creates a developer profile. When hardware is not specified, it chooses the
+  most capable modeled configuration and required pulse-hardware add-on, then enables one current
+  license for every application compatible with that model and physical profile. If hardware is
+  specified, it remains authoritative and incompatible applications stay disabled.
+
+Both policies feed the typed command registry's capability gates. An application command therefore
+reports SCPI `-113, "Command unavailable"` in a model-faithful profile without its license, while the
+same command can resolve in an all-applications developer profile. Hardware, `*OPT?`, and license
+queries continue to derive from the same immutable profile in either mode.

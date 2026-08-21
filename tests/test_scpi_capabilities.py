@@ -1,7 +1,13 @@
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument
-from scpi_emulator.scpi import CapabilityError, PNACapabilities
+from scpi_emulator.scpi import (
+    CapabilityError,
+    CommandSpec,
+    CompatibilityMode,
+    HeaderNode,
+    PNACapabilities,
+)
 
 
 def test_default_n5222b_identity_options_and_hardware_are_consistent() -> None:
@@ -113,3 +119,66 @@ def test_unaliased_software_product_uses_stable_three_digit_opt_code() -> None:
     )
 
     assert profile.option_query_codes == ("400", "072")
+
+
+def test_model_faithful_mode_is_the_default_and_keeps_only_installed_apps() -> None:
+    profile = PNACapabilities.create("N5242B", application_options=("S93080B",))
+
+    assert profile.mode is CompatibilityMode.MODEL_FAITHFUL
+    assert profile.application_options == ("S93080B",)
+    assert profile.feature_enabled("Frequency Offset") is True
+    assert profile.feature_enabled("Noise Figure") is False
+
+
+def test_all_applications_mode_builds_a_coherent_developer_profile() -> None:
+    profile = PNACapabilities.create("N5242B", mode="all-applications")
+
+    assert profile.mode is CompatibilityMode.ALL_APPLICATIONS
+    assert profile.hardware_configuration == "425"
+    assert profile.hardware_addons == ("021",)
+    assert profile.ports == 4
+    assert profile.sources == 2
+    assert profile.feature_enabled("Noise Figure") is True
+    assert profile.feature_enabled("Integrated Pulsed Rf") is True
+    assert "S93080B" in profile.application_options
+    assert "S93029B" in profile.application_options
+
+
+def test_all_applications_mode_respects_an_explicit_physical_configuration() -> None:
+    profile = PNACapabilities.create(
+        "N5222B",
+        mode=CompatibilityMode.ALL_APPLICATIONS,
+        hardware_configuration="200",
+        hardware_addons=(),
+    )
+
+    assert profile.hardware_configuration == "200"
+    assert profile.feature_enabled("Basic Pulsed Rf") is False
+    assert profile.feature_enabled("Source Phase Control") is False
+    assert profile.feature_enabled("Gain Compression") is True
+
+
+def test_pna_application_capabilities_gate_typed_commands() -> None:
+    strict = SCPIInstrument("Strict PNA-X", "strict", pna_capabilities=PNACapabilities.create("N5242B"))
+    developer = SCPIInstrument(
+        "Developer PNA-X",
+        "developer",
+        pna_capabilities=PNACapabilities.create("N5242B", mode="all-applications"),
+    )
+    specification = CommandSpec(
+        path=(HeaderNode("CALCulate"), HeaderNode("NOISe")),
+        handler=lambda invocation: "1",
+        query=True,
+        required_capabilities=frozenset({"noise-figure"}),
+    )
+    strict.core_registry.register(specification)
+    developer.core_registry.register(specification)
+
+    assert strict.process_command("CALC:NOIS?") == ""
+    assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
+    assert developer.process_command("CALC:NOIS?") == "1"
+
+
+def test_unknown_compatibility_mode_is_rejected() -> None:
+    with pytest.raises(CapabilityError, match="unsupported compatibility mode"):
+        PNACapabilities.create("N5222B", mode="everything")

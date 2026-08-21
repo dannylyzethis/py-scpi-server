@@ -255,11 +255,16 @@ class SCPIInstrument:
         self.acquisition = AcquisitionController(self.operation_manager, self.status)
         self.data_format = DataFormat()
         self.output_queue = OutputQueue(self.status)
-        self.core_registry = CommandRegistry()
         model = detect_pna_model(str(name), str(instrument_id))
         self.pna_capabilities = pna_capabilities
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
+        registry_capabilities = (
+            self.pna_capabilities.command_capabilities
+            if self.pna_capabilities is not None
+            else ()
+        )
+        self.core_registry = CommandRegistry(registry_capabilities)
         register_status_commands(self.core_registry, self.status)
         register_operation_commands(self.core_registry, self.operation_manager)
         register_acquisition_commands(self.core_registry, self.acquisition)

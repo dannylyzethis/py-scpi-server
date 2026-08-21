@@ -11,6 +11,7 @@ from .acquisition import (
 )
 from .capabilities import (
     CapabilityError,
+    CompatibilityMode,
     PNACapabilities,
     detect_pna_model,
     register_capability_commands,
@@ -87,6 +88,7 @@ __all__ = [
     "BinaryResponse",
     "ByteOrder",
     "CapabilityError",
+    "CompatibilityMode",
     "AcquisitionChannel",
     "AcquisitionController",
     "AcquisitionState",

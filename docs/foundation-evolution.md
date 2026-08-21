@@ -260,6 +260,12 @@ Impossible combinations are rejected when the profile is created. For example, a
 given the PNA-X noise receiver, a four-port application cannot be installed on a two-port profile,
 and software prerequisites cannot be omitted.
 
+The default model-faithful mode enables only explicitly installed application licenses. The
+all-applications developer mode selects a capable physical configuration when one is not supplied
+and enables every application compatible with that model and hardware. Both modes feed the same
+typed command-availability gates, so an unlicensed application command is unavailable in strict
+mode without making hardware or option queries contradictory in developer mode.
+
 Keysight's traditional `*OPT?` aliases and modern license product numbers are modeled separately.
 For example, an installed S93010B license is represented by option `010` in `*OPT?` while the license
 catalog retains the product-qualified identifier.
@@ -303,15 +309,14 @@ replace that work.
 
 The largest unfinished areas are:
 
-1. Model-faithful and developer-oriented all-application profile modes.
-2. PNA channels, measurements, traces, windows, markers, stimulus, receivers, segments, and sweeps.
-3. Deterministic S-parameter and receiver-data generation.
-4. Calibration, ECal, calibration kits, cal sets, and correction behavior.
-5. State, memory, Touchstone, and measurement file operations.
-6. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
+1. PNA channels, measurements, traces, windows, markers, stimulus, receivers, segments, and sweeps.
+2. Deterministic S-parameter and receiver-data generation.
+3. Calibration, ECal, calibration kits, cal sets, and correction behavior.
+4. State, memory, Touchstone, and measurement file operations.
+5. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
    spectrum analysis, IMD, modulation distortion, phase noise, and differential-IQ applications.
-7. VXI-11 `INSTR`, device-clear, trigger, lock, serial-poll, and asynchronous SRQ transport behavior.
-8. HiSLIP, discovery, dashboard security, fault injection, packaging, and release hardening.
+6. VXI-11 `INSTR`, device-clear, trigger, lock, serial-poll, and asynchronous SRQ transport behavior.
+7. HiSLIP, discovery, dashboard security, fault injection, packaging, and release hardening.
 
 Raw TCP works today, but VXI-11 and HiSLIP are needed for broader VISA `::INSTR` compatibility. The
 internal status/request state is not the same thing as delivering an asynchronous SRQ over those
@@ -409,11 +414,11 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-21:
 
-- 161 automated tests pass.
+- 166 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The initial N5222B and N5242B foundation manifests each report 64/64 documented commands.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
-- The versioned PNA capability milestone is three of four tasks complete.
+- The versioned PNA capability milestone is complete.
 
 See [PNA compatibility baseline](pna-compatibility.md) for model and firmware details, and
 [TODO.md](../TODO.md) or `bd ready` for the live implementation backlog.

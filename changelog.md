@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Explicit model-faithful and all-applications PNA compatibility modes.
+- Coherent developer profiles that select capable modeled hardware and compatible application
+  licenses while preserving truthful identity, option, and hardware queries.
+- PNA application capability names wired into typed command availability gates.
+
 ### Planned
 - Advanced SCPI subsystem support
 - Binary data transfer for waveforms

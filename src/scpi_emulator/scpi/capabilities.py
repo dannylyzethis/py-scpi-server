@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from enum import Enum
 from importlib.resources import files
 from typing import Any
 
@@ -12,6 +13,8 @@ from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, P
 
 
 DEFAULT_HARDWARE_CONFIGURATION = {"N5222B": "200", "N5242B": "201"}
+DEVELOPER_HARDWARE_CONFIGURATION = {"N5222B": "419", "N5242B": "425"}
+DEVELOPER_HARDWARE_ADDONS = {"N5222B": ("021",), "N5242B": ("021",)}
 
 OPTION_QUERY_CODES: dict[str, tuple[str, ...]] = {
     "S93007A": ("007",),
@@ -61,8 +64,16 @@ class CapabilityError(ValueError):
     """Raised when a requested PNA configuration cannot exist."""
 
 
+class CompatibilityMode(str, Enum):
+    """Policy used to choose installed PNA application capabilities."""
+
+    MODEL_FAITHFUL = "model-faithful"
+    ALL_APPLICATIONS = "all-applications"
+
+
 @dataclass(frozen=True)
 class PNACapabilities:
+    mode: CompatibilityMode
     model: str
     instrument_class: str
     hardware_configuration: str
@@ -82,23 +93,40 @@ class PNACapabilities:
         cls,
         model: str,
         *,
+        mode: CompatibilityMode | str = CompatibilityMode.MODEL_FAITHFUL,
         hardware_configuration: str | None = None,
-        hardware_addons: tuple[str, ...] = (),
-        application_options: tuple[str, ...] = (),
+        hardware_addons: tuple[str, ...] | None = None,
+        application_options: tuple[str, ...] | None = None,
         serial: str = "US12345678",
         firmware: str = "A.20.25.04",
     ) -> "PNACapabilities":
         matrix = _load_compatibility_matrix()
         model = model.upper()
+        try:
+            mode = CompatibilityMode(mode)
+        except ValueError as error:
+            choices = ", ".join(item.value for item in CompatibilityMode)
+            raise CapabilityError(f"unsupported compatibility mode {mode!r}; choose {choices}") from error
         models = matrix["models"]
         if model not in models:
             raise CapabilityError(f"unsupported PNA model {model!r}")
         model_data = models[model]
-        configuration = hardware_configuration or DEFAULT_HARDWARE_CONFIGURATION[model]
+        default_configurations = (
+            DEVELOPER_HARDWARE_CONFIGURATION
+            if mode is CompatibilityMode.ALL_APPLICATIONS
+            else DEFAULT_HARDWARE_CONFIGURATION
+        )
+        configuration = hardware_configuration or default_configurations[model]
         configurations = model_data["hardware_configurations"]
         if configuration not in configurations:
             raise CapabilityError(
                 f"hardware configuration {configuration!r} is not available on {model}"
+            )
+        if hardware_addons is None:
+            hardware_addons = (
+                DEVELOPER_HARDWARE_ADDONS[model]
+                if mode is CompatibilityMode.ALL_APPLICATIONS
+                else ()
             )
         requested_addons = tuple(dict.fromkeys(option.upper() for option in hardware_addons))
         unknown_addons = set(requested_addons) - set(model_data["hardware_addons"])
@@ -107,8 +135,17 @@ class PNACapabilities:
         if "XSB" in requested_addons and configuration not in {"422", "423"}:
             raise CapabilityError("XSB requires N5242B hardware configuration 422 or 423")
 
-        requested_apps = tuple(dict.fromkeys(option.upper() for option in application_options))
         hardware = configurations[configuration]
+        explicit_apps = tuple(
+            dict.fromkeys(option.upper() for option in (application_options or ()))
+        )
+        if mode is CompatibilityMode.ALL_APPLICATIONS:
+            automatic_apps = _compatible_application_options(
+                matrix["applications"], model, configuration, requested_addons, hardware
+            )
+            requested_apps = tuple(dict.fromkeys((*automatic_apps, *explicit_apps)))
+        else:
+            requested_apps = explicit_apps
         application_features: list[tuple[str, str]] = []
         for option in requested_apps:
             application_id = _application_for_option(matrix["applications"], model, option)
@@ -126,6 +163,7 @@ class PNACapabilities:
 
         frequency = model_data["frequency_hz"]
         return cls(
+            mode=mode,
             model=model,
             instrument_class=model_data["instrument_class"],
             hardware_configuration=configuration,
@@ -190,6 +228,21 @@ class PNACapabilities:
             normalized in {application_id.casefold(), feature.casefold()}
             for application_id, feature in self.application_features
         )
+
+    @property
+    def command_capabilities(self) -> frozenset[str]:
+        """Names application command specifications can use as availability gates."""
+        names: set[str] = set()
+        for application_id, feature in self.application_features:
+            names.update(
+                {
+                    application_id,
+                    application_id.replace("_", "-"),
+                    feature.casefold(),
+                }
+            )
+        names.update(option.casefold() for option in self.application_options)
+        return frozenset(names)
 
 
 def detect_pna_model(*values: str) -> str | None:
@@ -348,6 +401,44 @@ def _application_for_option(applications: dict[str, Any], model: str, option: st
         if model in application["models"] and option in application["options"]:
             return application_id
     return None
+
+
+def _compatible_application_options(
+    applications: dict[str, Any],
+    model: str,
+    configuration: str,
+    addons: tuple[str, ...],
+    hardware: dict[str, Any],
+) -> tuple[str, ...]:
+    """Select one current license per application that fits the physical profile."""
+    candidates = tuple(
+        _preferred_option(application["options"])
+        for application in applications.values()
+        if model in application["models"]
+    )
+    compatible: list[str] = []
+    for option in candidates:
+        application_id = _application_for_option(applications, model, option)
+        if application_id is None:
+            continue
+        try:
+            _validate_application_requirements(
+                applications[application_id],
+                application_id,
+                configuration,
+                addons,
+                candidates,
+                hardware,
+            )
+        except CapabilityError:
+            continue
+        compatible.append(option)
+    return tuple(compatible)
+
+
+def _preferred_option(options: list[str]) -> str:
+    """Prefer the current B-generation license when a matrix lists A and B products."""
+    return next((option for option in options if option.endswith("B")), options[-1])
 
 
 def _validate_application_requirements(
