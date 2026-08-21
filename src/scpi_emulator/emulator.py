@@ -20,33 +20,37 @@ import sys
 import re
 import logging
 import signal
-import json
 from pathlib import Path
 from datetime import datetime
-import traceback
 from collections import deque
 import os
+from collections.abc import Sequence
+
+from . import __version__
 
 # Flask imports
 try:
-    from flask import Flask, render_template, jsonify, request, send_from_directory
-    from flask_socketio import SocketIO, emit
+    from flask import Flask, render_template, jsonify, request
+    from flask_socketio import SocketIO
     HAS_FLASK = True
 except ImportError:
     HAS_FLASK = False
-    print("Flask not installed. Web dashboard will be disabled.")
-    print("Install with: pip install flask flask-socketio")
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('scpi_emulator.log'),
-        logging.StreamHandler()
-    ]
-)
 logger = logging.getLogger(__name__)
+
+
+def configure_logging(*, verbose=False, log_file=None):
+    """Configure application logging without import-time filesystem writes."""
+    handlers = [logging.StreamHandler()]
+    if log_file:
+        handlers.insert(0, logging.FileHandler(log_file))
+
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=handlers,
+        force=True,
+    )
 
 class CommandLogger:
     """Tracks commands and responses for web dashboard"""
@@ -338,7 +342,7 @@ class SCPIInstrument:
                 if param.upper() not in valid_values:
                     return f'-108,"Parameter not allowed; expected one of {valid_values}, got \'{param}\'"'
             except Exception:
-                return f'-108,"Invalid enum format in validation rule"'
+                return '-108,"Invalid enum format in validation rule"'
         elif validation == 'bool':
             if param.upper() not in ['ON', 'OFF', '1', '0']:
                 return f'-108,"Invalid boolean; expected ON/OFF/1/0, got \'{param}\'"'
@@ -442,7 +446,7 @@ class SCPIInstrument:
                 handler = self.commands[command_upper]
                 result = handler()
                 return str(result) if result is not None else ''
-            except Exception as e:
+            except Exception:
                 error_msg = f'-113,"Command execution error; {command}"'
                 self.error_queue.append(error_msg)
                 return ''
@@ -505,14 +509,14 @@ class SCPIServer:
         for client in self.clients[:]:
             try:
                 client.close()
-            except:
+            except OSError:
                 pass
         self.clients.clear()
         
         if self.socket:
             try:
                 self.socket.close()
-            except:
+            except OSError:
                 pass
         
         logger.info(f"Stopped SCPI server for '{self.instrument.name}'")
@@ -1051,7 +1055,7 @@ class SCPIEmulatorManager:
                             print(f"   {server.instrument.name}: {server.host}:{server.port}")
                         
                         if self.web_dashboard:
-                            print(f"   Web dashboard: http://localhost:8081")
+                            print("   Web dashboard: http://localhost:8081")
                     else:
                         print("❌ No servers running")
                 
@@ -1216,15 +1220,12 @@ def create_dashboard_template():
         logger.info(f"Created dashboard template: {template_path}")
 
 
-def main():
-    print("SCPI Equipment Emulator - VERSION 2.3")
-    print("🌐 NEW: Web Dashboard with real-time monitoring!")
-    print("=" * 60)
-    create_dashboard_template()
+def build_parser():
+    """Build the command-line parser without starting the emulator."""
     parser = argparse.ArgumentParser(
-        description='SCPI Equipment Emulator v2.3 - LabVIEW Compatible with Web Dashboard'
+        description='Stateful SCPI instrument emulator for automation development and testing'
     )
-    
+
     parser.add_argument('--load', '-l', help='Load instrument definitions (.csv, .xlsx, .xls)')
     parser.add_argument('--start', '-s', action='store_true', help='Start TCP servers immediately')
     parser.add_argument('--web', '-w', action='store_true', help='Start web dashboard')
@@ -1234,31 +1235,34 @@ def main():
     parser.add_argument('--create-example', action='store_true', help='Create example CSV file')
     parser.add_argument('--interactive', '-i', action='store_true', help='Start interactive mode')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
-    
-    args = parser.parse_args()
-    
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-    
+    parser.add_argument('--log-file', help='Write logs to this file in addition to stderr')
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    configure_logging(verbose=args.verbose, log_file=args.log_file)
+
+    print(f"SCPI Instrument Emulator {__version__} (legacy engine 2.3)")
+    print("=" * 60)
+
     if args.create_example:
         create_example_csv()
-        return
-    
-    # Create dashboard template
-    create_dashboard_template()
-    
+        return 0
+
     # Create emulator manager
     manager = SCPIEmulatorManager()
     
     # Load file if provided
     if args.load:
         if not manager.load_from_file(args.load, args.port):
-            sys.exit(1)
+            return 1
         
         # Start servers if requested
         if args.start:
             if not manager.start_all_servers(args.host):
-                sys.exit(1)
+                return 1
         
         # Start web dashboard if requested
         if args.web:
@@ -1269,7 +1273,7 @@ def main():
     if args.interactive or (not args.load and not args.create_example):
         manager.interactive_mode()
     elif args.load and (args.start or args.web):
-        print(f"\n🚀 SCPI Emulator running!")
+        print("\n🚀 SCPI Emulator running!")
         if manager.running:
             print(f"📡 Instruments available on ports {args.port}+")
         if args.web:
@@ -1282,5 +1286,7 @@ def main():
         except KeyboardInterrupt:
             manager.stop_all_servers()
 
+    return 0
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -1,8 +1,8 @@
 # SCPI Equipment Emulator
 
-[![Python Version](https://img.shields.io/badge/python-3.6+-blue.svg)](https://python.org)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.3-brightgreen.svg)](https://github.com/yourusername/scpi-emulator/releases)
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-brightgreen.svg)](https://github.com/dannylyzethis/py-scpi-server/releases)
 [![LabVIEW Compatible](https://img.shields.io/badge/LabVIEW-Compatible-orange.svg)](https://www.ni.com/en-us/shop/labview.html)
 
 A comprehensive SCPI (Standard Commands for Programmable Instruments) equipment emulator that provides virtual instrument functionality over TCP/IP. Perfect for testing LabVIEW applications, VISA drivers, and instrument automation without physical hardware.
@@ -17,7 +17,7 @@ A comprehensive SCPI (Standard Commands for Programmable Instruments) equipment 
 - **💾 Stateful Commands**: SET/QUERY command pairs with persistent state
 - **✅ Input Validation**: Range, enum, and boolean validation with proper SCPI error handling
 - **🔄 VISA Device Clear**: Proper simulation of VISA device clear operations
-- **🚀 Zero Dependencies**: Pure Python 3.6+ with no external dependencies for CSV files
+- **🚀 Minimal Core**: Python 3.10+ with no third-party dependency required for CSV profiles
 
 ## 📸 Screenshots
 
@@ -35,44 +35,45 @@ A comprehensive SCPI (Standard Commands for Programmable Instruments) equipment 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/scpi-emulator.git
-cd scpi-emulator
+git clone https://github.com/dannylyzethis/py-scpi-server.git
+cd py-scpi-server
 
-# No installation required! Pure Python.
-# For Excel support (optional):
-pip install openpyxl
+# Install the core emulator in editable mode
+python -m pip install -e .
 
-# For web dashboard (optional):
-pip install flask flask-socketio
+# Or include every optional runtime feature
+python -m pip install -e ".[all]"
 ```
 
 ### Create Example Configuration
 
 ```bash
-python server-py-ver2.3.py --create-example
+scpi-emulator --create-example
 ```
 
 ### Start Emulator
 
 ```bash
 # Load configuration and start servers
-python server-py-ver2.3.py --load scpi_instruments_example.csv --start
+scpi-emulator --load scpi_instruments_example.csv --start
 
 # With web dashboard
-python server-py-ver2.3.py --load scpi_instruments_example.csv --start --web
+scpi-emulator --load scpi_instruments_example.csv --start --web
 
 # With verbose logging
-python server-py-ver2.3.py --load scpi_instruments_example.csv --start --web --verbose
+scpi-emulator --load scpi_instruments_example.csv --start --web --verbose
 ```
 
 ### Connect from LabVIEW
 
-Use these VISA resource strings in LabVIEW:
-- **Keysight 34461A DMM**: `TCPIP0::localhost::5555::INSTR`
-- **Keysight E36312A PSU**: `TCPIP0::localhost::5556::INSTR`
-- **Tektronix TDS2024B Scope**: `TCPIP0::localhost::5557::INSTR`
-- **Agilent 33220A Generator**: `TCPIP0::localhost::5558::INSTR`
-- **Debug Test Instrument**: `TCPIP0::localhost::5559::INSTR`
+The current transport is a raw TCP socket. Use these VISA resource strings in LabVIEW:
+- **Keysight 34461A DMM**: `TCPIP0::localhost::5555::SOCKET`
+- **Keysight E36312A PSU**: `TCPIP0::localhost::5556::SOCKET`
+- **Tektronix TDS2024B Scope**: `TCPIP0::localhost::5557::SOCKET`
+- **Agilent 33220A Generator**: `TCPIP0::localhost::5558::SOCKET`
+- **Debug Test Instrument**: `TCPIP0::localhost::5559::SOCKET`
+
+VXI-11/HiSLIP `::INSTR` compatibility is planned but not implemented yet.
 
 ## 📋 Configuration Format
 
@@ -89,7 +90,7 @@ My DMM,5555,*IDN?,MY_DMM,MODEL123,SERIAL456,1.0,
 
 ### Excel Support
 - Open the CSV in Excel and save as `.xlsx`
-- Or install `openpyxl`: `pip install openpyxl`
+- Or install the Excel extra: `python -m pip install -e ".[excel]"`
 - Supports `.xlsx`, `.xls`, and `.csv` formats
 
 ### Validation Rules
@@ -103,7 +104,7 @@ My DMM,5555,*IDN?,MY_DMM,MODEL123,SERIAL456,1.0,
 ## 🔧 Command Line Options
 
 ```bash
-python server-py-ver2.3.py [OPTIONS]
+scpi-emulator [OPTIONS]
 
 Options:
   --load, -l FILE          Load instrument definitions (.csv, .xlsx, .xls)
@@ -115,6 +116,8 @@ Options:
   --create-example         Create example CSV file
   --interactive, -i        Start interactive mode
   --verbose, -v            Enable verbose logging
+  --log-file FILE          Also write logs to FILE
+  --version                Show the package version
   --help                   Show help message
 ```
 
@@ -206,7 +209,7 @@ Web Dashboard ← WebSocket ← Command Logger ← Response/State Updates
 ### Interactive Mode
 
 ```bash
-python server-py-ver2.3.py --interactive
+scpi-emulator --interactive
 
 # Commands:
 # load <file>     - Load instrument definitions
@@ -248,13 +251,13 @@ python test_instrument.py --instrument debug_test_instrument
 # Check if port is available
 netstat -an | grep 5555
 # Or try different port
-python server-py-ver2.3.py --load config.csv --port 6000 --start
+scpi-emulator --load config.csv --port 6000 --start
 ```
 
 **LabVIEW VISA Errors**
 ```bash
 # Enable verbose logging to see VISA device clear simulation
-python server-py-ver2.3.py --load config.csv --start --verbose
+scpi-emulator --load config.csv --start --verbose
 # Look for [VISA-CLR] logs
 ```
 
@@ -274,7 +277,7 @@ pip install flask flask-socketio
 >>>requirement python 3.13 or later
 
 # Check dashboard port
-python server-py-ver2.3.py --web --web-port 8082
+scpi-emulator --web --web-port 8082
 ```
 
 ### Debug Logging
@@ -282,7 +285,7 @@ python server-py-ver2.3.py --web --web-port 8082
 Enable verbose logging for detailed troubleshooting:
 
 ```bash
-python server-py-ver2.3.py --load config.csv --start --verbose
+scpi-emulator --load config.csv --start --verbose
 ```
 
 Look for these log patterns:
@@ -320,7 +323,7 @@ Keysight E36312A,5556,VOLT (.+),OK,range:0,30
 
 ```labview
 // LabVIEW code example
-VISA Resource Name: TCPIP0::localhost::5555::INSTR
+VISA Resource Name: TCPIP0::localhost::5555::SOCKET
 VISA Write: "*IDN?"
 VISA Read: "Keysight Technologies,34461A,MY12345678,A.02.14"
 ```
@@ -355,18 +358,17 @@ VISA Read: "Keysight Technologies,34461A,MY12345678,A.02.14"
 
 ```bash
 # Clone and setup development environment
-git clone https://github.com/yourusername/scpi-emulator.git
-cd scpi-emulator
+git clone https://github.com/dannylyzethis/py-scpi-server.git
+cd py-scpi-server
 
 # Install development dependencies
-pip install -r requirements-dev.txt
+python -m pip install -e ".[all,dev]"
 
 # Run tests
 python -m pytest tests/
 
 # Run linting
-flake8 server-py-ver2.3.py
-black server-py-ver2.3.py
+ruff check src tests
 ```
 
 ### Contribution Guidelines
@@ -391,8 +393,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/scpi-emulator/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/scpi-emulator/discussions)
+- **Issues**: [GitHub Issues](https://github.com/dannylyzethis/py-scpi-server/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/dannylyzethis/py-scpi-server/discussions)
 - **Documentation**: See `/docs` folder for detailed guides
 - **Email**: your.email@example.com
 
@@ -405,15 +407,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/scpi-emulator&type=Date)](https://star-history.com/#yourusername/scpi-emulator&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=dannylyzethis/py-scpi-server&type=Date)](https://star-history.com/#dannylyzethis/py-scpi-server&Date)
 
 ## 📊 Project Stats
 
-![GitHub repo size](https://img.shields.io/github/repo-size/yourusername/scpi-emulator)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/yourusername/scpi-emulator)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/scpi-emulator)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/scpi-emulator)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/scpi-emulator)
+![GitHub repo size](https://img.shields.io/github/repo-size/dannylyzethis/py-scpi-server)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dannylyzethis/py-scpi-server)
+![GitHub last commit](https://img.shields.io/github/last-commit/dannylyzethis/py-scpi-server)
+![GitHub issues](https://img.shields.io/github/issues/dannylyzethis/py-scpi-server)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/dannylyzethis/py-scpi-server)
 
 ---
 

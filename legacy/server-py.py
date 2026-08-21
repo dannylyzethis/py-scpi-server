@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """
-SCPI Equipment Emulator - VERSION 2.2
-FIXED: Validation preservation during VISA device clear operations
+SCPI Equipment Emulator - VERSION 2.1
+FIXED: Welcome message removed for VISA compatibility
+FIXING: Range validation in stateful commands
 
-Key fixes:
-- Store validation info separately to survive device clear
-- Preserve validation during stateful command linking
-- Enhanced debugging for validation tracking
+Recent Changes:
+- v2.1: Adding version tracking, fixing validation extraction
+- v2.0: Removed welcome message (MAJOR FIX for NI-MAX compatibility)
+- v1.x: Lambda closures, Unicode fixes, VISA device clear simulation
+
+Complete SCPI Equipment Emulator - LabVIEW Compatible
+Compatible with LabVIEW VISA, NI-MAX, and standard SCPI clients
+Supports multiple instruments on different ports from Excel/CSV definitions
+NO EXTERNAL DEPENDENCIES - Pure Python 3.6+
 """
 
 import csv
@@ -136,10 +142,6 @@ class SCPIInstrument:
         self.last_command = ""
         self.command_count = 0
         
-        # CRITICAL FIX: Store validation info separately to survive device clear
-        self.validation_rules = {}  # Maps command patterns to validation rules
-        self.default_values = {}    # Maps base commands to default values
-        
         # Add standard IEEE 488.2 commands
         self._add_ieee488_commands()
 
@@ -171,7 +173,7 @@ class SCPIInstrument:
         return ''
 
     def visa_device_clear(self):
-        """Simulate VISA Device Clear operation - FIXED VERSION"""
+        """Simulate VISA Device Clear operation - more comprehensive than *CLS"""
         logger.info(f"[VISA-CLR] VISA Device Clear - Before: state={dict(self.state)}, errors={len(self.error_queue)}")
         
         # Clear all state
@@ -182,7 +184,8 @@ class SCPIInstrument:
         self.last_command = ""
         self.command_count = 0
         
-        # CRITICAL FIX: Re-establish stateful commands using preserved validation
+        # CRITICAL: Re-establish stateful commands with fresh default values
+        # This ensures the closures capture clean state
         self.link_stateful_commands()
         
         logger.info(f"[VISA-CLR] VISA Device Clear - After: state={dict(self.state)}, errors={len(self.error_queue)}")
@@ -224,7 +227,7 @@ class SCPIInstrument:
         return '0,"No error"'
 
     def add_command(self, command, response, validation=None):
-        """Add a command-response pair - ENHANCED VERSION WITH VALIDATION STORAGE"""
+        """Add a command-response pair - FIXED VERSION"""
         command = command.strip().upper()
         
         logger.debug(f"Adding command '{command}' -> '{response}' for {self.name}")
@@ -238,12 +241,6 @@ class SCPIInstrument:
                 pattern = pattern.replace('(.+)', r'(.+)')
             
             logger.debug(f"Created parameterized pattern: '{pattern}'")
-            
-            # CRITICAL FIX: Store validation rules separately
-            if validation:
-                self.validation_rules[pattern] = validation
-                logger.info(f"[VALIDATION-STORE] Stored validation '{validation}' for pattern '{pattern}'")
-            
             self.commands[pattern] = self._create_parameterized_response(response, validation)
         else:
             # FIXED: Capture response by value to avoid closure issues
@@ -328,8 +325,8 @@ class SCPIInstrument:
         return None
 
     def link_stateful_commands(self):
-        """After all commands are loaded, link SET/QUERY pairs - FIXED TO PRESERVE VALIDATION"""
-        logger.info(f"[LINK] Starting link_stateful_commands for {self.name} (VERSION 2.2 - FIXED)")
+        """After all commands are loaded, link SET/QUERY pairs - PRESERVE VALIDATION"""
+        logger.info(f"[LINK] Starting link_stateful_commands for {self.name} (VERSION 2.1)")
         command_groups = {}
         
         # Group commands by base name and preserve validation info
@@ -344,9 +341,11 @@ class SCPIInstrument:
                     command_groups[base_name] = {}
                 command_groups[base_name]['set'] = cmd
                 
-                # CRITICAL FIX: Get validation from stored rules, not from handler
-                validation = self.validation_rules.get(cmd)
-                logger.info(f"[LINK] Command '{cmd}' validation from stored rules: '{validation}'")
+                # Extract validation from the original handler if it exists
+                original_handler = self.commands[cmd]
+                validation = getattr(original_handler, '_validation', None)
+                logger.info(f"[LINK] Command '{cmd}' handler type: {type(original_handler)}")
+                logger.info(f"[LINK] Command '{cmd}' validation extracted: '{validation}'")
                 command_groups[base_name]['validation'] = validation
                 
             elif cmd.endswith('?'):
@@ -366,21 +365,14 @@ class SCPIInstrument:
                 logger.info(f"[LINK] Processing stateful pair: {set_cmd} <-> {query_cmd}")
                 logger.info(f"[LINK] Validation for {base_name}: '{validation}'")
                 
-                # Get the original query response as default value (or use stored default)
-                if base_name in self.default_values:
-                    default_value = self.default_values[base_name]
-                    logger.info(f"[LINK] Using stored default for {base_name}: '{default_value}'")
-                else:
-                    original_query_handler = self.commands[query_cmd]
-                    try:
-                        default_value = original_query_handler() if callable(original_query_handler) else "0"
-                        # Store the default value for future use
-                        self.default_values[base_name] = default_value
-                        logger.info(f"[LINK] Extracted and stored default for {base_name}: '{default_value}'")
-                    except Exception as e:
-                        default_value = "0"
-                        self.default_values[base_name] = default_value
-                        logger.warning(f"[LINK] Error getting default for {query_cmd}: {e}, using '0'")
+                # Get the original query response as default value
+                original_query_handler = self.commands[query_cmd]
+                try:
+                    default_value = original_query_handler() if callable(original_query_handler) else "0"
+                    logger.info(f"[LINK] LINKING {set_cmd} <-> {query_cmd}, default: '{default_value}', validation: '{validation}'")
+                except Exception as e:
+                    default_value = "0"
+                    logger.warning(f"[LINK] Error getting default for {query_cmd}: {e}, using '0'")
                 
                 # Replace with stateful versions that preserve validation
                 self.commands[set_cmd] = self._create_stateful_set(base_name, validation)
@@ -1110,30 +1102,27 @@ def create_example_csv():
     print("\n💡 For Excel format, you can:")
     print("   1. Open this CSV file in Excel and save as .xlsx")
     print("   2. Or install openpyxl: pip install openpyxl")
-    print("\n🔧 VALIDATION FIX TESTING:")
-    print("   python server-py.py --load scpi_instruments_example.csv --start --verbose")
-    print("   # Now validation survives VISA Device Clear operations!")
-    print("   # Look for logs: [VALIDATION-STORE] = validation preservation")
+    print("\n[VISA DEVICE CLEAR] WINDOWS-COMPATIBLE TESTING:")
+    print("   python scpi_emulator_fixed.py --load scpi_instruments_example.csv --start --verbose")
+    print("   # Now simulates VISA Device Clear (like NI-MAX) on new connections")
+    print("   # Look for logs: [VISA-CLR] = VISA device clear, [CMD]/[RSP] = commands")
     print("")
     print("   telnet localhost 5559   # Connect to debug test instrument")
-    print("   TEST_RANGE?             # Check default value (5)")
-    print("   TEST_RANGE 15           # Should FAIL validation (out of range 1-10)")
-    print("   SYST:ERR?               # Check error queue for validation error")
-    print("   TEST_RANGE 7            # Should PASS validation")  
+    print("   TEST_RANGE?             # Check default value")
+    print("   TEST_RANGE 7            # Set to 7")  
     print("   TEST_RANGE?             # Should return 7")
-    print("   # Disconnect and reconnect to test VISA Device Clear")
-    print("   TEST_RANGE 15           # Should STILL FAIL validation after reconnect!")
+    print("   # THEN disconnect and reconnect to test VISA Device Clear")
+    print("   TEST_RANGE?             # Should return default, not 7!")
     print("")
-    print("✅ Fixed: Validation now survives VISA device clear operations!")
+    print("Watch for: [VISA-CLR] VISA Device Clear logs on new connections!")
 
 
 def main():
-    print("SCPI Equipment Emulator - VERSION 2.2")
-    print("🔧 FIXED: Validation preservation during VISA device clear")
-    print("=" * 60)
+    print("SCPI Equipment Emulator - VERSION 2.1")
+    print("=" * 50)
     
     parser = argparse.ArgumentParser(
-        description='SCPI Equipment Emulator v2.2 - LabVIEW Compatible (VALIDATION FIXED)',
+        description='SCPI Equipment Emulator v2.1 - LabVIEW Compatible (Pure Python)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1149,11 +1138,6 @@ LabVIEW Connection:
 Dependencies:
   - Pure Python 3.6+ (no dependencies for CSV files)
   - For Excel files: pip install openpyxl (optional)
-
-Version 2.2 Fixes:
-  ✅ Validation rules now survive VISA device clear operations
-  ✅ Enhanced validation debugging and error reporting
-  ✅ Preserved stateful command behavior across reconnections
         """
     )
     
