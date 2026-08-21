@@ -8,15 +8,21 @@ A stateful SCPI instrument emulator for developing and testing automation softwa
 physical instruments. The current alpha provides configurable raw-TCP instruments while a new
 standards-oriented SCPI, IEEE 488.2, and PNA/PNA-X engine is developed.
 
+For a detailed, plain-language explanation of the architecture changes and completed-system vision,
+see [From command responder to instrument emulator](docs/foundation-evolution.md).
+
 ## Current capabilities
 
 - Multiple simultaneous raw-TCP instrument endpoints.
 - Strict CSV and optional XLSX instrument definitions.
 - Static command responses and inferred stateful SET/query pairs.
-- Numeric range, enum, and boolean validation with a FIFO error queue.
-- A legacy subset of IEEE 488.2 common commands.
+- A byte-safe SCPI parser and typed command registry with range, unit, enum, and type validation.
+- A bounded FIFO error queue connected to IEEE 488.2 event and status registers.
+- Active `*CLS`, `*OPC`, `*OPC?`, `*WAI`, ESE/SRE/status-byte, trigger, and acquisition behavior.
+- Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
+- Versioned N5222B PNA and N5242B PNA-X hardware, option, license, and capability profiles.
 - Optional Flask/Socket.IO monitoring dashboard.
-- A packaged CLI plus a regression suite for existing behavior.
+- A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 
 ## Current limitations
 
@@ -24,11 +30,13 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 
 - The transport is raw TCP, so VISA clients must use `::SOCKET` resources.
 - VXI-11, HiSLIP, `::INSTR`, serial poll, and asynchronous SRQ are not implemented yet.
-- IEEE status registers, `*OPC`, triggering, and overlapping operations are legacy placeholders.
-- The legacy parser does not yet support full SCPI abbreviation, relative paths, quoted
-  semicolons, units, or binary blocks.
+- Transport-level serial poll and asynchronous SRQ are not implemented yet, although the internal
+  status and request state is modeled.
+- Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
+  quoted strings; typed core commands use the replacement parser.
 - PNA commands currently return configured responses; behavioral PNA/PNA-X applications are on
-  the tracked roadmap.
+  the tracked roadmap. The current 64-command manifest covers the foundation snapshot, not the
+  complete Keysight command tree.
 - The web dashboard is intended for trusted local development environments and is not currently
   hardened for untrusted networks.
 
