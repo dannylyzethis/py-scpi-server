@@ -278,33 +278,18 @@ class SCPIInstrument:
         self.validation_rules = {}
         self.default_values = {}
         
-        # Add standard IEEE 488.2 commands
-        self._add_ieee488_commands()
+        # Commands not yet owned by the typed registry remain on the legacy
+        # dispatcher for CSV compatibility.
+        self._add_legacy_fallback_commands()
 
-    def _add_ieee488_commands(self):
-        """Add standard IEEE 488.2 mandatory commands"""
+    def _add_legacy_fallback_commands(self):
+        """Register only core commands not yet implemented by typed modules."""
         self.commands.update({
-            '*CLS': self._clear_status,
-            '*ESE': self._event_status_enable,
-            '*ESE?': self._event_status_enable_query,
-            '*ESR?': self._event_status_register_query,
             '*IDN?': lambda: f"SCPI_Emulator,{self.name},{self.id},2.3.0",
-            '*OPC': lambda: '1',
-            '*OPC?': lambda: '1',
             '*RST': self._reset,
-            '*SRE': self._service_request_enable,
-            '*SRE?': self._service_request_enable_query,
-            '*STB?': self._status_byte_query,
             '*TST?': self._self_test,
-            '*WAI': lambda: '',
-            'SYST:ERR?': self._system_error_query,
             'SYST:VERS?': lambda: '1999.0',
         })
-
-    def _clear_status(self):
-        """Clear status events and errors without changing instrument configuration."""
-        self.status.clear_status()
-        return ''
 
     def visa_device_clear(self):
         """Simulate VISA Device Clear operation"""
@@ -325,33 +310,8 @@ class SCPIInstrument:
         self.output_queue.clear()
         return ''
 
-    def _event_status_enable(self, value=None):
-        if value is not None:
-            self.status.set_event_status_enable(int(value))
-        return ''
-
-    def _event_status_enable_query(self):
-        return str(self.status.event_status_enable)
-
-    def _event_status_register_query(self):
-        return str(self.status.read_event_status())
-
-    def _service_request_enable(self, value=None):
-        if value is not None:
-            self.status.set_service_request_enable(int(value))
-        return ''
-
-    def _service_request_enable_query(self):
-        return str(self.status.service_request_enable)
-
-    def _status_byte_query(self):
-        return str(self.status.status_byte)
-
     def _self_test(self):
         return '0'
-
-    def _system_error_query(self):
-        return self.error_queue.next_response()
 
     def begin_operation(self, name):
         """Start overlapped work that participates in OPC, OPC?, WAI, and ABORt."""
