@@ -27,6 +27,15 @@ from .operations import (
     OperationTimeout,
     register_operation_commands,
 )
+from .output import (
+    BinaryResponse,
+    ByteOrder,
+    DataEncoding,
+    DataFormat,
+    OutputQueue,
+    OutputQueueFull,
+    register_format_commands,
+)
 from .parser import (
     BinaryBlock,
     Command,
@@ -60,12 +69,16 @@ from .status import (
 
 __all__ = [
     "BinaryBlock",
+    "BinaryResponse",
+    "ByteOrder",
     "AcquisitionChannel",
     "AcquisitionController",
     "AcquisitionState",
     "Command",
     "CommandRegistry",
     "CommandSpec",
+    "DataEncoding",
+    "DataFormat",
     "ErrorCategory",
     "ErrorQueue",
     "EVENT_REGISTER_MASK",
@@ -80,6 +93,8 @@ __all__ = [
     "OperationState",
     "OperationStateError",
     "OperationTimeout",
+    "OutputQueue",
+    "OutputQueueFull",
     "Parameter",
     "ParameterKind",
     "ParameterSpec",
@@ -103,5 +118,6 @@ __all__ = [
     "register_status_commands",
     "register_operation_commands",
     "register_acquisition_commands",
+    "register_format_commands",
     "standard_error",
 ]

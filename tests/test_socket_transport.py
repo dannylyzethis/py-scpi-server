@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument, SCPIServer
+from scpi_emulator.scpi import BinaryResponse
 
 
 def receive_lines(client: socket.socket, count: int) -> list[str]:
@@ -130,3 +131,19 @@ def test_bus_triggered_acquisition_drives_real_opc_handshake(running_server) -> 
 
         client.sendall(b"*TRG\n*OPC?\n*STB?\n*ESR?\n*STB?\n")
         assert receive_lines(client, 4) == ["1", "96", "1", "0"]
+
+
+def test_large_binary_response_survives_fragmented_socket_reads(running_server) -> None:
+    server, port = running_server
+    payload = bytes(range(256)) * 4096
+    expected = BinaryResponse(payload).encode() + b"\n"
+    server.instrument.add_binary_query("CALC:DATA?", payload)
+
+    with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as client:
+        client.settimeout(2)
+        client.sendall(b"CALC:DATA?\n")
+        received = bytearray()
+        while len(received) < len(expected):
+            received.extend(client.recv(min(997, len(expected) - len(received))))
+
+    assert bytes(received) == expected

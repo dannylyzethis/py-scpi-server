@@ -4,6 +4,7 @@ from threading import Thread
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.scpi import OutputQueue
 
 
 @pytest.fixture
@@ -129,6 +130,35 @@ def test_wai_blocks_later_program_units_and_abort_cancels_work(
     thread.join(timeout=1)
     assert not thread.is_alive()
     assert instrument.process_command("*ESR?") == "0"
+
+
+def test_active_output_queue_drives_mav_and_reports_query_interruption(
+    instrument: SCPIInstrument,
+) -> None:
+    instrument.queue_command_response("*IDN?")
+    assert instrument.status.status_byte == 16
+    assert instrument.read_output(5) == b"SCPI_"
+    assert instrument.status.status_byte == 16
+
+    instrument.queue_command_response("SYST:VERS?")
+
+    assert instrument.status.event_status & 4
+    assert instrument.read_output() == b"1999.0\n"
+    assert instrument.status.status_byte == 4
+    assert instrument.process_command("SYST:ERR?") == '-410,"Query INTERRUPTED"'
+    assert instrument.status.status_byte == 0
+
+
+def test_output_capacity_failure_reports_query_deadlock(
+    instrument: SCPIInstrument,
+) -> None:
+    instrument.output_queue = OutputQueue(instrument.status, capacity=8)
+    instrument.add_binary_query("CALC:DATA?", bytes(range(32)))
+
+    assert instrument.queue_command_response("CALC:DATA?") == ""
+    assert instrument.output_queue.message_available is False
+    assert instrument.status.event_status & 4
+    assert instrument.process_command("SYST:ERR?") == '-430,"Query DEADLOCKED"'
 
 
 @pytest.mark.xfail(

@@ -29,14 +29,19 @@ from collections.abc import Sequence
 from . import __version__
 from .scpi import (
     AcquisitionController,
+    BinaryResponse,
     CommandRegistry,
+    DataFormat,
     OperationManager,
+    OutputQueue,
+    OutputQueueFull,
     SCPICommandError,
     SCPIParseError,
     StatusSystem,
     parse_program_message,
     register_operation_commands,
     register_acquisition_commands,
+    register_format_commands,
     register_status_commands,
 )
 
@@ -245,10 +250,13 @@ class SCPIInstrument:
         self.error_queue = self.status.error_queue
         self.operation_manager = OperationManager(self.status)
         self.acquisition = AcquisitionController(self.operation_manager, self.status)
+        self.data_format = DataFormat()
+        self.output_queue = OutputQueue(self.status)
         self.core_registry = CommandRegistry()
         register_status_commands(self.core_registry, self.status)
         register_operation_commands(self.core_registry, self.operation_manager)
         register_acquisition_commands(self.core_registry, self.acquisition)
+        register_format_commands(self.core_registry, self.data_format)
         self.last_command = ""
         self.command_count = 0
         
@@ -290,6 +298,7 @@ class SCPIInstrument:
         
         self.operation_manager.abort()
         self.status.clear_status()
+        self.output_queue.clear()
         self.last_command = ""
         self.command_count = 0
         
@@ -299,6 +308,7 @@ class SCPIInstrument:
         self.operation_manager.abort()
         self.state.clear()
         self.status.clear_status()
+        self.output_queue.clear()
         return ''
 
     def _event_status_enable(self, value=None):
@@ -352,6 +362,33 @@ class SCPIInstrument:
             self.commands[pattern] = self._create_parameterized_response(response, validation)
         else:
             self.commands[command] = lambda resp=response: str(resp)
+
+    def add_binary_query(self, command, data, *, definite=True):
+        """Add a byte-preserving binary query response to the active instrument."""
+        command = command.strip().upper()
+        if not command.endswith('?'):
+            raise ValueError("binary response commands must be queries")
+        payload = bytes(data)
+        self.commands[command] = lambda: BinaryResponse(payload, definite=definite)
+
+    def queue_command_response(self, command):
+        """Execute a program message and leave any response in the output queue."""
+        if self.output_queue:
+            self.output_queue.clear()
+            self.error_queue.push(-410)
+        response = self.process_command(command)
+        if response:
+            try:
+                self.output_queue.enqueue(response)
+            except OutputQueueFull:
+                self.output_queue.clear()
+                self.error_queue.push(-430)
+                return ''
+        return response
+
+    def read_output(self, maximum=None):
+        """Read queued response bytes, preserving MAV until fully drained."""
+        return self.output_queue.read(maximum)
 
     def _create_parameterized_response(self, response_template, validation=None):
         """Create a function for parameterized responses"""
@@ -507,6 +544,8 @@ class SCPIInstrument:
             try:
                 handler = self.commands[command_upper]
                 result = handler()
+                if isinstance(result, (BinaryResponse, bytes, bytearray, memoryview)):
+                    return result
                 return str(result) if result is not None else ''
             except Exception:
                 self.error_queue.push(-310, f"command execution failed; {command}")
@@ -629,7 +668,7 @@ class SCPIServer:
                             try:
                                 command = buffer.decode('utf-8').strip()
                                 if command:
-                                    response = self.instrument.process_command(command)
+                                    response = self.instrument.queue_command_response(command)
                                     
                                     # Log to web dashboard
                                     error = None
@@ -654,9 +693,8 @@ class SCPIServer:
                                             'error': error
                                         })
                                     
-                                    if response:
-                                        response_msg = response + '\n'
-                                        client_socket.sendall(response_msg.encode('utf-8'))
+                                    if self.instrument.output_queue:
+                                        client_socket.sendall(self.instrument.read_output())
                                     
                                 buffer = b''
                                 last_activity = current_time
@@ -685,7 +723,7 @@ class SCPIServer:
                         try:
                             command = command_bytes.decode('utf-8').strip()
                             if command:
-                                response = self.instrument.process_command(command)
+                                response = self.instrument.queue_command_response(command)
                                 
                                 # Log to web dashboard
                                 error = None
@@ -710,9 +748,8 @@ class SCPIServer:
                                         'error': error
                                     })
                                 
-                                if response:
-                                    response_msg = response + '\n'
-                                    client_socket.sendall(response_msg.encode('utf-8'))
+                                if self.instrument.output_queue:
+                                    client_socket.sendall(self.instrument.read_output())
                                 
                         except UnicodeDecodeError:
                             continue
