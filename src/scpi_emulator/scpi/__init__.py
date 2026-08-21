@@ -32,6 +32,14 @@ from .registry import (
     ResolvedCommand,
     SCPICommandError,
 )
+from .status import (
+    EVENT_REGISTER_MASK,
+    STATUS_REGISTER_MASK,
+    StatusByteBit,
+    StatusRegisterGroup,
+    StatusSystem,
+    register_status_commands,
+)
 
 __all__ = [
     "BinaryBlock",
@@ -40,6 +48,7 @@ __all__ = [
     "CommandSpec",
     "ErrorCategory",
     "ErrorQueue",
+    "EVENT_REGISTER_MASK",
     "HeaderSegment",
     "HeaderNode",
     "Invocation",
@@ -55,9 +64,14 @@ __all__ = [
     "ResolvedCommand",
     "SCPICommandError",
     "SCPIErrorRecord",
+    "STATUS_REGISTER_MASK",
     "StandardEventBit",
+    "StatusByteBit",
+    "StatusRegisterGroup",
+    "StatusSystem",
     "classify_error",
     "mnemonic_matches",
     "parse_program_message",
+    "register_status_commands",
     "standard_error",
 ]
