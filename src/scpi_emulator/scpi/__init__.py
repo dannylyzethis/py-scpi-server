@@ -12,16 +12,34 @@ from .parser import (
     mnemonic_matches,
     parse_program_message,
 )
+from .registry import (
+    CommandRegistry,
+    CommandSpec,
+    HeaderNode,
+    Invocation,
+    ParameterSpec,
+    ParameterType,
+    ResolvedCommand,
+    SCPICommandError,
+)
 
 __all__ = [
     "BinaryBlock",
     "Command",
+    "CommandRegistry",
+    "CommandSpec",
     "HeaderSegment",
+    "HeaderNode",
+    "Invocation",
     "NumericValue",
     "Parameter",
     "ParameterKind",
+    "ParameterSpec",
+    "ParameterType",
     "ProgramMessage",
     "SCPIParseError",
+    "ResolvedCommand",
+    "SCPICommandError",
     "mnemonic_matches",
     "parse_program_message",
 ]
