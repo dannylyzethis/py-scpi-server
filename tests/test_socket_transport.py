@@ -72,3 +72,39 @@ def test_cls_preserves_values_and_connection_remains_responsive(running_server) 
         '0,"No error"',
         "SCPI_Emulator,Socket Test,socket_test,2.3.0",
     ]
+
+
+def test_opc_event_handshake_propagates_to_status_byte_over_socket(running_server) -> None:
+    server, port = running_server
+    with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as client:
+        client.settimeout(2)
+        client.sendall(b"*IDN?\n")
+        assert receive_lines(client, 1)[0].startswith("SCPI_Emulator,")
+        sweep = server.instrument.begin_operation("sweep")
+
+        client.sendall(b"*ESE 1\n*SRE 32\n*OPC\n*STB?\n")
+        assert receive_lines(client, 1) == ["0"]
+
+        sweep.complete()
+        client.sendall(b"*STB?\n*ESR?\n*STB?\n")
+        assert receive_lines(client, 3) == ["96", "1", "0"]
+
+
+def test_opc_query_waits_for_prior_socket_operation_without_setting_event(running_server) -> None:
+    server, port = running_server
+    with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as client:
+        client.settimeout(2)
+        client.sendall(b"*IDN?\n")
+        assert receive_lines(client, 1)[0].startswith("SCPI_Emulator,")
+        sweep = server.instrument.begin_operation("sweep")
+
+        client.sendall(b"*OPC?\n")
+        client.settimeout(0.1)
+        with pytest.raises(socket.timeout):
+            client.recv(4096)
+
+        sweep.complete()
+        client.settimeout(2)
+        assert receive_lines(client, 1) == ["1"]
+        client.sendall(b"*ESR?\n")
+        assert receive_lines(client, 1) == ["0"]

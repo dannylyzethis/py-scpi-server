@@ -10,6 +10,14 @@ from .errors import (
     classify_error,
     standard_error,
 )
+from .operations import (
+    OperationHandle,
+    OperationManager,
+    OperationState,
+    OperationStateError,
+    OperationTimeout,
+    register_operation_commands,
+)
 from .parser import (
     BinaryBlock,
     Command,
@@ -54,6 +62,11 @@ __all__ = [
     "Invocation",
     "NumericValue",
     "NO_ERROR",
+    "OperationHandle",
+    "OperationManager",
+    "OperationState",
+    "OperationStateError",
+    "OperationTimeout",
     "Parameter",
     "ParameterKind",
     "ParameterSpec",
@@ -73,5 +86,6 @@ __all__ = [
     "mnemonic_matches",
     "parse_program_message",
     "register_status_commands",
+    "register_operation_commands",
     "standard_error",
 ]

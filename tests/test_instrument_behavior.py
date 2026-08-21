@@ -1,3 +1,6 @@
+from queue import Empty, Queue
+from threading import Thread
+
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument
@@ -66,7 +69,8 @@ def test_cls_clears_status_without_losing_values_or_command_responsiveness(
 ) -> None:
     assert instrument.process_command("VOLT 7.5") == "OK"
     assert instrument.process_command("MODE AC") == "OK"
-    instrument.state.update({"ese": 32, "sre": 4, "esr": 48, "stb": 36})
+    assert instrument.process_command("*ESE 32") == ""
+    assert instrument.process_command("*SRE 4") == ""
     assert instrument.process_command("NOT:A:COMMAND") == ""
 
     assert instrument.process_command("*CLS") == ""
@@ -75,19 +79,56 @@ def test_cls_clears_status_without_losing_values_or_command_responsiveness(
     assert instrument.process_command("MODE?") == "AC"
     assert instrument.process_command("*IDN?").startswith("SCPI_Emulator,")
     assert instrument.process_command("SYST:ERR?") == '0,"No error"'
-    assert instrument.state["ese"] == 32
-    assert instrument.state["sre"] == 4
-    assert "esr" not in instrument.state
-    assert "stb" not in instrument.state
+    assert instrument.process_command("*ESE?") == "32"
+    assert instrument.process_command("*SRE?") == "4"
+    assert instrument.process_command("*ESR?") == "0"
+    assert instrument.process_command("*STB?") == "0"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Legacy exact matching does not parse parameters for IEEE *ESE and *SRE setters",
-)
 def test_ieee_enable_register_setters_accept_parameters(instrument: SCPIInstrument) -> None:
     assert instrument.process_command("*ESE 1") == ""
     assert instrument.process_command("*ESE?") == "1"
+    assert instrument.process_command("*SRE 32") == ""
+    assert instrument.process_command("*SRE?") == "32"
+
+
+def test_opc_event_drives_ese_esb_sre_and_master_summary(
+    instrument: SCPIInstrument,
+) -> None:
+    assert instrument.process_command("*ESE 1") == ""
+    assert instrument.process_command("*SRE 32") == ""
+    sweep = instrument.begin_operation("sweep")
+
+    assert instrument.process_command("*OPC") == ""
+    assert instrument.process_command("*STB?") == "0"
+
+    sweep.complete()
+
+    assert instrument.process_command("*STB?") == "96"
+    assert instrument.process_command("*STB?") == "96"
+    assert instrument.process_command("*ESR?") == "1"
+    assert instrument.process_command("*STB?") == "0"
+
+
+def test_wai_blocks_later_program_units_and_abort_cancels_work(
+    instrument: SCPIInstrument,
+) -> None:
+    sweep = instrument.begin_operation("sweep")
+    responses: Queue[str] = Queue()
+    thread = Thread(
+        target=lambda: responses.put(instrument.process_command("*WAI;*IDN?"))
+    )
+    thread.start()
+
+    with pytest.raises(Empty):
+        responses.get(timeout=0.05)
+
+    assert instrument.process_command("ABOR") == ""
+    assert sweep.done
+    assert responses.get(timeout=1).startswith("SCPI_Emulator,")
+    thread.join(timeout=1)
+    assert not thread.is_alive()
+    assert instrument.process_command("*ESR?") == "0"
 
 
 @pytest.mark.xfail(

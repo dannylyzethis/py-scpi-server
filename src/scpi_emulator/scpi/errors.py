@@ -162,6 +162,11 @@ class ErrorQueue:
         """Implement the response payload for ``SYSTem:ERRor?``."""
         return self.pop().response
 
+    def last_response(self) -> str | None:
+        """Return the newest queued error for monitoring without removing it."""
+        with self._lock:
+            return self._errors[-1].response if self._errors else None
+
     def count_response(self) -> str:
         """Implement the response payload for ``SYSTem:ERRor:COUNt?``."""
         return str(len(self))

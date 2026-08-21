@@ -27,6 +27,16 @@ import os
 from collections.abc import Sequence
 
 from . import __version__
+from .scpi import (
+    CommandRegistry,
+    OperationManager,
+    SCPICommandError,
+    SCPIParseError,
+    StatusSystem,
+    parse_program_message,
+    register_operation_commands,
+    register_status_commands,
+)
 
 # Flask imports
 try:
@@ -229,7 +239,12 @@ class SCPIInstrument:
         self.id = instrument_id
         self.commands = {}
         self.state = {}
-        self.error_queue = []
+        self.status = StatusSystem()
+        self.error_queue = self.status.error_queue
+        self.operation_manager = OperationManager(self.status)
+        self.core_registry = CommandRegistry()
+        register_status_commands(self.core_registry, self.status)
+        register_operation_commands(self.core_registry, self.operation_manager)
         self.last_command = ""
         self.command_count = 0
         
@@ -262,56 +277,57 @@ class SCPIInstrument:
 
     def _clear_status(self):
         """Clear status events and errors without changing instrument configuration."""
-        self.error_queue.clear()
-        self.state.pop('esr', None)
-        self.state.pop('stb', None)
+        self.status.clear_status()
         return ''
 
     def visa_device_clear(self):
         """Simulate VISA Device Clear operation"""
         logger.info(f"[VISA-CLR] VISA Device Clear for {self.name}")
         
-        self.state.clear()
-        self.error_queue.clear()
+        self.operation_manager.abort()
+        self.status.clear_status()
         self.last_command = ""
         self.command_count = 0
         
         self.link_stateful_commands()
 
     def _reset(self):
+        self.operation_manager.abort()
         self.state.clear()
-        self.error_queue.clear()
+        self.status.clear_status()
         return ''
 
     def _event_status_enable(self, value=None):
         if value is not None:
-            self.state['ese'] = int(value)
+            self.status.set_event_status_enable(int(value))
         return ''
 
     def _event_status_enable_query(self):
-        return str(self.state.get('ese', 0))
+        return str(self.status.event_status_enable)
 
     def _event_status_register_query(self):
-        return str(self.state.get('esr', 0))
+        return str(self.status.read_event_status())
 
     def _service_request_enable(self, value=None):
         if value is not None:
-            self.state['sre'] = int(value)
+            self.status.set_service_request_enable(int(value))
         return ''
 
     def _service_request_enable_query(self):
-        return str(self.state.get('sre', 0))
+        return str(self.status.service_request_enable)
 
     def _status_byte_query(self):
-        return str(self.state.get('stb', 0))
+        return str(self.status.status_byte)
 
     def _self_test(self):
         return '0'
 
     def _system_error_query(self):
-        if self.error_queue:
-            return self.error_queue.pop(0)
-        return '0,"No error"'
+        return self.error_queue.next_response()
+
+    def begin_operation(self, name):
+        """Start overlapped work that participates in OPC, OPC?, WAI, and ABORt."""
+        return self.operation_manager.begin(name)
 
     def add_command(self, command, response, validation=None):
         """Add a command-response pair"""
@@ -335,7 +351,7 @@ class SCPIInstrument:
             if args and val:
                 error = self._validate_generic(args[0], val)
                 if error:
-                    self.error_queue.append(error)
+                    self.error_queue.push(error[0], error[1])
                     return ''
             
             response = template
@@ -359,20 +375,20 @@ class SCPIInstrument:
                 min_val, max_val = map(float, range_str.split(','))
                 value = float(param)
                 if not (min_val <= value <= max_val):
-                    return f'-222,"Data out of range; expected {min_val} to {max_val}, got {value}"'
+                    return -222, f"expected {min_val} to {max_val}, got {value}"
             except ValueError:
-                return f'-104,"Data type error; cannot convert \'{param}\' to number"'
+                return -104, f"cannot convert '{param}' to number"
         elif validation.startswith('enum:'):
             try:
                 _, enum_str = validation.split(':', 1)
                 valid_values = [v.strip().upper() for v in enum_str.split(',')]
                 if param.upper() not in valid_values:
-                    return f'-108,"Parameter not allowed; expected one of {valid_values}, got \'{param}\'"'
+                    return -108, f"expected one of {valid_values}, got '{param}'"
             except Exception:
-                return '-108,"Invalid enum format in validation rule"'
+                return -108, "invalid enum format in validation rule"
         elif validation == 'bool':
             if param.upper() not in ['ON', 'OFF', '1', '0']:
-                return f'-108,"Invalid boolean; expected ON/OFF/1/0, got \'{param}\'"'
+                return -108, f"expected ON/OFF/1/0, got '{param}'"
         
         return None
 
@@ -427,7 +443,7 @@ class SCPIInstrument:
                 if validation:
                     error = self._validate_generic(args[0], validation)
                     if error:
-                        self.error_queue.append(error)
+                        self.error_queue.push(error[0], error[1])
                         return ''
                 
                 self.state[key] = args[0]
@@ -465,6 +481,17 @@ class SCPIInstrument:
 
     def _process_single_command(self, command):
         """Process a single SCPI command"""
+        try:
+            parsed = parse_program_message(command).commands[0]
+            return self.core_registry.dispatch(parsed)
+        except SCPIParseError as error:
+            self.error_queue.push(-102, str(error))
+            return ''
+        except SCPICommandError as error:
+            if not error.message.startswith("Undefined header"):
+                self.error_queue.push(error)
+                return ''
+
         command_upper = command.upper()
         
         # Try exact match first
@@ -474,8 +501,7 @@ class SCPIInstrument:
                 result = handler()
                 return str(result) if result is not None else ''
             except Exception:
-                error_msg = f'-113,"Command execution error; {command}"'
-                self.error_queue.append(error_msg)
+                self.error_queue.push(-310, f"command execution failed; {command}")
                 return ''
         
         # Try regex matching for parameterized commands
@@ -492,8 +518,7 @@ class SCPIInstrument:
                 continue
         
         # Command not found
-        error_msg = f'-113,"Undefined header; {command}"'
-        self.error_queue.append(error_msg)
+        self.error_queue.push(-113, command)
         return ''
 
 
@@ -601,7 +626,7 @@ class SCPIServer:
                                     # Log to web dashboard
                                     error = None
                                     if self.instrument.error_queue:
-                                        error = self.instrument.error_queue[-1]
+                                        error = self.instrument.error_queue.last_response()
                                     
                                     command_logger.log_command(
                                         self.instrument.name, 
@@ -657,7 +682,7 @@ class SCPIServer:
                                 # Log to web dashboard
                                 error = None
                                 if self.instrument.error_queue:
-                                    error = self.instrument.error_queue[-1]
+                                    error = self.instrument.error_queue.last_response()
                                 
                                 command_logger.log_command(
                                     self.instrument.name, 
@@ -809,7 +834,7 @@ class WebDashboard:
                     return jsonify({'status': 'error', 'message': 'No command provided'}), 400
                 server = self.manager.servers[instrument_id]
                 response = server.instrument.process_command(command)
-                error = server.instrument.error_queue[-1] if server.instrument.error_queue else None
+                error = server.instrument.error_queue.last_response()
                 self.manager.web_dashboard.emit_command_update(server.instrument.name, command, response or '(no response)', error)
                 return jsonify({'status': 'success', 'message': 'Command sent', 'response': response, 'error': error})
             except Exception as e:
