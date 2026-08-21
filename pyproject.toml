@@ -45,7 +45,7 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-scpi_emulator = ["templates/*.html"]
+scpi_emulator = ["profiles/*.json", "templates/*.html"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"

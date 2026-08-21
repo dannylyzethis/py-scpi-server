@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "snapshot": {
+    "date": "2026-08-20",
+    "help_revision": "A.20.25.xx",
+    "reference_firmware": "A.20.25.04",
+    "firmware_release_date": "2026-07-15"
+  },
+  "compatibility_policy": {
+    "documented_family_pattern": "^A\\.20\\.25\\.[0-9]{2}$",
+    "verified_versions": ["A.20.25.04"],
+    "other_versions": "unverified",
+    "future_versions": "require_new_snapshot",
+    "notes": [
+      "The matrix records documented capability, not completed emulator coverage.",
+      "A model, hardware configuration, and installed application licenses jointly determine command availability.",
+      "DDS revision 7 instruments require A.14.00 or newer; CPU revision 9 instruments require A.15.71 or newer."
+    ]
+  },
+  "sources": {
+    "firmware": "https://www.keysight.com/us/en/lib/software-detail/instrument-firmware-software/n52xxb-pna-series-network-analyzer-firmware.html",
+    "programming_help": "https://helpfiles.keysight.com/csg/N52xxB/Programming/GP-IB_Command_Finder/Command_Finder.htm",
+    "configurations": "https://helpfiles.keysight.com/csg/N52xxB/Support/Configurations.htm",
+    "n5222b_product": "https://www.keysight.com/us/en/product/N5222B/pna-microwave-network-analyzer-900-hz-10-mhz-26-5-ghz.html",
+    "n5242b_product": "https://www.keysight.com/us/en/product/N5242B/pna-x-microwave-network-analyzer-900-hz-10-mhz-26-5-ghz.html"
+  },
+  "applications": {
+    "fixture_removal": {"options": ["S93007A", "S93007B"], "models": ["N5222B", "N5242B"]},
+    "time_domain": {"options": ["S93010A", "S93010B"], "models": ["N5222B", "N5242B"]},
+    "enhanced_time_domain": {"options": ["S93011A", "S93011B"], "models": ["N5222B", "N5242B"]},
+    "measurement_uncertainty": {"options": ["S93015A", "S93015B"], "models": ["N5222B", "N5242B"]},
+    "basic_pulsed_rf": {"options": ["S93025A", "S93025B"], "models": ["N5222B", "N5242B"], "requires_any_hardware": ["021"]},
+    "integrated_pulsed_rf": {"options": ["S93026A", "S93026B"], "models": ["N5222B", "N5242B"], "requires_any_hardware": ["021"]},
+    "noise_figure": {"options": ["S93029A", "S93029B"], "models": ["N5242B"], "requires_software": ["S93080A/B"], "requires_any_hardware": ["219", "222", "224", "419", "422", "423", "425"]},
+    "wideband_iq": {"options": ["S93050B", "S93051B"], "models": ["N5222B", "N5242B"]},
+    "phase_noise": {"options": ["S930317B", "S930321B"], "models": ["N5222B", "N5242B"], "constraint": "serial prefix 6021 or newer"},
+    "modulation_distortion_26_5_ghz": {"options": ["S930702B"], "models": ["N5222B", "N5242B"]},
+    "arbitrary_waveform_generation": {"options": ["S93072B"], "models": ["N5222B", "N5242B"], "constraint": "synthesizer revision 7 or newer"},
+    "frequency_offset": {"options": ["S93080A", "S93080B"], "models": ["N5222B", "N5242B"]},
+    "scalar_mixer": {"options": ["S93082A", "S93082B"], "models": ["N5222B", "N5242B"], "requires_software": ["S93080A/B"]},
+    "frequency_converter": {"options": ["S93083A", "S93083B"], "models": ["N5222B", "N5242B"], "requires_software": ["S93080A/B"]},
+    "embedded_lo": {"options": ["S93084A", "S93084B"], "models": ["N5222B", "N5242B"], "constraint": "requires a converter application"},
+    "gain_compression": {"options": ["S93086A", "S93086B"], "models": ["N5222B", "N5242B"]},
+    "intermodulation_distortion": {"options": ["S93087A", "S93087B"], "models": ["N5222B", "N5242B"], "requires_software": ["S93080A/B"], "excludes_hardware": ["200", "400"]},
+    "source_phase_control": {"options": ["S93088A", "S93088B"], "models": ["N5222B", "N5242B"], "constraint": "four-port configurations only"},
+    "differential_iq": {"options": ["S93089A", "S93089B"], "models": ["N5222B", "N5242B"], "constraint": "four-port configurations only"},
+    "spectrum_analysis_26_5_ghz": {"options": ["S930902A", "S930902B"], "models": ["N5222B", "N5242B"]},
+    "fast_cw": {"options": ["S93118A", "S93118B"], "models": ["N5222B", "N5242B"]},
+    "active_hot_parameters": {"options": ["S93110A", "S93110B", "S93111A", "S93111B"], "models": ["N5242B"], "constraint": "four-port, two-source configuration"},
+    "true_mode_stimulus": {"options": ["S93460A", "S93460B"], "models": ["N5222B", "N5242B"], "constraint": "four-port configurations only"},
+    "n_port": {"options": ["S93551A", "S93551B"], "models": ["N5222B", "N5242B"], "constraint": "compatible external multiport test set required"},
+    "performance_test": {"options": ["S93898A", "S93898B"], "models": ["N5222B", "N5242B"]}
+  },
+  "models": {
+    "N5222B": {
+      "family": "N522xB",
+      "instrument_class": "PNA",
+      "frequency_hz": {"minimum": 10000000, "maximum": 26500000000},
+      "hardware_configurations": {
+        "200": {"ports": 2, "sources": 1, "features": ["base"]},
+        "201": {"ports": 2, "sources": 1, "features": ["front_panel_access", "r1_switch"]},
+        "205": {"ports": 2, "sources": 1, "features": ["front_panel_access", "r1_switch", "low_frequency_extension"]},
+        "217": {"ports": 2, "sources": 1, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators"]},
+        "219": {"ports": 2, "sources": 1, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "bias_tees"]},
+        "220": {"ports": 2, "sources": 1, "features": ["source_attenuators", "receiver_attenuators", "low_frequency_extension"]},
+        "400": {"ports": 4, "sources": 2, "features": ["base"]},
+        "401": {"ports": 4, "sources": 2, "features": ["front_panel_access", "r1_switch"]},
+        "405": {"ports": 4, "sources": 2, "features": ["front_panel_access", "r1_switch", "low_frequency_extension"]},
+        "417": {"ports": 4, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators"]},
+        "419": {"ports": 4, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "bias_tees"]},
+        "420": {"ports": 4, "sources": 2, "features": ["source_attenuators", "receiver_attenuators", "low_frequency_extension"]}
+      },
+      "hardware_addons": ["020", "021", "022", "UNY"],
+      "unsupported_features": ["internal_rf_switches", "internal_combiner", "noise_receiver", "rear_panel_rf_path_access"]
+    },
+    "N5242B": {
+      "family": "N524xB",
+      "instrument_class": "PNA-X",
+      "frequency_hz": {"minimum": 10000000, "maximum": 26500000000},
+      "hardware_configurations": {
+        "201": {"ports": 2, "sources": 1, "features": ["base", "front_panel_access"]},
+        "205": {"ports": 2, "sources": 1, "features": ["front_panel_access", "r1_switch", "low_frequency_extension"]},
+        "217": {"ports": 2, "sources": 1, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators"]},
+        "219": {"ports": 2, "sources": 1, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "bias_tees"]},
+        "222": {"ports": 2, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "combiner", "rf_switches"]},
+        "224": {"ports": 2, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "bias_tees", "combiner", "rf_switches"]},
+        "401": {"ports": 4, "sources": 1, "features": ["base", "front_panel_access"]},
+        "417": {"ports": 4, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators"]},
+        "419": {"ports": 4, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "bias_tees"]},
+        "422": {"ports": 4, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "combiner", "rf_switches"]},
+        "423": {"ports": 4, "sources": 2, "features": ["front_panel_access", "source_attenuators", "receiver_attenuators", "bias_tees", "combiner", "rf_switches"]},
+        "425": {"ports": 4, "sources": 2, "features": ["configurable_test_set", "source_attenuators", "receiver_attenuators", "combiner", "rf_switches", "low_frequency_extension"]}
+      },
+      "hardware_addons": ["020", "021", "022", "UNY", "XSB"],
+      "unsupported_features": []
+    }
+  }
+}
