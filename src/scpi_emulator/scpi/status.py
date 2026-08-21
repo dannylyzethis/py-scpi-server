@@ -214,6 +214,22 @@ def register_status_commands(registry: CommandRegistry, status: StatusSystem) ->
     common("*SRE", lambda invocation: str(status.service_request_enable), query=True)
     common("*STB", lambda invocation: str(status.status_byte), query=True)
 
+    error_path = (HeaderNode("SYSTem"), HeaderNode("ERRor"))
+    registry.register(
+        CommandSpec(
+            path=error_path,
+            handler=lambda invocation: status.error_queue.next_response(),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            path=(*error_path, HeaderNode("COUNt")),
+            handler=lambda invocation: status.error_queue.count_response(),
+            query=True,
+        )
+    )
+
     registry.register(
         CommandSpec(
             path=(HeaderNode("STATus"), HeaderNode("PRESet")),

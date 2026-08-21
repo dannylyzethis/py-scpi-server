@@ -151,6 +151,18 @@ def test_typed_registry_exposes_ieee_and_status_group_commands() -> None:
     assert dispatch(registry, "STAT:OPER:ENAB?") == "4"
 
 
+def test_typed_system_error_queries_cannot_be_masked_by_static_profiles() -> None:
+    status = StatusSystem()
+    registry = CommandRegistry()
+    register_status_commands(registry, status)
+    status.error_queue.push(-222, "outside configured range")
+
+    assert dispatch(registry, "SYST:ERR:COUN?") == "1"
+    assert dispatch(registry, "SYST:ERR?") == '-222,"Data out of range; outside configured range"'
+    assert dispatch(registry, "SYST:ERR:COUN?") == "0"
+    assert dispatch(registry, "SYST:ERR?") == '0,"No error"'
+
+
 def test_stb_query_is_nondestructive_and_cls_is_registered() -> None:
     status = StatusSystem()
     registry = CommandRegistry()

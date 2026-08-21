@@ -53,7 +53,7 @@ def test_command_spec_key_is_stable_across_abbreviations() -> None:
 
 
 @pytest.mark.parametrize("model", ["N5222B", "N5242B"])
-def test_coverage_report_flags_the_next_capability_gap(model: str) -> None:
+def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None:
     manifest = load_command_manifest()
     instrument = SCPIInstrument(f"Keysight {model}", model)
 
@@ -65,9 +65,9 @@ def test_coverage_report_flags_the_next_capability_gap(model: str) -> None:
     )
 
     assert report["summary"]["documented"] == len(manifest.commands)
-    assert report["summary"]["missing"] == 1
-    assert report["missing_command_ids"] == ["common.opt.query"]
-    assert report["summary"]["coverage_percent"] > 95
+    assert report["summary"]["missing"] == 0
+    assert report["missing_command_ids"] == []
+    assert report["summary"]["coverage_percent"] == 100
 
 
 @pytest.mark.parametrize("model", ["N5222B", "N5242B"])

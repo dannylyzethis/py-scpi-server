@@ -9,6 +9,12 @@ from .acquisition import (
     TriggerSource,
     register_acquisition_commands,
 )
+from .capabilities import (
+    CapabilityError,
+    PNACapabilities,
+    detect_pna_model,
+    register_capability_commands,
+)
 from .errors import (
     ErrorCategory,
     ErrorQueue,
@@ -80,6 +86,7 @@ __all__ = [
     "BinaryBlock",
     "BinaryResponse",
     "ByteOrder",
+    "CapabilityError",
     "AcquisitionChannel",
     "AcquisitionController",
     "AcquisitionState",
@@ -111,6 +118,7 @@ __all__ = [
     "ParameterKind",
     "ParameterSpec",
     "ParameterType",
+    "PNACapabilities",
     "ProgramMessage",
     "QUEUE_OVERFLOW",
     "SCPIParseError",
@@ -127,6 +135,7 @@ __all__ = [
     "classify_error",
     "command_spec_key",
     "coverage_report",
+    "detect_pna_model",
     "load_command_manifest",
     "mnemonic_matches",
     "parse_program_message",
@@ -134,6 +143,7 @@ __all__ = [
     "registry_implementation_keys",
     "register_operation_commands",
     "register_acquisition_commands",
+    "register_capability_commands",
     "register_format_commands",
     "standard_error",
 ]

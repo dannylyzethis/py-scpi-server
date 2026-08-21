@@ -38,10 +38,13 @@ from .scpi import (
     SCPICommandError,
     SCPIParseError,
     StatusSystem,
+    PNACapabilities,
+    detect_pna_model,
     parse_program_message,
     register_operation_commands,
     register_acquisition_commands,
     register_format_commands,
+    register_capability_commands,
     register_status_commands,
 )
 
@@ -241,7 +244,7 @@ class ExcelReader:
 class SCPIInstrument:
     """Represents a single SCPI instrument with its command set"""
 
-    def __init__(self, name, instrument_id):
+    def __init__(self, name, instrument_id, *, pna_capabilities=None):
         self.name = name
         self.id = instrument_id
         self.commands = {}
@@ -253,10 +256,16 @@ class SCPIInstrument:
         self.data_format = DataFormat()
         self.output_queue = OutputQueue(self.status)
         self.core_registry = CommandRegistry()
+        model = detect_pna_model(str(name), str(instrument_id))
+        self.pna_capabilities = pna_capabilities
+        if self.pna_capabilities is None and model is not None:
+            self.pna_capabilities = PNACapabilities.create(model)
         register_status_commands(self.core_registry, self.status)
         register_operation_commands(self.core_registry, self.operation_manager)
         register_acquisition_commands(self.core_registry, self.acquisition)
         register_format_commands(self.core_registry, self.data_format)
+        if self.pna_capabilities is not None:
+            register_capability_commands(self.core_registry, self.pna_capabilities)
         self.last_command = ""
         self.command_count = 0
         
@@ -555,7 +564,10 @@ class SCPIInstrument:
         for pattern, handler in self.commands.items():
             try:
                 if '(' in pattern:
-                    match = re.fullmatch(pattern, command_upper)
+                    regex = "(.+)".join(
+                        re.escape(literal) for literal in pattern.split("(.+)")
+                    )
+                    match = re.fullmatch(regex, command_upper)
                     if match:
                         args = match.groups()
                         result = handler(*args)

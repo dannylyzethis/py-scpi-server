@@ -73,8 +73,12 @@ def test_pna_identity_response_is_not_truncated() -> None:
 
     pna = manager.instruments["keysight_pna_n5222b"]["instrument"]
     assert pna.process_command("*IDN?") == (
-        "Keysight Technologies,N5222B,US12345678,A.10.00.00"
+        "Keysight Technologies,N5222B,US12345678,A.20.25.04"
     )
+    assert pna.process_command("SYST:CAP:FREQ:MAX?") == "26500000000"
+    assert pna.process_command("SENS1:FREQ:STOP?") == "26500000000"
+    assert pna.process_command("SENS1:FREQ:STOP 30e9") == ""
+    assert pna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
     assert pna.process_command("CALC1:DATA? FDAT") == "1,-45,0.8,-90,0.6,-135"
 
 

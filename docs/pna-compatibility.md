@@ -69,3 +69,15 @@ python tools/pna_manifest.py --model N5222B --firmware A.20.25.04
 The command exits with status 1 while documented gaps remain, making it suitable for an intentional
 CI coverage gate. Add `--allow-gaps --output reports/pna-coverage-N5222B-A.20.25.04.json` to refresh a
 checked-in report while preserving known gaps.
+
+## Runtime capability profiles
+
+`PNACapabilities.create()` binds a model to one physical hardware configuration, optional hardware
+add-ons, installed application licenses, serial number, and firmware. The same immutable profile
+drives `*IDN?`, `*OPT?`, `SYSTem:CAPability` frequency and hardware queries, port/source catalogs,
+attenuator and receiver-access queries, and license/feature catalogs.
+
+The default profiles are N5222B-200 and N5242B-201. Explicit profiles reject model-incompatible
+hardware, missing application prerequisites, excluded configurations, and port/source constraints.
+`*OPT?` reports traditional three-digit option aliases while `SYST:CAP:LIC:CAT?` reports installed
+product-qualified licenses, matching the distinction made by Keysight firmware.

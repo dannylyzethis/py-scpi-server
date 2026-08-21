@@ -1,6 +1,31 @@
 {
   "implemented_command_ids": [
     "abort",
+    "capability.frequency.maximum.query",
+    "capability.frequency.minimum.query",
+    "capability.hardware.lfe.exists.query",
+    "capability.hardware.ports.catalog.query",
+    "capability.hardware.ports.count.query",
+    "capability.hardware.ports.internal.catalog.query",
+    "capability.hardware.ports.internal.count.query",
+    "capability.hardware.ports.source.catalog.query",
+    "capability.hardware.ports.source.count.query",
+    "capability.hardware.ports.source.internal.catalog.query",
+    "capability.hardware.ports.source.internal.count.query",
+    "capability.hardware.receiver.direct_access.query",
+    "capability.hardware.receiver.internal.count.query",
+    "capability.hardware.receiver_attenuator.exists.query",
+    "capability.hardware.receiver_attenuator.maximum.query",
+    "capability.hardware.receiver_attenuator.step.query",
+    "capability.hardware.source.count.query",
+    "capability.hardware.source_attenuator.exists.query",
+    "capability.hardware.source_attenuator.maximum.query",
+    "capability.hardware.source_attenuator.step.query",
+    "capability.licenses.catalog.query",
+    "capability.licenses.feature.catalog.query",
+    "capability.licenses.feature.enable.query",
+    "capability.preset.frequency.maximum.query",
+    "capability.preset.frequency.minimum.query",
     "common.cls",
     "common.ese.query",
     "common.ese.set",
@@ -8,6 +33,7 @@
     "common.idn.query",
     "common.opc.event",
     "common.opc.query",
+    "common.opt.query",
     "common.rst",
     "common.sre.query",
     "common.sre.set",
@@ -30,6 +56,7 @@
     "sense.sweep.mode.set",
     "sense.sweep.time.query",
     "sense.sweep.time.set",
+    "system.error.count.query",
     "system.error.query",
     "system.version.query",
     "trigger.delay.query",
@@ -39,9 +66,7 @@
     "trigger.source.set"
   ],
   "manifest_schema_version": 1,
-  "missing_command_ids": [
-    "common.opt.query"
-  ],
+  "missing_command_ids": [],
   "schema_version": 1,
   "snapshot": {
     "date": "2026-08-20",
@@ -49,10 +74,10 @@
     "help_revision": "A.20.25.xx"
   },
   "summary": {
-    "coverage_percent": 97.37,
-    "documented": 38,
-    "implemented": 37,
-    "missing": 1
+    "coverage_percent": 100.0,
+    "documented": 64,
+    "implemented": 64,
+    "missing": 0
   },
   "target": {
     "firmware": "A.20.25.04",
@@ -79,6 +104,7 @@
     "STATUS:QUESTIONABLE:NTRANSITION?",
     "STATUS:QUESTIONABLE:PTRANSITION",
     "STATUS:QUESTIONABLE:PTRANSITION?",
+    "SYST:ERR?",
     "TRIGGER:SEQUENCE:SOURCE",
     "TRIGGER:SEQUENCE:SOURCE?"
   ]

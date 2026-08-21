@@ -137,13 +137,13 @@ Agilent 33220A Generator,5558,FREQ (.+),OK,"range:1e-6,50e6"
 ,,TRIG:SOUR (.+),OK,"enum:IMM,EXT,BUS"
 ,,TRIG:SOUR?,IMM,
 ,,SYST:BEEP,OK,
-Keysight N5222B VNA,5559,SENS:FREQ:START (.+),OK,"range:10e3,26.5e9"
+Keysight N5222B VNA,5559,SENS:FREQ:START (.+),OK,"range:10e6,26.5e9"
 ,,SENS:FREQ:START?,1.0E+9,
-,,SENS:FREQ:STOP (.+),OK,"range:10e3,26.5e9"
+,,SENS:FREQ:STOP (.+),OK,"range:10e6,26.5e9"
 ,,SENS:FREQ:STOP?,2.0E+9,
-,,SENS:FREQ:CENT (.+),OK,"range:10e3,26.5e9"
+,,SENS:FREQ:CENT (.+),OK,"range:10e6,26.5e9"
 ,,SENS:FREQ:CENT?,1.5E+9,
-,,SENS:FREQ:SPAN (.+),OK,"range:1,26.5e9"
+,,SENS:FREQ:SPAN (.+),OK,"range:1,26.49e9"
 ,,SENS:FREQ:SPAN?,1.0E+9,
 ,,SENS:SWE:POIN (.+),OK,"range:2,100001"
 ,,SENS:SWE:POIN?,201,
