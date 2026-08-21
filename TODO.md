@@ -4,8 +4,8 @@ Beads (`bd`) is the source of truth for issue status, priority, and dependencies
 
 ## Start here
 
-- [ ] `scpi-001` — Create the canonical `src/scpi_emulator` package, project metadata, and CLI.
-- [ ] `scpi-002` — Characterize current behavior with regression tests before replacing it.
+- [x] `scpi-001` — Create the canonical `src/scpi_emulator` package, project metadata, and CLI.
+- [x] `scpi-002` — Characterize current behavior with regression tests before replacing it.
 - [ ] `scpi-003` — Repair malformed CSV profiles and introduce strict configuration validation.
 - [ ] `scpi-201` — Pin the initial N5222B and N5242B models, firmware families, options, and application matrix.
 
