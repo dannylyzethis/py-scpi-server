@@ -1,5 +1,15 @@
 """SCPI language primitives."""
 
+from .errors import (
+    ErrorCategory,
+    ErrorQueue,
+    NO_ERROR,
+    QUEUE_OVERFLOW,
+    SCPIErrorRecord,
+    StandardEventBit,
+    classify_error,
+    standard_error,
+)
 from .parser import (
     BinaryBlock,
     Command,
@@ -28,18 +38,26 @@ __all__ = [
     "Command",
     "CommandRegistry",
     "CommandSpec",
+    "ErrorCategory",
+    "ErrorQueue",
     "HeaderSegment",
     "HeaderNode",
     "Invocation",
     "NumericValue",
+    "NO_ERROR",
     "Parameter",
     "ParameterKind",
     "ParameterSpec",
     "ParameterType",
     "ProgramMessage",
+    "QUEUE_OVERFLOW",
     "SCPIParseError",
     "ResolvedCommand",
     "SCPICommandError",
+    "SCPIErrorRecord",
+    "StandardEventBit",
+    "classify_error",
     "mnemonic_matches",
     "parse_program_message",
+    "standard_error",
 ]
