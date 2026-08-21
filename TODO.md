@@ -13,7 +13,7 @@ These four tasks can proceed independently and establish the baseline for the re
 
 ## Milestones
 
-- [ ] `scpi-m0` — Maintainable emulator foundation
+- [x] `scpi-m0` — Maintainable emulator foundation
 - [ ] `scpi-m1` — SCPI and IEEE 488.2 core
 - [ ] `scpi-m2` — Versioned PNA/PNA-X capability system
 - [ ] `scpi-m3` — Base PNA measurement engine
