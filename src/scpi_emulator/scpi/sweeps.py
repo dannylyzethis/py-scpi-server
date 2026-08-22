@@ -252,7 +252,15 @@ def register_sweep_commands(registry: CommandRegistry, state: PNASweepSystem) ->
     power_number = ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50))
 
     def add(path, handler, *, query=False, parameters=()):
-        registry.register(CommandSpec(tuple(path), handler, tuple(parameters), query=query))
+        registry.register(
+            CommandSpec(
+                tuple(path),
+                handler,
+                tuple(parameters),
+                query=query,
+                exists=lambda inv: inv.indices.get("channel", 1) in state.measurements.channels,
+            )
+        )
 
     for header, attribute in (
         ("STARt", "frequency_start"),

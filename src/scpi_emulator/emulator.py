@@ -43,6 +43,7 @@ from .scpi import (
     PNAMeasurementSystem,
     PNADataSystem,
     PNASweepSystem,
+    PNAStateFileStore,
     ScalarScenarioSystem,
     detect_pna_model,
     parse_program_message,
@@ -55,6 +56,7 @@ from .scpi import (
     register_pna_data_commands,
     register_sweep_commands,
     register_scalar_commands,
+    register_state_file_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
 
@@ -259,7 +261,7 @@ def _is_dmm(name, instrument_id) -> bool:
 class SCPIInstrument:
     """Represents a single SCPI instrument with its command set"""
 
-    def __init__(self, name, instrument_id, *, pna_capabilities=None):
+    def __init__(self, name, instrument_id, *, pna_capabilities=None, state_directory=None):
         self.name = name
         self.id = instrument_id
         self.commands = {}
@@ -275,6 +277,7 @@ class SCPIInstrument:
         self.pna_measurements = None
         self.pna_sweeps = None
         self.pna_data = None
+        self.pna_state_files = None
         self.scalar_data = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
@@ -300,6 +303,10 @@ class SCPIInstrument:
                 self.pna_measurements, self.data_format, self.pna_capabilities.ports
             )
             register_pna_data_commands(self.core_registry, self.pna_data)
+            self.pna_state_files = PNAStateFileStore(
+                self.pna_measurements, str(instrument_id), state_directory
+            )
+            register_state_file_commands(self.core_registry, self.pna_state_files)
             self.acquisition.add_trigger_listener(self.pna_data.notify_trigger)
             self.acquisition.add_completion_listener(self.pna_data.notify_complete)
         elif _is_dmm(name, instrument_id):

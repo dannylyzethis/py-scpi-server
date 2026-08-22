@@ -156,29 +156,32 @@ def register_pna_data_commands(registry: CommandRegistry, state: PNADataSystem) 
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     data = HeaderNode("DATA")
     access = ParameterSpec(ParameterType.ENUM, choices=("SDATa", "FDATa", "RDATa"))
+    def exists(inv):
+        channel = state.measurements.channels.get(inv.indices.get("channel", 1))
+        return channel is not None and channel.selected in channel.measurements
     registry.register(CommandSpec(
         (calc, data), lambda inv, kind: state.values(inv.indices["channel"], kind),
-        (access,), query=True,
+        (access,), query=True, exists=exists,
     ))
     for kind in ("SDATa", "FDATa", "RDATa"):
         registry.register(CommandSpec(
             (calc, data, HeaderNode(kind)),
             lambda inv, selected=kind: state.values(inv.indices["channel"], selected),
-            query=True,
+            query=True, exists=exists,
         ))
     registry.register(CommandSpec(
         (calc, HeaderNode("MEASure"), data, HeaderNode("X")),
-        lambda inv: state.x_values(inv.indices["channel"]), query=True,
+        lambda inv: state.x_values(inv.indices["channel"]), query=True, exists=exists,
     ))
     registry.register(CommandSpec(
         (calc, HeaderNode("RDATA")),
         lambda inv, receiver: state.receiver_values(inv.indices["channel"], receiver),
-        (ParameterSpec(ParameterType.CHARACTER),), query=True,
+        (ParameterSpec(ParameterType.CHARACTER),), query=True, exists=exists,
     ))
     registry.register(CommandSpec(
         (calc, data, HeaderNode("SNP"), HeaderNode("PORTs")),
         lambda inv, ports: state.snp_values(inv.indices["channel"], ports),
-        (ParameterSpec(ParameterType.STRING),), query=True,
+        (ParameterSpec(ParameterType.STRING),), query=True, exists=exists,
     ))
 
 

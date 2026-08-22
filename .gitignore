@@ -140,3 +140,6 @@ dmypy.json
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Runtime instrument state files
+.scpi-state/

@@ -94,6 +94,7 @@ from .status import (
 )
 from .sweeps import PNASweepChannel, PNASweepSystem, register_sweep_commands
 from .scalar_data import ScalarConfiguration, ScalarScenarioSystem, register_scalar_commands
+from .state_files import PNAStateFileStore, register_state_file_commands
 
 __all__ = [
     "BinaryBlock",
@@ -140,6 +141,7 @@ __all__ = [
     "PNAMeasurementSystem",
     "PNASweepChannel",
     "PNASweepSystem",
+    "PNAStateFileStore",
     "ProgramMessage",
     "QUEUE_OVERFLOW",
     "SCPIParseError",
@@ -174,5 +176,6 @@ __all__ = [
     "register_pna_data_commands",
     "register_scalar_commands",
     "register_sweep_commands",
+    "register_state_file_commands",
     "standard_error",
 ]

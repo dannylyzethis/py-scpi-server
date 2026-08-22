@@ -49,6 +49,7 @@ def test_log_cw_and_power_sweeps_generate_the_expected_x_values() -> None:
 
 def test_if_bandwidth_and_points_drive_acquisition_duration_and_opc_operation() -> None:
     instrument = pna()
+    instrument.process_command('CALC2:PAR:DEF:EXT "CH2_S21","S21"')
     instrument.process_command("SENS2:SWE:POIN 5")
     instrument.process_command("SENS2:BAND 10kHz")
     assert instrument.acquisition.channel(2).sweep_time == pytest.approx(0.0005)
@@ -59,6 +60,7 @@ def test_if_bandwidth_and_points_drive_acquisition_duration_and_opc_operation() 
 
 def test_source_power_is_scoped_by_channel_and_port() -> None:
     instrument = pna()
+    instrument.process_command('CALC2:PAR:DEF:EXT "CH2_S21","S21"')
     instrument.process_command("SOUR2:POW2 -17.5")
     assert instrument.process_command("SOUR2:POW2?") == "-17.5"
     assert instrument.process_command("SOUR2:POW?") == "-10.0"
@@ -97,6 +99,7 @@ def test_segment_lifecycle_builds_axis_and_segment_specific_timing() -> None:
 
 def test_receiver_attenuation_dwell_and_generation_are_channel_scoped() -> None:
     instrument = pna()
+    instrument.process_command('CALC2:PAR:DEF:EXT "CH2_S21","S21"')
     instrument.process_command("SENS2:POW:ATT AREC,20")
     instrument.process_command("SENS2:SWE:GEN STEP")
     instrument.process_command("SENS2:SWE:DWEL 0.001S")

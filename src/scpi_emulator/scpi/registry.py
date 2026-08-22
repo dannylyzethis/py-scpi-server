@@ -106,6 +106,7 @@ class CommandSpec:
     query: bool = False
     common: bool = False
     available: AvailabilityPredicate | None = None
+    exists: AvailabilityPredicate | None = None
     required_capabilities: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
@@ -155,6 +156,7 @@ class CommandRegistry:
     def resolve(self, command: Command) -> ResolvedCommand:
         matches: list[ResolvedCommand] = []
         unavailable = False
+        nonexistent = False
         for specification in self._specifications:
             indices = _match_header(command, specification)
             if indices is None:
@@ -166,11 +168,18 @@ class CommandRegistry:
             if specification.available is not None and not specification.available(invocation):
                 unavailable = True
                 continue
+            if specification.exists is not None and not specification.exists(invocation):
+                nonexistent = True
+                continue
             matches.append(ResolvedCommand(specification, invocation))
 
         if len(matches) > 1:
             raise RuntimeError(f"ambiguous command registry match for {command.header}")
         if not matches:
+            if nonexistent:
+                raise SCPICommandError(
+                    -200, f"Execution error; addressed object does not exist; {command.header}"
+                )
             detail = "Command unavailable" if unavailable else "Undefined header"
             raise SCPICommandError(-113, f"{detail}; {command.header}")
         return matches[0]

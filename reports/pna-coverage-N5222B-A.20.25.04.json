@@ -97,6 +97,10 @@
     "initiate.continuous.query",
     "initiate.continuous.set",
     "initiate.immediate",
+    "memory.catalog.query",
+    "memory.delete",
+    "memory.load.state",
+    "memory.store.state",
     "sense.average.count.query",
     "sense.average.count.set",
     "sense.average.query",
@@ -172,8 +176,8 @@
   },
   "summary": {
     "coverage_percent": 100.0,
-    "documented": 161,
-    "implemented": 161,
+    "documented": 165,
+    "implemented": 165,
     "missing": 0
   },
   "target": {

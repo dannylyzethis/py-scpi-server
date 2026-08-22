@@ -149,6 +149,28 @@ def test_required_capability_and_predicate_guard_commands() -> None:
         assert "Command unavailable" in error.value.message
 
 
+def test_existence_predicate_rejects_address_before_handler() -> None:
+    calls = []
+    registry = CommandRegistry()
+    registry.register(
+        CommandSpec(
+            path=(
+                HeaderNode("CALCulate", index="channel", index_default=1),
+                HeaderNode("DATA"),
+            ),
+            handler=lambda invocation: calls.append(invocation.indices["channel"]),
+            query=True,
+            exists=lambda invocation: invocation.indices["channel"] in {1, 3},
+        )
+    )
+
+    assert registry.dispatch(command("CALC3:DATA?")) is None
+    with pytest.raises(SCPICommandError, match="addressed object does not exist") as error:
+        registry.dispatch(command("CALC2:DATA?"))
+    assert error.value.code == -200
+    assert calls == [3]
+
+
 @pytest.mark.parametrize(
     ("source", "code"),
     [
