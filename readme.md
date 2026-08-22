@@ -14,6 +14,8 @@ The extension boundary for discoverable instrument families is documented in
 [Instrument driver and catalog contract](docs/driver-catalog.md).
 The shared queued-data format and playback rules are documented in
 [Deterministic scenario and queued-data engine](docs/scenario-engine.md).
+Multi-instrument selection, addressing, and startup are documented in
+[Reusable virtual bench composition](docs/virtual-benches.md).
 
 ## Current capabilities
 
@@ -30,6 +32,8 @@ The shared queued-data format and playback rules are documented in
   transport, command-coverage, maturity, and scenario-input metadata.
 - A thread-safe deterministic scenario engine for scalar, trace, table, event, and error streams,
   with read/trigger/operation policies, timing, resettable seeds, JSON, and binary containers.
+- Versioned virtual bench files with catalog-backed model/configuration validation, unique resources,
+  deployment-host overrides, and rollback-safe multi-instrument socket startup.
 - Optional Flask/Socket.IO monitoring dashboard.
 - A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 

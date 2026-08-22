@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Versioned virtual-bench definitions, JSON load/save, catalog-backed transactional composition,
+  resource rendering, deployment-host overrides, and rollback-safe multi-server startup.
 - A generic deterministic scenario engine with queued scalar/trace/table/event/error streams,
   explicit advancement and exhaustion policies, observable timing/playback, and seeded reset.
 - Versioned JSON and compressed-binary scenario codecs with complex and typed binary-vector values.
