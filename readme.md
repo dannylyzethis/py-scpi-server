@@ -12,6 +12,8 @@ For a detailed, plain-language explanation of the architecture changes and compl
 see [From command responder to instrument emulator](docs/foundation-evolution.md).
 The extension boundary for discoverable instrument families is documented in
 [Instrument driver and catalog contract](docs/driver-catalog.md).
+The shared queued-data format and playback rules are documented in
+[Deterministic scenario and queued-data engine](docs/scenario-engine.md).
 
 ## Current capabilities
 
@@ -26,6 +28,8 @@ The extension boundary for discoverable instrument families is documented in
   including model-faithful and all-applications developer modes.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
+- A thread-safe deterministic scenario engine for scalar, trace, table, event, and error streams,
+  with read/trigger/operation policies, timing, resettable seeds, JSON, and binary containers.
 - Optional Flask/Socket.IO monitoring dashboard.
 - A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 

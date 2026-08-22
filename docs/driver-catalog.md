@@ -18,8 +18,8 @@ Each driver provides an immutable `DriverDescriptor` containing:
 
 Support status is explicit. For example, the built-in PNA driver advertises raw TCP sockets as
 implemented, VXI-11 and HiSLIP as planned, and PNA trace/scalar scenario inputs as planned until the
-generic scenario engine is delivered. Catalog presence therefore does not falsely imply that every
-listed capability is complete.
+PNA adapter is delivered by `scpi-303`. The generic scenario engine exists independently; catalog
+presence therefore does not falsely imply that every instrument-specific adapter is complete.
 
 ## Creating an instrument
 

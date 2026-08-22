@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A generic deterministic scenario engine with queued scalar/trace/table/event/error streams,
+  explicit advancement and exhaustion policies, observable timing/playback, and seeded reset.
+- Versioned JSON and compressed-binary scenario codecs with complex and typed binary-vector values.
 - An immutable instrument-driver metadata contract, catalog, model lookup, factory API, and
   `scpi_emulator.drivers` entry-point discovery for external emulator families.
 - A built-in PNA/PNA-X catalog driver derived from the pinned compatibility snapshot.

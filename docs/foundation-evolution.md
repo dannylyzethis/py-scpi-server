@@ -414,13 +414,15 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 174 automated tests pass.
+- 188 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The initial N5222B and N5242B foundation manifests each report 64/64 documented commands.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned PNA capability milestone is complete.
 - The instrument-driver/catalog contract can enumerate built-in and third-party emulator families
   without coupling them to the dashboard or future bench composer.
+- The generic deterministic scenario engine provides shared scalar, trace, table, event, and error
+  playback for future DMM, PNA, and additional instrument adapters.
 
 See [PNA compatibility baseline](pna-compatibility.md) for model and firmware details, and
 [TODO.md](../TODO.md) or `bd ready` for the live implementation backlog.
