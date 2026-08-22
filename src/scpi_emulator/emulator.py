@@ -41,6 +41,7 @@ from .scpi import (
     StatusSystem,
     PNACapabilities,
     PNAMeasurementSystem,
+    PNADataSystem,
     PNASweepSystem,
     detect_pna_model,
     parse_program_message,
@@ -50,6 +51,7 @@ from .scpi import (
     register_capability_commands,
     register_status_commands,
     register_measurement_commands,
+    register_pna_data_commands,
     register_sweep_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
@@ -265,6 +267,7 @@ class SCPIInstrument:
         self.pna_capabilities = pna_capabilities
         self.pna_measurements = None
         self.pna_sweeps = None
+        self.pna_data = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
         registry_capabilities = (
@@ -285,6 +288,12 @@ class SCPIInstrument:
                 self.pna_capabilities, self.pna_measurements, self.acquisition
             )
             register_sweep_commands(self.core_registry, self.pna_sweeps)
+            self.pna_data = PNADataSystem(
+                self.pna_measurements, self.data_format, self.pna_capabilities.ports
+            )
+            register_pna_data_commands(self.core_registry, self.pna_data)
+            self.acquisition.add_trigger_listener(self.pna_data.notify_trigger)
+            self.acquisition.add_completion_listener(self.pna_data.notify_complete)
         self.last_command = ""
         self.command_count = 0
         
@@ -320,10 +329,13 @@ class SCPIInstrument:
     def _reset(self):
         self.operation_manager.abort()
         self.state.clear()
+        self.data_format.reset()
         if self.pna_measurements is not None:
             self.pna_measurements.reset()
         if self.pna_sweeps is not None:
             self.pna_sweeps.reset()
+        if self.pna_data is not None:
+            self.pna_data.reset()
         self.status.clear_status()
         self.output_queue.clear()
         return ''
@@ -338,6 +350,15 @@ class SCPIInstrument:
     def external_trigger(self, channel=None):
         """Inject an external trigger edge into one channel or all waiting channels."""
         return self.acquisition.external_trigger(channel)
+
+    def attach_scenario(self, scenario):
+        """Attach a shared ScenarioDefinition or ScenarioPlayer to this instrument."""
+        from .scenario import ScenarioPlayer
+
+        player = scenario if isinstance(scenario, ScenarioPlayer) else ScenarioPlayer(scenario)
+        if self.pna_data is not None:
+            self.pna_data.attach(player)
+        return player
 
     def add_command(self, command, response, validation=None):
         """Add a command-response pair"""

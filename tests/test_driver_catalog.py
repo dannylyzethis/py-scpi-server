@@ -81,7 +81,11 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
         "vxi-11": SupportLevel.IMPLEMENTED,
         "hislip": SupportLevel.PLANNED,
     }
-    assert all(item.support is SupportLevel.PLANNED for item in descriptor.scenario_inputs)
+    assert {item.kind: item.support for item in descriptor.scenario_inputs} == {
+        "complex-trace": SupportLevel.IMPLEMENTED,
+        "scalar-result": SupportLevel.PLANNED,
+        "event": SupportLevel.PLANNED,
+    }
 
 
 def test_pna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:

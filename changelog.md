@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded model-specific PNA coverage reports from 64 to 154 implemented documented commands.
 - Coherent PNA linear, logarithmic, CW, power, and segmented sweep configuration with frequency
   axes, source power, receiver attenuation, IF bandwidth, dwell, and acquisition-derived timing.
+- PNA adapters over the shared deterministic scenario engine for SDATA, FDATA, RDATA, receiver,
+  SNP, and X-axis queries with ASCII/binary encoding and trigger/operation playback policies.
 - VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
   lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and
   OPC-driven asynchronous SRQ callbacks, verified with PyVISA-Py and native NI-VISA clients.

@@ -113,7 +113,15 @@ class AcquisitionController:
         self._default_trigger_source = TriggerSource.INTERNAL
         self._default_trigger_delay = 0.0
         self._lock = RLock()
+        self._trigger_listeners = []
+        self._completion_listeners = []
         operations.add_abort_listener(self._on_global_abort)
+
+    def add_trigger_listener(self, listener) -> None:
+        self._trigger_listeners.append(listener)
+
+    def add_completion_listener(self, listener) -> None:
+        self._completion_listeners.append(listener)
 
     def channel(self, number: int = 1) -> AcquisitionChannel:
         number = _channel_number(number)
@@ -297,6 +305,8 @@ class AcquisitionController:
             self._update_operation_condition()
             if operation is not None and operation.state is OperationState.PENDING:
                 operation.complete()
+            for listener in tuple(self._completion_listeners):
+                listener(number)
             if channel.sweep_mode is SweepMode.CONTINUOUS and self.auto_progress:
                 generation = channel.generation
                 self._schedule_locked(
@@ -315,6 +325,8 @@ class AcquisitionController:
 
     def _accept_trigger_locked(self, channel: AcquisitionChannel) -> None:
         channel.trigger_received = True
+        for listener in tuple(self._trigger_listeners):
+            listener(channel.number)
         channel.state = AcquisitionState.WAITING
         self._update_operation_condition()
         if channel.trigger_delay == 0:

@@ -101,6 +101,7 @@ def test_data_format_encodes_ascii_and_binary_byte_orders() -> None:
 
 def test_format_commands_control_encoding_and_byte_order() -> None:
     data_format = DataFormat()
+    assert data_format.encoding is DataEncoding.ASCII
     registry = CommandRegistry()
     register_format_commands(registry, data_format)
 

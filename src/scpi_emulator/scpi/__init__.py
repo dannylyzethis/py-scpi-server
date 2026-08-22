@@ -61,6 +61,7 @@ from .output import (
     OutputQueueFull,
     register_format_commands,
 )
+from .pna_data import PNADataSystem, register_pna_data_commands
 from .parser import (
     BinaryBlock,
     Command,
@@ -134,6 +135,7 @@ __all__ = [
     "ParameterSpec",
     "ParameterType",
     "PNACapabilities",
+    "PNADataSystem",
     "PNAMeasurementSystem",
     "PNASweepChannel",
     "PNASweepSystem",
@@ -166,6 +168,7 @@ __all__ = [
     "register_capability_commands",
     "register_format_commands",
     "register_measurement_commands",
+    "register_pna_data_commands",
     "register_sweep_commands",
     "standard_error",
 ]

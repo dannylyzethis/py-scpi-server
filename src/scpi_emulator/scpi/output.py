@@ -51,8 +51,12 @@ class DataEncoding(Enum):
 
 @dataclass
 class DataFormat:
-    encoding: DataEncoding = DataEncoding.REAL64
+    encoding: DataEncoding = DataEncoding.ASCII
     byte_order: ByteOrder = ByteOrder.NORMAL
+
+    def reset(self) -> None:
+        self.encoding = DataEncoding.ASCII
+        self.byte_order = ByteOrder.NORMAL
 
     def configure(self, kind: str, bits: int | None = None) -> None:
         kind = kind.upper()

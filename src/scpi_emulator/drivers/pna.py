@@ -101,7 +101,7 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
         scenario_inputs=(
             ScenarioInputDescriptor(
                 "complex-trace",
-                SupportLevel.PLANNED,
+                SupportLevel.IMPLEMENTED,
                 "Complex receiver or corrected trace samples with an optional stimulus axis.",
             ),
             ScenarioInputDescriptor(

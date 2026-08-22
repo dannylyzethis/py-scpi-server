@@ -111,6 +111,7 @@ class PNASweepSystem:
         with self._lock:
             self.channels.clear()
             self.channel(1)
+            self._synchronize(1)
 
     def channel(self, number: int) -> PNASweepChannel:
         with self._lock:

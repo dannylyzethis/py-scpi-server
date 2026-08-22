@@ -79,7 +79,10 @@ def test_pna_identity_response_is_not_truncated() -> None:
     assert pna.process_command("SENS1:FREQ:STOP?") == "26500000000"
     assert pna.process_command("SENS1:FREQ:STOP 30e9") == ""
     assert pna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
-    assert pna.process_command("CALC1:DATA? FDAT") == "1,-45,0.8,-90,0.6,-135"
+    # Typed PNA data owns this command now; validate sweep shape instead of the old canned row.
+    formatted = pna.process_command("CALC1:DATA? FDAT").split(",")
+    assert len(formatted) == 201
+    assert set(formatted) == {"-inf"}
 
 
 @pytest.mark.parametrize(

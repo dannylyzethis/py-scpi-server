@@ -1,6 +1,11 @@
 {
   "implemented_command_ids": [
     "abort",
+    "calculate.data.fdata.query",
+    "calculate.data.query",
+    "calculate.data.rdata.query",
+    "calculate.data.sdata.query",
+    "calculate.data.snp.ports.query",
     "calculate.equation.text.query",
     "calculate.equation.text.set",
     "calculate.format.query",
@@ -20,6 +25,7 @@
     "calculate.math.interpolate.query",
     "calculate.math.interpolate.set",
     "calculate.math.memorize",
+    "calculate.measure.data.x.query",
     "calculate.parameter.catalog.extended.query",
     "calculate.parameter.define.extended",
     "calculate.parameter.delete",
@@ -30,6 +36,7 @@
     "calculate.parameter.select",
     "calculate.parameter.tnumber.query",
     "calculate.parameter.wnumber.query",
+    "calculate.rdata.query",
     "capability.frequency.maximum.query",
     "capability.frequency.minimum.query",
     "capability.hardware.lfe.exists.query",
@@ -165,8 +172,8 @@
   },
   "summary": {
     "coverage_percent": 100.0,
-    "documented": 154,
-    "implemented": 154,
+    "documented": 161,
+    "implemented": 161,
     "missing": 0
   },
   "target": {

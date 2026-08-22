@@ -9,6 +9,7 @@ def pna() -> SCPIInstrument:
 
 def test_frequency_forms_generate_one_coherent_measurement_axis() -> None:
     instrument = pna()
+    assert len(instrument.pna_measurements.selected(1).stimulus) == 201
     instrument.process_command("SENS:FREQ:STAR 1GHz")
     instrument.process_command("SENS:FREQ:STOP 3GHz")
     instrument.process_command("SENS:SWE:POIN 3")
