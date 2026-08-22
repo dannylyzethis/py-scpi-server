@@ -30,6 +30,8 @@ Multi-instrument selection, addressing, and startup are documented in
   including model-faithful and all-applications developer modes.
 - Stateful PNA channel, measurement, display-window, trace, format, math, marker, limit, and
   equation workflows with indexed and abbreviated SCPI forms.
+- PNA frequency, CW, power, and segment sweep axes with IF-bandwidth/dwell-derived acquisition
+  timing, source-port power, and receiver attenuation.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
 - A thread-safe deterministic scenario engine for scalar, trace, table, event, and error streams,
@@ -48,9 +50,9 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 - HiSLIP and network discovery are not implemented yet.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
-- PNA configuration workflows are stateful, but sweep/stimulus behavior, scenario-backed trace
-  data, file-backed state recall, and behavioral PNA/PNA-X applications remain on the roadmap. The
-  current 108-command manifest is a growing verified snapshot, not the complete Keysight tree.
+- PNA configuration and sweep/stimulus workflows are stateful, but scenario-backed trace data,
+  file-backed state recall, and behavioral PNA/PNA-X applications remain on the roadmap. The
+  current command manifest is a growing verified snapshot, not the complete Keysight tree.
 - The dashboard now requires authentication for non-loopback binds, but it remains a development
   control plane rather than an internet-facing service.
 

@@ -8,6 +8,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from decimal import Decimal
 from threading import RLock
+from typing import Callable
 
 from .parser import NumericValue
 from .registry import (
@@ -115,6 +116,7 @@ class PNAMeasurementSystem:
         self.channels: dict[int, ChannelState] = {}
         self.windows: dict[int, WindowState] = {}
         self.active_window: int | None = None
+        self.axis_provider: Callable[[int], tuple[float, ...]] | None = None
         self._lock = RLock()
         self.reset()
 
@@ -173,6 +175,9 @@ class PNAMeasurementSystem:
                 parameter=parameter,
                 number=channel.next_measurement_number,
             )
+            if self.axis_provider is not None:
+                measurement.stimulus = self.axis_provider(channel_number)
+                measurement.samples = (0j,) * len(measurement.stimulus)
             channel.next_measurement_number += 1
             channel.measurements[name] = measurement
             if channel.selected is None:

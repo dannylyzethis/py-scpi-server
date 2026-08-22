@@ -280,11 +280,12 @@ The versioned PNA command manifest records syntax, model and firmware applicabil
 responses, defaults, supersession metadata, and official documentation provenance. A coverage tool
 compares that snapshot with the active typed registry and produces model-specific reports.
 
-The current reports show 108 of 108 commands implemented for the expanded foundation and PNA
-measurement-lifecycle snapshot. This is not a claim that all PNA commands are complete. The
+The current reports show 154 of 154 commands implemented for the expanded foundation, PNA
+measurement-lifecycle, and sweep snapshot. This is not a claim that all PNA commands are complete. The
 snapshot includes common synchronization, acquisition, identity, option and capability commands,
 plus the first stateful channel, measurement, display, format, math, marker, limit, and equation
-workflows. It will continue expanding with sweeps, data, files, and applications.
+workflows, plus linear, logarithmic, CW, power, and segment sweep configuration. It will continue
+expanding with data, files, and applications.
 
 Why this is better: “supported” becomes measurable against a named model, firmware family, and
 documentation snapshot rather than being inferred from a collection of CSV rows.
@@ -310,14 +311,13 @@ replace that work.
 
 The largest unfinished areas are:
 
-1. PNA stimulus, source, receiver, segment, and sweep behavior.
-2. Deterministic S-parameter and receiver-data generation using the shared scenario engine.
-3. Named-file state save/recall and measurement file operations. Real calibration math and internal
+1. Deterministic S-parameter and receiver-data generation using the shared scenario engine.
+2. Named-file state save/recall and measurement file operations. Real calibration math and internal
    calibration state are deliberately out of scope; correction status remains static.
-5. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
+3. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
    spectrum analysis, IMD, modulation distortion, phase noise, and differential-IQ applications.
-6. HiSLIP and discovery compatibility after the completed VXI-11 `INSTR` foundation.
-7. HiSLIP, discovery, dashboard security, fault injection, packaging, and release hardening.
+4. HiSLIP and discovery compatibility after the completed VXI-11 `INSTR` foundation.
+5. Virtual front panels, fault injection, packaging, and release hardening.
 
 Raw TCP and VXI-11 work today. VXI-11 bridges Device Clear, trigger, locking, abort, serial poll, and
 the internal request state to asynchronous SRQ callbacks. HiSLIP and discovery remain future work.
@@ -414,14 +414,16 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 227 automated tests pass.
+- 235 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
-- The N5222B and N5242B manifests each report 108/108 documented commands in the current snapshot.
+- The N5222B and N5242B manifests each report 154/154 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned PNA capability milestone is complete.
 - The first PNA measurement lifecycle is stateful: channels own uniquely named measurements,
   display traces feed those measurements, selected context remains coherent, and `*RST` restores
   the preset while `*CLS` and Device Clear preserve configuration.
+- Channel stimulus produces coherent linear, logarithmic, CW, power, and segment axes; point count,
+  IF bandwidth, and dwell determine the acquisition duration used by OPC/status handshakes.
 - The instrument-driver/catalog contract can enumerate built-in and third-party emulator families
   without coupling them to the dashboard or future bench composer.
 - The generic deterministic scenario engine provides shared scalar, trace, table, event, and error

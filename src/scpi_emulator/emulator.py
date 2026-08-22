@@ -41,6 +41,7 @@ from .scpi import (
     StatusSystem,
     PNACapabilities,
     PNAMeasurementSystem,
+    PNASweepSystem,
     detect_pna_model,
     parse_program_message,
     register_operation_commands,
@@ -49,6 +50,7 @@ from .scpi import (
     register_capability_commands,
     register_status_commands,
     register_measurement_commands,
+    register_sweep_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
 
@@ -262,6 +264,7 @@ class SCPIInstrument:
         model = detect_pna_model(str(name), str(instrument_id))
         self.pna_capabilities = pna_capabilities
         self.pna_measurements = None
+        self.pna_sweeps = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
         registry_capabilities = (
@@ -278,6 +281,10 @@ class SCPIInstrument:
             register_capability_commands(self.core_registry, self.pna_capabilities)
             self.pna_measurements = PNAMeasurementSystem()
             register_measurement_commands(self.core_registry, self.pna_measurements)
+            self.pna_sweeps = PNASweepSystem(
+                self.pna_capabilities, self.pna_measurements, self.acquisition
+            )
+            register_sweep_commands(self.core_registry, self.pna_sweeps)
         self.last_command = ""
         self.command_count = 0
         
@@ -315,6 +322,8 @@ class SCPIInstrument:
         self.state.clear()
         if self.pna_measurements is not None:
             self.pna_measurements.reset()
+        if self.pna_sweeps is not None:
+            self.pna_sweeps.reset()
         self.status.clear_status()
         self.output_queue.clear()
         return ''

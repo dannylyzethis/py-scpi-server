@@ -91,6 +91,7 @@ from .status import (
     StatusSystem,
     register_status_commands,
 )
+from .sweeps import PNASweepChannel, PNASweepSystem, register_sweep_commands
 
 __all__ = [
     "BinaryBlock",
@@ -134,6 +135,8 @@ __all__ = [
     "ParameterType",
     "PNACapabilities",
     "PNAMeasurementSystem",
+    "PNASweepChannel",
+    "PNASweepSystem",
     "ProgramMessage",
     "QUEUE_OVERFLOW",
     "SCPIParseError",
@@ -163,5 +166,6 @@ __all__ = [
     "register_capability_commands",
     "register_format_commands",
     "register_measurement_commands",
+    "register_sweep_commands",
     "standard_error",
 ]

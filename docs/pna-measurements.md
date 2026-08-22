@@ -66,6 +66,6 @@ the trace activates channel 2 and `Gain`, and later queries observe the same con
 ## Scope boundary
 
 This layer owns existence and configuration relationships. It does not yet model sweep timing,
-stimulus lists, receiver physics, calibration math, or application-specific results. Keeping those
-concerns separate lets the upcoming sweep layer and generic scenario engine supply data without
-rebuilding the channel/measurement/display lifecycle.
+receiver physics, calibration math, or application-specific results. The adjacent sweep layer now
+supplies linear, logarithmic, CW, power, and segment X-axes and deterministic acquisition timing;
+the generic scenario engine will supply the DUT values without rebuilding either state layer.
