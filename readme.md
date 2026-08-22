@@ -3,6 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](MIT%20License.md)
 [![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#current-limitations)
+[![CI](https://github.com/dannylyzethis/py-scpi-server/actions/workflows/ci.yml/badge.svg)](https://github.com/dannylyzethis/py-scpi-server/actions/workflows/ci.yml)
 
 A stateful SCPI instrument emulator for developing and testing automation software without
 physical instruments. The current alpha provides configurable raw-TCP instruments while a new
@@ -54,8 +55,8 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 - HiSLIP and network discovery are not implemented yet.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
-- PNA configuration, sweep/stimulus, and base trace-data workflows are stateful, but file-backed
-  state recall and behavioral PNA/PNA-X applications remain on the roadmap. The
+- PNA configuration, sweep/stimulus, base trace-data workflows, and existence-only named state
+  recall are stateful, but behavioral PNA/PNA-X applications remain on the roadmap. The
   current command manifest is a growing verified snapshot, not the complete Keysight tree.
 - The dashboard now requires authentication for non-loopback binds, but it remains a development
   control plane rather than an internet-facing service.
@@ -72,8 +73,8 @@ Scalar/DMM playback is described in [DMM scenario data](docs/dmm-scenario-data.m
 - `openpyxl` through the `excel` extra for XLSX profiles.
 - Flask and Flask-SocketIO through the `web` extra for the dashboard.
 
-The project is tested with Python 3.14 during local development. CI covers the supported Python
-versions declared in `pyproject.toml`.
+The project is tested with Python 3.14 during local development. CI covers the oldest and newest
+declared Python families on both Linux and Windows.
 
 ## Installation
 
@@ -93,6 +94,9 @@ For development:
 ```bash
 python -m pip install -e ".[all,dev]"
 ```
+
+For the reproducible CI, Docker, coverage, compatibility-report, and release workflow, see
+[Build, verification, and release guide](docs/release.md).
 
 ## Quick start
 
@@ -121,6 +125,13 @@ python -m scpi_emulator --help
 scpi-emulator --version
 scpi-emulator --interactive
 scpi-emulator --load detailed_instruments.csv --start --verbose --log-file emulator.log
+```
+
+Container quick start:
+
+```bash
+docker build -t scpi-emulator .
+docker run --rm -p 5555:5555 -p 5559:5559 scpi-emulator
 ```
 
 ## VISA and socket clients

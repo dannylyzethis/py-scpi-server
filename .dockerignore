@@ -1,0 +1,15 @@
+.git
+.github
+.beads
+.venv
+__pycache__
+*.py[cod]
+*.egg-info
+.coverage
+.pytest_cache
+.scpi-state
+build
+dist
+docs
+reports
+tests

@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[all,dev]"
+      - run: python -m ruff check src tests tools
+      - run: python -m pytest -q
+      - name: PyVISA-Py VXI-11 smoke test
+        run: >-
+          python -m pytest -q
+          tests/test_vxi11_transport.py::test_real_pyvisa_instr_query_clear_trigger_and_serial_poll
+
+  quality:
+    name: Coverage, manifests, and package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[all,dev]"
+      - run: python -m pytest --cov --cov-report=term-missing --cov-fail-under=82 -q
+      - run: python tools/pna_manifest.py --model N5222B --firmware A.20.25.04
+      - run: python tools/pna_manifest.py --model N5242B --firmware A.20.25.04
+      - run: python -m build
+      - run: python -m pip install --force-reinstall --no-deps dist/*.whl
+      - run: scpi-emulator --version
+
+  container:
+    name: Container smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t scpi-emulator:ci .
+      - run: docker run -d --rm --name scpi-emulator-ci -p 5555:5555 scpi-emulator:ci
+      - name: Query the container over raw SCPI
+        run: |
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.monotonic() + 15
+          while True:
+              try:
+                  with socket.create_connection(("127.0.0.1", 5555), timeout=1) as client:
+                      client.sendall(b"*IDN?\n")
+                      response = client.recv(4096).decode().strip()
+                      assert response.startswith("SCPI_Emulator,Keysight 34461A DMM,")
+                      break
+              except OSError:
+                  if time.monotonic() >= deadline:
+                      raise
+                  time.sleep(0.25)
+          PY
+      - if: always()
+        run: docker logs scpi-emulator-ci || true
+      - if: always()
+        run: docker stop scpi-emulator-ci || true
