@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- An immutable instrument-driver metadata contract, catalog, model lookup, factory API, and
+  `scpi_emulator.drivers` entry-point discovery for external emulator families.
+- A built-in PNA/PNA-X catalog driver derived from the pinned compatibility snapshot.
 - Explicit model-faithful and all-applications PNA compatibility modes.
 - Coherent developer profiles that select capable modeled hardware and compatible application
   licenses while preserving truthful identity, option, and hardware queries.

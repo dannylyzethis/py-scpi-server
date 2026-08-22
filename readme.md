@@ -10,6 +10,8 @@ standards-oriented SCPI, IEEE 488.2, and PNA/PNA-X engine is developed.
 
 For a detailed, plain-language explanation of the architecture changes and completed-system vision,
 see [From command responder to instrument emulator](docs/foundation-evolution.md).
+The extension boundary for discoverable instrument families is documented in
+[Instrument driver and catalog contract](docs/driver-catalog.md).
 
 ## Current capabilities
 
@@ -22,6 +24,8 @@ see [From command responder to instrument emulator](docs/foundation-evolution.md
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
 - Versioned N5222B PNA and N5242B PNA-X hardware, option, license, and capability profiles,
   including model-faithful and all-applications developer modes.
+- A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
+  transport, command-coverage, maturity, and scenario-input metadata.
 - Optional Flask/Socket.IO monitoring dashboard.
 - A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 
