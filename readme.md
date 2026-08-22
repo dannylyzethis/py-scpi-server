@@ -34,6 +34,8 @@ Multi-instrument selection, addressing, and startup are documented in
   timing, source-port power, and receiver attenuation.
 - Scenario-backed PNA SDATA, FDATA, RDATA, SNP, and X-axis data in ASCII or IEEE binary formats,
   using the same deterministic playback engine as scalar instruments.
+- A catalog-visible Keysight 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
+  queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
 - A thread-safe deterministic scenario engine for scalar, trace, table, event, and error streams,
@@ -61,6 +63,7 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 See [TODO.md](TODO.md) and `bd ready` for the implementation backlog.
 PNA state semantics are described in [PNA measurement workflows](docs/pna-measurements.md).
 Scenario trace mapping is described in [PNA scenario data](docs/pna-scenario-data.md).
+Scalar/DMM playback is described in [DMM scenario data](docs/dmm-scenario-data.md).
 
 ## Requirements
 

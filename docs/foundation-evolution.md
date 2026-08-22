@@ -413,7 +413,7 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 243 automated tests pass.
+- 250 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The N5222B and N5242B manifests each report 161/161 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
@@ -425,6 +425,9 @@ As of 2026-08-22:
   IF bandwidth, and dwell determine the acquisition duration used by OPC/status handshakes.
 - Selected measurements and receiver/SNP queries consume named complex traces from the generic
   scenario player with shared read, trigger, operation, end, seed, timing, and reset policies.
+- The catalog-visible 34461A reference DMM consumes scalar streams through the same player, proving
+  nominal, drift, range-failure, recovery, exhaustion, trigger/operation, fetch, and reset behavior
+  on a second instrument shape.
 - The instrument-driver/catalog contract can enumerate built-in and third-party emulator families
   without coupling them to the dashboard or future bench composer.
 - The generic deterministic scenario engine provides shared scalar, trace, table, event, and error

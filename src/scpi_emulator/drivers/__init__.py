@@ -16,11 +16,12 @@ from .catalog import (
     TransportDescriptor,
 )
 from .pna import PNA_DRIVER_ID, PNADriver
+from .dmm import DMM_DRIVER_ID, DMMDriver
 
 
 def build_driver_catalog(*, discover_plugins: bool = True) -> DriverCatalog:
     """Create a fresh catalog containing built-ins and optional entry-point drivers."""
-    catalog = DriverCatalog((PNADriver(),))
+    catalog = DriverCatalog((DMMDriver(), PNADriver()))
     if discover_plugins:
         catalog.discover()
     return catalog
@@ -28,12 +29,14 @@ def build_driver_catalog(*, discover_plugins: bool = True) -> DriverCatalog:
 
 __all__ = [
     "DRIVER_ENTRY_POINT_GROUP",
+    "DMM_DRIVER_ID",
     "PNA_DRIVER_ID",
     "CatalogError",
     "CommandCoverage",
     "DriverCatalog",
     "DriverDescriptor",
     "DriverMaturity",
+    "DMMDriver",
     "InstrumentDriver",
     "InstrumentRequest",
     "ModelDescriptor",

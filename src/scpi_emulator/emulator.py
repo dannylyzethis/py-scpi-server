@@ -43,6 +43,7 @@ from .scpi import (
     PNAMeasurementSystem,
     PNADataSystem,
     PNASweepSystem,
+    ScalarScenarioSystem,
     detect_pna_model,
     parse_program_message,
     register_operation_commands,
@@ -53,6 +54,7 @@ from .scpi import (
     register_measurement_commands,
     register_pna_data_commands,
     register_sweep_commands,
+    register_scalar_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
 
@@ -249,6 +251,11 @@ class ExcelReader:
             raise ConfigurationError(f"{csv_path}: unable to read CSV file: {e}") from e
 
 
+def _is_dmm(name, instrument_id) -> bool:
+    identity = f"{name} {instrument_id}".upper()
+    return "DMM" in identity or any(model in identity for model in ("34460", "34461", "34465", "34470"))
+
+
 class SCPIInstrument:
     """Represents a single SCPI instrument with its command set"""
 
@@ -268,6 +275,7 @@ class SCPIInstrument:
         self.pna_measurements = None
         self.pna_sweeps = None
         self.pna_data = None
+        self.scalar_data = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
         registry_capabilities = (
@@ -294,6 +302,9 @@ class SCPIInstrument:
             register_pna_data_commands(self.core_registry, self.pna_data)
             self.acquisition.add_trigger_listener(self.pna_data.notify_trigger)
             self.acquisition.add_completion_listener(self.pna_data.notify_complete)
+        elif _is_dmm(name, instrument_id):
+            self.scalar_data = ScalarScenarioSystem(self.operation_manager)
+            register_scalar_commands(self.core_registry, self.scalar_data)
         self.last_command = ""
         self.command_count = 0
         
@@ -336,6 +347,8 @@ class SCPIInstrument:
             self.pna_sweeps.reset()
         if self.pna_data is not None:
             self.pna_data.reset()
+        if self.scalar_data is not None:
+            self.scalar_data.reset()
         self.status.clear_status()
         self.output_queue.clear()
         return ''
@@ -358,6 +371,8 @@ class SCPIInstrument:
         player = scenario if isinstance(scenario, ScenarioPlayer) else ScenarioPlayer(scenario)
         if self.pna_data is not None:
             self.pna_data.attach(player)
+        if self.scalar_data is not None:
+            self.scalar_data.attach(player)
         return player
 
     def add_command(self, command, response, validation=None):

@@ -9,6 +9,7 @@ from scpi_emulator.drivers import (
     DriverCatalog,
     DriverDescriptor,
     DriverMaturity,
+    DMMDriver,
     InstrumentRequest,
     ModelDescriptor,
     PNADriver,
@@ -70,7 +71,10 @@ class FakeEntryPoint:
 def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
 
-    assert [descriptor.id for descriptor in catalog.descriptors] == ["keysight-pna"]
+    assert [descriptor.id for descriptor in catalog.descriptors] == [
+        "keysight-3446x",
+        "keysight-pna",
+    ]
     driver = catalog.get("KEYSIGHT-PNA")
     descriptor = driver.descriptor
     assert descriptor.maturity is DriverMaturity.ALPHA
@@ -86,6 +90,19 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
         "scalar-result": SupportLevel.PLANNED,
         "event": SupportLevel.PLANNED,
     }
+
+
+def test_builtin_dmm_driver_advertises_and_creates_scalar_scenario_instrument() -> None:
+    driver = DMMDriver()
+    assert driver.descriptor.model("34461a").instrument_class == "DMM"
+    assert driver.descriptor.scenario_inputs[0].support is SupportLevel.IMPLEMENTED
+
+    instrument = driver.create_instrument(InstrumentRequest("meter", "34461A"))
+    assert instrument.scalar_data is not None
+    with pytest.raises(CatalogError, match="no configurable"):
+        driver.create_instrument(
+            InstrumentRequest("meter", "34461A", configuration={"option": "imaginary"})
+        )
 
 
 def test_pna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:

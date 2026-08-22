@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   axes, source power, receiver attenuation, IF bandwidth, dwell, and acquisition-derived timing.
 - PNA adapters over the shared deterministic scenario engine for SDATA, FDATA, RDATA, receiver,
   SNP, and X-axis queries with ASCII/binary encoding and trigger/operation playback policies.
+- A built-in Keysight 34461A reference DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
+  function/range configuration, queued values, trigger/operation policies, errors, and reset.
 - VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
   lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and
   OPC-driven asynchronous SRQ callbacks, verified with PyVISA-Py and native NI-VISA clients.
