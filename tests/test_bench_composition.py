@@ -18,6 +18,7 @@ from scpi_emulator.bench import (
     save_bench,
 )
 from scpi_emulator.drivers import build_driver_catalog
+from scpi_emulator.vxi11_transport import VXI11Server
 
 
 def free_port() -> int:
@@ -153,7 +154,7 @@ def test_unknown_driver_model_transport_and_configuration_fail_transactionally()
             composer.compose(loads_bench(json.dumps(raw)))
 
     unavailable = bench_json(5401, 5402)
-    unavailable["instruments"][1]["resource"]["transport"] = "vxi-11"
+    unavailable["instruments"][1]["resource"]["transport"] = "hislip"
     with pytest.raises(BenchCompositionError, match="planned, not implemented"):
         composer.compose(loads_bench(json.dumps(unavailable)))
 
@@ -229,3 +230,29 @@ def test_failed_second_bind_rolls_back_the_first_server() -> None:
 
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as probe:
         probe.bind(("127.0.0.1", first_port))
+
+
+def test_composed_vxi11_resource_starts_transactionally() -> None:
+    portmapper_port = free_port()
+    definition = BenchDefinition(
+        "vxi-bench",
+        (
+            BenchInstrument(
+                "pna1",
+                "keysight-pna",
+                "N5222B",
+                ResourceAddress("vxi-11", "127.0.0.1", portmapper_port),
+            ),
+        ),
+    )
+    composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
+
+    assert composed.resources() == {"pna1": "TCPIP::127.0.0.1::INSTR"}
+    runtime = composed.start()
+    try:
+        assert isinstance(runtime.servers["pna1"], VXI11Server)
+        assert runtime.servers["pna1"].running is True
+    finally:
+        runtime.stop()
+
+    assert runtime.servers == {}

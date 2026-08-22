@@ -94,7 +94,7 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
                 "TCPIP::{host}::{port}::SOCKET",
                 SupportLevel.IMPLEMENTED,
             ),
-            TransportDescriptor("vxi-11", "TCPIP::{host}::INSTR", SupportLevel.PLANNED),
+            TransportDescriptor("vxi-11", "TCPIP::{host}::INSTR", SupportLevel.IMPLEMENTED),
             TransportDescriptor("hislip", "TCPIP::{host}::hislip0::INSTR", SupportLevel.PLANNED),
         ),
         scenario_inputs=(

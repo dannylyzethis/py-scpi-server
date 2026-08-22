@@ -109,7 +109,7 @@ class BenchComposer:
 
 
 class BenchRuntime:
-    """Rollback-safe collection of raw-socket servers for one composed bench."""
+    """Rollback-safe collection of transport servers for one composed bench."""
 
     def __init__(self, bench: ComposedBench) -> None:
         self.bench = bench
@@ -121,6 +121,7 @@ class BenchRuntime:
 
     def start(self, *, bind_host: str | None = None) -> None:
         from scpi_emulator.emulator import SCPIServer
+        from scpi_emulator.vxi11_transport import VXI11Server
 
         with self._lock:
             if self.running or self.servers:
@@ -128,7 +129,7 @@ class BenchRuntime:
             endpoints: set[tuple[str, int]] = set()
             for composed in self.bench.instruments:
                 resource = composed.definition.resource
-                if resource.transport.casefold() != "raw-socket":
+                if resource.transport.casefold() not in {"raw-socket", "vxi-11"}:
                     raise BenchStartError(
                         f"runtime cannot start transport {resource.transport!r} yet"
                     )
@@ -147,12 +148,19 @@ class BenchRuntime:
                 for composed in self.bench.instruments:
                     resource = composed.definition.resource
                     host = resource.host if bind_host is None else bind_host
-                    server = SCPIServer(
-                        composed.instrument,
-                        self,
-                        host=host,
-                        port=resource.port,
-                    )
+                    if resource.transport.casefold() == "raw-socket":
+                        server = SCPIServer(
+                            composed.instrument,
+                            self,
+                            host=host,
+                            port=resource.port,
+                        )
+                    else:
+                        server = VXI11Server(
+                            composed.instrument,
+                            host=host,
+                            portmapper_port=resource.port,
+                        )
                     if not server.start():
                         server.stop()
                         raise BenchStartError(

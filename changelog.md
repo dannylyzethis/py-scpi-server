@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
+  lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and
+  OPC-driven asynchronous SRQ callbacks, verified with PyVISA-Py and native NI-VISA clients.
 - A local-only-by-default dashboard control plane with required authentication for remote binds,
   CSRF enforcement, same-origin WebSockets, serialized instrument mutations, input bounds, security
   headers, and text-safe rendering of instrument command data.

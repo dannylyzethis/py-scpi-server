@@ -315,12 +315,11 @@ The largest unfinished areas are:
 4. State, memory, Touchstone, and measurement file operations.
 5. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
    spectrum analysis, IMD, modulation distortion, phase noise, and differential-IQ applications.
-6. VXI-11 `INSTR`, device-clear, trigger, lock, serial-poll, and asynchronous SRQ transport behavior.
+6. HiSLIP and discovery compatibility after the completed VXI-11 `INSTR` foundation.
 7. HiSLIP, discovery, dashboard security, fault injection, packaging, and release hardening.
 
-Raw TCP works today, but VXI-11 and HiSLIP are needed for broader VISA `::INSTR` compatibility. The
-internal status/request state is not the same thing as delivering an asynchronous SRQ over those
-transports.
+Raw TCP and VXI-11 work today. VXI-11 bridges Device Clear, trigger, locking, abort, serial poll, and
+the internal request state to asynchronous SRQ callbacks. HiSLIP and discovery remain future work.
 
 ## What the completed emulator should achieve
 
@@ -414,7 +413,7 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 212 automated tests pass.
+- 219 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The initial N5222B and N5242B foundation manifests each report 64/64 documented commands.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.

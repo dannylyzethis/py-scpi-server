@@ -41,8 +41,9 @@ Multi-instrument selection, addressing, and startup are documented in
 
 This release is an alpha foundation, not a complete instrument simulation. In particular:
 
-- The transport is raw TCP, so VISA clients must use `::SOCKET` resources.
-- VXI-11, HiSLIP, `::INSTR`, serial poll, and asynchronous SRQ are not implemented yet.
+- Raw TCP supports VISA `::SOCKET` resources; VXI-11 supports standard `::INSTR` resources,
+  Device Clear, bus trigger, locking, serial poll, abort, and asynchronous SRQ.
+- HiSLIP and network discovery are not implemented yet.
 - Transport-level serial poll and asynchronous SRQ are not implemented yet, although the internal
   status and request state is modeled.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
@@ -117,12 +118,13 @@ scpi-emulator --load detailed_instruments.csv --start --verbose --log-file emula
 
 The current server accepts CR, LF, or CRLF-terminated SCPI messages over a bounded, binary-safe raw
 TCP connection. Each instrument allows one active client session, matching normal instrument
-ownership. Use VISA SOCKET resource names, for example:
+ownership. VISA resource examples are:
 
 ```text
 TCPIP0::localhost::5025::SOCKET
 TCPIP0::localhost::5029::SOCKET
 TCPIP0::localhost::5030::SOCKET
+TCPIP0::localhost::inst0::INSTR
 ```
 
 Example with a plain TCP client:
@@ -134,6 +136,10 @@ with socket.create_connection(("localhost", 5025), timeout=2) as client:
     client.sendall(b"*IDN?\n")
     print(client.recv(4096).decode().strip())
 ```
+
+VXI-11 uses ONC RPC portmapper port 111 by default. A development server may expose its negotiated
+core RPC port directly to PyVISA-Py with
+`TCPIP0::127.0.0.1,<core-port>::inst0::INSTR`, which is useful in unprivileged CI environments.
 
 ## Configuration format
 

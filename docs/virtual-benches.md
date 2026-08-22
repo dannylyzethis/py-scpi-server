@@ -109,9 +109,11 @@ they used different hosts cannot collapse onto the same host/port silently. This
 checked-in bench file to run locally, on a remote development host, or in CI without rewriting model
 and option selections.
 
-Raw sockets are the only startable transport today. VXI-11 and HiSLIP remain visible as planned
-catalog capabilities but are rejected during composition until their transport milestones are
-implemented.
+Raw sockets and VXI-11 are startable transports. For VXI-11, the resource port in a bench definition
+is the local ONC RPC portmapper port—normally 111—and the rendered VISA resource is
+`TCPIP::<host>::INSTR`. Multiple VXI-11 instruments normally use distinct host addresses, as real
+network instruments do. HiSLIP remains a planned catalog capability and is rejected during
+composition until its transport milestone is implemented.
 
 ## Current boundary
 

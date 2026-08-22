@@ -78,7 +78,7 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
     assert descriptor.model("n5242b").instrument_class == "PNA-X"
     assert {item.name: item.support for item in descriptor.transports} == {
         "raw-socket": SupportLevel.IMPLEMENTED,
-        "vxi-11": SupportLevel.PLANNED,
+        "vxi-11": SupportLevel.IMPLEMENTED,
         "hislip": SupportLevel.PLANNED,
     }
     assert all(item.support is SupportLevel.PLANNED for item in descriptor.scenario_inputs)
