@@ -28,6 +28,8 @@ Multi-instrument selection, addressing, and startup are documented in
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
 - Versioned N5222B PNA and N5242B PNA-X hardware, option, license, and capability profiles,
   including model-faithful and all-applications developer modes.
+- Stateful PNA channel, measurement, display-window, trace, format, math, marker, limit, and
+  equation workflows with indexed and abbreviated SCPI forms.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
 - A thread-safe deterministic scenario engine for scalar, trace, table, event, and error streams,
@@ -44,17 +46,16 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 - Raw TCP supports VISA `::SOCKET` resources; VXI-11 supports standard `::INSTR` resources,
   Device Clear, bus trigger, locking, serial poll, abort, and asynchronous SRQ.
 - HiSLIP and network discovery are not implemented yet.
-- Transport-level serial poll and asynchronous SRQ are not implemented yet, although the internal
-  status and request state is modeled.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
-- PNA commands currently return configured responses; behavioral PNA/PNA-X applications are on
-  the tracked roadmap. The current 64-command manifest covers the foundation snapshot, not the
-  complete Keysight command tree.
-- The web dashboard is intended for trusted local development environments and is not currently
-  hardened for untrusted networks.
+- PNA configuration workflows are stateful, but sweep/stimulus behavior, scenario-backed trace
+  data, file-backed state recall, and behavioral PNA/PNA-X applications remain on the roadmap. The
+  current 108-command manifest is a growing verified snapshot, not the complete Keysight tree.
+- The dashboard now requires authentication for non-loopback binds, but it remains a development
+  control plane rather than an internet-facing service.
 
 See [TODO.md](TODO.md) and `bd ready` for the implementation backlog.
+PNA state semantics are described in [PNA measurement workflows](docs/pna-measurements.md).
 
 ## Requirements
 

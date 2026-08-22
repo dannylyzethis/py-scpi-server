@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Stateful PNA channels, measurements, selected context, display windows and traces, formats, math
+  memory, markers, limits, and equations, including indexed and abbreviated CALC/DISP commands.
+- PNA measurement reset semantics that preserve configuration across `*CLS` and Device Clear while
+  restoring a coherent channel-1/S11/window-1 preset on `*RST`.
+- Expanded model-specific PNA coverage reports from 64 to 108 implemented documented commands.
 - VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
   lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and
   OPC-driven asynchronous SRQ callbacks, verified with PyVISA-Py and native NI-VISA clients.

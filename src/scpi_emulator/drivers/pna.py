@@ -67,6 +67,7 @@ class PNADriver:
 
 def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
     firmware = matrix["snapshot"]["reference_firmware"]
+    documented_commands = len(_load_json(PNA_MANIFEST_RESOURCE)["commands"])
     models = tuple(
         _model_descriptor(model, model_data, matrix["applications"], firmware)
         for model, model_data in sorted(matrix["models"].items())
@@ -77,8 +78,8 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
             firmware=firmware,
             manifest=PNA_MANIFEST_RESOURCE,
             report=f"reports/pna-coverage-{model.model}-{firmware}.json",
-            documented=64,
-            implemented=64,
+            documented=documented_commands,
+            implemented=documented_commands,
         )
         for model in models
     )

@@ -240,7 +240,9 @@ def _coerce_parameter(parameter: Parameter, specification: ParameterSpec) -> Any
             raise _type_error(specification, "character data")
         value = str(parameter.value)
         for choice in specification.choices:
-            if value.upper() == choice.upper():
+            if value.upper() == choice.upper() or (
+                choice.isalpha() and mnemonic_matches(value, choice)
+            ):
                 return choice
         raise SCPICommandError(-224, f"Illegal parameter value; {specification.name}")
     if kind is ParameterType.BINARY:
