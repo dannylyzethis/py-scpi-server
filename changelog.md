@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A local-only-by-default dashboard control plane with required authentication for remote binds,
+  CSRF enforcement, same-origin WebSockets, serialized instrument mutations, input bounds, security
+  headers, and text-safe rendering of instrument command data.
 - Hardened raw-SCPI socket transport on the standard port 5025 with bounded binary-aware framing,
   configurable termination, one active session per instrument, timeouts, backpressure, and clean
   shutdown behavior.

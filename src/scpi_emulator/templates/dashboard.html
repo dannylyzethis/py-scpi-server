@@ -364,7 +364,25 @@
     </div>
 
     <script>
-        const socket = io();
+        const csrfToken = {{ csrf_token | tojson }};
+        const authRequired = {{ auth_required | tojson }};
+        let dashboardToken = sessionStorage.getItem('scpi-dashboard-token') || '';
+        if (authRequired && !dashboardToken) {
+            dashboardToken = window.prompt('Dashboard access token') || '';
+            if (dashboardToken) sessionStorage.setItem('scpi-dashboard-token', dashboardToken);
+        }
+        function apiFetch(url, options = {}) {
+            const headers = new Headers(options.headers || {});
+            headers.set('X-SCPI-CSRF', csrfToken);
+            if (dashboardToken) headers.set('Authorization', `Bearer ${dashboardToken}`);
+            return fetch(url, { ...options, headers });
+        }
+        function escapeHtml(value) {
+            const span = document.createElement('span');
+            span.textContent = String(value ?? '');
+            return span.innerHTML;
+        }
+        const socket = io({ auth: { token: dashboardToken } });
 
         // Populate instrument dropdown
         function updateInstrumentSelect(instruments) {
@@ -396,14 +414,14 @@
                     .slice(-3)
                     .map(cmd => `
                         <div class="command-entry animate">
-                            <span class="command">${cmd.command}</span>
-                            <span class="response">→ ${cmd.response}${cmd.error ? ` <span class="log-error">(${cmd.error})</span>` : ''}</span>
+                            <span class="command">${escapeHtml(cmd.command)}</span>
+                            <span class="response">→ ${escapeHtml(cmd.response)}${cmd.error ? ` <span class="log-error">(${escapeHtml(cmd.error)})</span>` : ''}</span>
                         </div>
                     `).join('');
                 return `
                     <div class="instrument-card">
                         <div class="instrument-header">
-                            <div class="instrument-name">🔍 ${inst.name}</div>
+                            <div class="instrument-name">🔍 ${escapeHtml(inst.name)}</div>
                             <div class="status-indicator ${inst.running ? '' : 'stopped'}"></div>
                         </div>
                         <div class="instrument-info">
@@ -427,31 +445,36 @@
                         <div class="recent-commands scrollbar-custom">
                             ${recentCommands || '<div class="command-entry">No recent commands</div>'}
                         </div>
-                        <button class="btn btn-warning" onclick="restartInstrument('${inst.id}')">🔄 Restart</button>
+                        <button class="btn btn-warning restart-instrument" data-index="${data.instruments.indexOf(inst)}">🔄 Restart</button>
                     </div>
                 `;
             }).join('');
             document.getElementById('instruments').innerHTML = instrumentsHtml;
+            document.querySelectorAll('.restart-instrument').forEach(button => {
+                button.addEventListener('click', () => {
+                    restartInstrument(data.instruments[Number(button.dataset.index)].id);
+                });
+            });
         }
 
         // Refresh status
         function refreshStatus() {
             Promise.all([
-                fetch('/api/status').then(res => res.json()),
-                fetch('/api/commands').then(res => res.json())
+                apiFetch('/api/status').then(res => res.json()),
+                apiFetch('/api/commands').then(res => res.json())
             ])
                 .then(([statusData, commandsData]) => {
                     updateStatus({ ...statusData, commands: commandsData });
                     updateInstrumentSelect(statusData.instruments);
                 })
                 .catch(error => {
-                    document.getElementById('status').innerHTML = `Error: ${error.message}`;
+                    document.getElementById('status').textContent = `Error: ${error.message}`;
                 });
         }
 
         // Start all servers
         function startAll() {
-            fetch('/api/start_all', { method: 'POST' })
+            apiFetch('/api/start_all', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
@@ -462,7 +485,7 @@
 
         // Stop all servers
         function stopAll() {
-            fetch('/api/stop_all', { method: 'POST' })
+            apiFetch('/api/stop_all', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
@@ -473,7 +496,7 @@
 
         // Restart individual instrument
         function restartInstrument(instrumentId) {
-            fetch(`/api/restart/${instrumentId}`, { method: 'POST' })
+            apiFetch(`/api/restart/${encodeURIComponent(instrumentId)}`, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
@@ -492,7 +515,7 @@
                 responseEl.classList.add('log-error');
                 return;
             }
-            fetch(`/api/send_command/${instrumentId}`, {
+            apiFetch(`/api/send_command/${encodeURIComponent(instrumentId)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ command })
@@ -522,7 +545,7 @@
             }
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
-            fetch('/api/upload_config', { method: 'POST', body: formData })
+            apiFetch('/api/upload_config', { method: 'POST', body: formData })
                 .then(response => response.json())
                 .then(data => {
                     responseEl.textContent = data.message;
@@ -541,10 +564,13 @@
             const console = document.getElementById('commands');
             const newLine = document.createElement('div');
             newLine.className = `console-line ${data.error ? 'log-error' : data.command.includes('?') ? 'log-info' : 'log-success'}`;
-            newLine.innerHTML = `
-                <span class="timestamp">${data.time_str}</span>
-                <span class="${data.error ? 'log-error' : 'log-info'}">[${data.instrument}] ${data.command} → ${data.response}${data.error ? ` <span class="log-error">(${data.error})</span>` : ''}</span>
-            `;
+            const timestamp = document.createElement('span');
+            timestamp.className = 'timestamp';
+            timestamp.textContent = data.time_str || '';
+            const message = document.createElement('span');
+            message.className = data.error ? 'log-error' : 'log-info';
+            message.textContent = `[${data.instrument}] ${data.command} → ${data.response}${data.error ? ` (${data.error})` : ''}`;
+            newLine.append(timestamp, message);
             console.appendChild(newLine);
             setTimeout(() => newLine.classList.add('animate'), 10);
             console.scrollTop = console.scrollHeight;

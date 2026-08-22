@@ -173,6 +173,7 @@ The repository includes:
 --start, -s           Start configured raw-TCP servers
 --web, -w             Start the optional dashboard
 --web-port PORT       Dashboard port; default 8081
+--web-host HOST       Dashboard bind host; default 127.0.0.1
 --port, -p PORT       First automatically assigned instrument port; default 5025
 --host HOST           Instrument bind host; default localhost
 --create-example      Write scpi_instruments_example.csv in the current directory
@@ -181,6 +182,11 @@ The repository includes:
 --log-file FILE       Also write logs to FILE
 --version             Print the package version
 ```
+
+The dashboard is local-only by default. To bind it to a remote-facing address, set a strong
+`SCPI_EMULATOR_WEB_TOKEN` environment variable and pass `--web-host`; remote API and WebSocket access
+then requires that bearer token. Mutating API requests also use a per-process CSRF token rendered
+into the dashboard page.
 
 ## Development
 

@@ -414,7 +414,7 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 205 automated tests pass.
+- 212 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The initial N5222B and N5242B foundation manifests each report 64/64 documented commands.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.

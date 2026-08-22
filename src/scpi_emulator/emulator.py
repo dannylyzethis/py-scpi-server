@@ -20,6 +20,7 @@ import sys
 import re
 import logging
 import signal
+import secrets
 from pathlib import Path
 from datetime import datetime
 from collections import deque
@@ -771,10 +772,19 @@ class SCPIServer:
             client_socket.sendall(self.instrument.read_output())
             client_socket.settimeout(min(0.1, self.transport_config.accept_poll_interval))
 
+    def execute_control_command(self, command):
+        """Serialize dashboard execution with the physical-style TCP session."""
+        if not self._session_lock.acquire(blocking=False):
+            raise RuntimeError("instrument is busy with an active client session")
+        try:
+            return self.instrument.process_command(command)
+        finally:
+            self._session_lock.release()
+
 class WebDashboard:
     """Flask-based web dashboard for SCPI emulator"""
     
-    def __init__(self, emulator_manager, host='0.0.0.0', port=8081):
+    def __init__(self, emulator_manager, host='127.0.0.1', port=8081, *, auth_token=None):
         if not HAS_FLASK:
             logger.error("Flask not available. Web dashboard disabled.")
             return
@@ -782,21 +792,58 @@ class WebDashboard:
         self.manager = emulator_manager
         self.host = host
         self.port = port
+        self.auth_token = auth_token
+        self.csrf_token = secrets.token_urlsafe(32)
+        self._mutation_lock = threading.RLock()
+        if host not in ('localhost', '127.0.0.1', '::1') and not auth_token:
+            raise ValueError("remote dashboard binding requires an authentication token")
         
         # Create Flask app
         self.app = Flask(__name__)
-        self.app.config['SECRET_KEY'] = 'scpi_emulator_secret_key'
-        self.socketio = SocketIO(self.app, cors_allowed_origins="*")
+        self.app.config['SECRET_KEY'] = secrets.token_hex(32)
+        self.app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+        self.socketio = SocketIO(self.app)
         
         self._setup_routes()
         self._setup_socketio()
         
     def _setup_routes(self):
         """Setup Flask routes"""
+
+        @self.app.before_request
+        def protect_control_plane():
+            if not request.path.startswith('/api/'):
+                return None
+            if self.auth_token:
+                supplied = request.headers.get('Authorization', '')
+                expected = f'Bearer {self.auth_token}'
+                if not secrets.compare_digest(supplied, expected):
+                    return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+            if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}:
+                supplied = request.headers.get('X-SCPI-CSRF', '')
+                if not secrets.compare_digest(supplied, self.csrf_token):
+                    return jsonify({'status': 'error', 'message': 'CSRF validation failed'}), 403
+            return None
+
+        @self.app.after_request
+        def add_security_headers(response):
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.headers['X-Frame-Options'] = 'DENY'
+            response.headers['Referrer-Policy'] = 'no-referrer'
+            response.headers['Content-Security-Policy'] = (
+                "base-uri 'self'; frame-ancestors 'none'; object-src 'none'"
+            )
+            if request.path.startswith('/api/'):
+                response.headers['Cache-Control'] = 'no-store'
+            return response
         
         @self.app.route('/')
         def dashboard():
-            return render_template('dashboard.html')
+            return render_template(
+                'dashboard.html',
+                csrf_token=self.csrf_token,
+                auth_required=bool(self.auth_token),
+            )
         
         @self.app.route('/api/status')
         def api_status():
@@ -839,10 +886,11 @@ class WebDashboard:
             try:
                 if instrument_id in self.manager.servers:
                     server = self.manager.servers[instrument_id]
-                    server.stop()
-                    time.sleep(0.5)
-                    
-                    if server.start():
+                    with self._mutation_lock:
+                        server.stop()
+                        restarted = server.start()
+
+                    if restarted:
                         return jsonify({'status': 'success', 'message': f'Restarted {instrument_id}'})
                     else:
                         return jsonify({'status': 'error', 'message': f'Failed to restart {instrument_id}'}), 500
@@ -856,7 +904,8 @@ class WebDashboard:
         def api_stop_all():
             """Stop all instruments"""
             try:
-                self.manager.stop_all_servers()
+                with self._mutation_lock:
+                    self.manager.stop_all_servers()
                 return jsonify({'status': 'success', 'message': 'All servers stopped'})
             except Exception as e:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -865,7 +914,9 @@ class WebDashboard:
         def api_start_all():
             """Start all instruments"""
             try:
-                if self.manager.start_all_servers():
+                with self._mutation_lock:
+                    started = self.manager.start_all_servers()
+                if started:
                     return jsonify({'status': 'success', 'message': 'All servers started'})
                 else:
                     return jsonify({'status': 'error', 'message': 'Failed to start some servers'}), 500
@@ -877,11 +928,22 @@ class WebDashboard:
             try:
                 if instrument_id not in self.manager.servers:
                     return jsonify({'status': 'error', 'message': f'Instrument {instrument_id} not found'}), 404
-                command = request.json.get('command', '').strip()
+                payload = request.get_json(silent=True)
+                if not request.is_json or not isinstance(payload, dict):
+                    return jsonify({'status': 'error', 'message': 'JSON object required'}), 415
+                command = payload.get('command', '')
+                if not isinstance(command, str):
+                    return jsonify({'status': 'error', 'message': 'Command must be text'}), 400
+                command = command.strip()
                 if not command:
                     return jsonify({'status': 'error', 'message': 'No command provided'}), 400
+                if len(command.encode('utf-8')) > 1024 * 1024:
+                    return jsonify({'status': 'error', 'message': 'Command is too large'}), 413
                 server = self.manager.servers[instrument_id]
-                response = server.instrument.process_command(command)
+                try:
+                    response = server.execute_control_command(command)
+                except RuntimeError as exc:
+                    return jsonify({'status': 'error', 'message': str(exc)}), 409
                 error = server.instrument.error_queue.last_response()
                 self.manager.web_dashboard.emit_command_update(server.instrument.name, command, response or '(no response)', error)
                 return jsonify({'status': 'success', 'message': 'Command sent', 'response': response, 'error': error})
@@ -894,7 +956,11 @@ class WebDashboard:
         """Setup WebSocket events for real-time updates"""
         
         @self.socketio.on('connect')
-        def handle_connect():
+        def handle_connect(auth=None):
+            if self.auth_token:
+                supplied = auth.get('token', '') if isinstance(auth, dict) else ''
+                if not secrets.compare_digest(supplied, self.auth_token):
+                    return False
             logger.info("Web client connected")
         
         @self.socketio.on('disconnect')
@@ -1154,13 +1220,13 @@ class SCPIEmulatorManager:
         self.running = False
         logger.info("All servers stopped")
 
-    def start_web_dashboard(self, host='0.0.0.0', port=8081):
+    def start_web_dashboard(self, host='127.0.0.1', port=8081, *, auth_token=None):
         """Start the web dashboard"""
         if not HAS_FLASK:
             logger.warning("Flask not available. Cannot start web dashboard.")
             return False
             
-        self.web_dashboard = WebDashboard(self, host, port)
+        self.web_dashboard = WebDashboard(self, host, port, auth_token=auth_token)
         return self.web_dashboard.start()
 
     def interactive_mode(self):
@@ -1400,6 +1466,7 @@ def build_parser():
     parser.add_argument('--start', '-s', action='store_true', help='Start TCP servers immediately')
     parser.add_argument('--web', '-w', action='store_true', help='Start web dashboard')
     parser.add_argument('--web-port', type=int, default=8081, help='Web dashboard port (default: 8081)')
+    parser.add_argument('--web-host', default='127.0.0.1', help='Dashboard bind host (default: 127.0.0.1)')
     parser.add_argument('--port', '-p', type=int, default=5025, help='Starting port for instruments (default: 5025)')
     parser.add_argument('--host', default='localhost', help='Server host (default: localhost)')
     parser.add_argument('--create-example', action='store_true', help='Create example CSV file')
@@ -1436,7 +1503,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         
         # Start web dashboard if requested
         if args.web:
-            if not manager.start_web_dashboard('0.0.0.0', args.web_port):
+            if not manager.start_web_dashboard(
+                args.web_host,
+                args.web_port,
+                auth_token=os.environ.get('SCPI_EMULATOR_WEB_TOKEN'),
+            ):
                 logger.warning("Failed to start web dashboard")
     
     # Start interactive mode
