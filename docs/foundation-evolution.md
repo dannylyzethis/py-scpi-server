@@ -414,7 +414,7 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 197 automated tests pass.
+- 205 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The initial N5222B and N5242B foundation manifests each report 64/64 documented commands.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
@@ -423,6 +423,8 @@ As of 2026-08-22:
   without coupling them to the dashboard or future bench composer.
 - The generic deterministic scenario engine provides shared scalar, trace, table, event, and error
   playback for future DMM, PNA, and additional instrument adapters.
+- Raw socket transport now provides bounded binary-aware framing, one active session per instrument,
+  configurable termination, timeouts, and clean shutdown on the standard port 5025.
 - Versioned virtual bench files can select catalog instruments, validate configurations and resource
   conflicts, and start equivalent local, remote-hosted, or CI socket benches transactionally.
 

@@ -6,7 +6,18 @@ from types import SimpleNamespace
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument, SCPIServer
-from scpi_emulator.scpi import BinaryResponse
+from scpi_emulator.scpi import (
+    BinaryResponse,
+    CommandSpec,
+    HeaderNode,
+    ParameterSpec,
+    ParameterType,
+)
+from scpi_emulator.socket_transport import (
+    MessageTooLarge,
+    SocketMessageFramer,
+    SocketTransportConfig,
+)
 
 
 def receive_lines(client: socket.socket, count: int) -> list[str]:
@@ -147,3 +158,159 @@ def test_large_binary_response_survives_fragmented_socket_reads(running_server) 
             received.extend(client.recv(min(997, len(expected) - len(received))))
 
     assert bytes(received) == expected
+
+
+def test_framer_preserves_terminators_in_quotes_and_definite_blocks() -> None:
+    framer = SocketMessageFramer(SocketTransportConfig())
+
+    assert framer.feed(b'DISP:TEXT "first\nsecond"\nMMEM:DATA #15a\r\nb') == (
+        b'DISP:TEXT "first\nsecond"',
+    )
+    assert framer.feed(b'c\n*IDN?\r\n') == (b'MMEM:DATA #15a\r\nbc', b'*IDN?')
+
+
+def test_framer_enforces_per_message_bound_without_rejecting_command_chains() -> None:
+    config = SocketTransportConfig(max_message_size=8)
+    framer = SocketMessageFramer(config)
+
+    assert framer.feed(b"A\nB\nC\nD\nE\n") == (b"A", b"B", b"C", b"D", b"E")
+    with pytest.raises(MessageTooLarge):
+        framer.feed(b"123456789")
+
+    with pytest.raises(MessageTooLarge):
+        SocketMessageFramer(config).feed(b"DATA #299")
+
+
+def test_configurable_read_and_write_termination() -> None:
+    instrument = SCPIInstrument("Terminator Test", "terminator_test")
+    manager = SimpleNamespace(web_dashboard=None)
+    config = SocketTransportConfig(
+        read_terminations=(b"\0",),
+        write_termination=b"\r\n",
+        idle_frame_timeout=None,
+    )
+    server = SCPIServer(
+        instrument,
+        manager,
+        host="127.0.0.1",
+        port=0,
+        transport_config=config,
+    )
+    assert server.start()
+    try:
+        with closing(socket.create_connection(("127.0.0.1", server.port), timeout=2)) as client:
+            client.settimeout(2)
+            client.sendall(b"SYST:VERS?\0")
+            assert client.recv(64) == b"1999.0\r\n"
+    finally:
+        server.stop()
+
+
+def test_definite_binary_command_is_dispatched_without_text_decoding() -> None:
+    instrument = SCPIInstrument("Binary Input", "binary_input")
+    instrument.core_registry.register(
+        CommandSpec(
+            path=(HeaderNode("MMEMory"), HeaderNode("DATA")),
+            parameters=(ParameterSpec(ParameterType.BINARY, "data"),),
+            handler=lambda invocation, data: str(len(data)),
+        )
+    )
+    manager = SimpleNamespace(web_dashboard=None)
+    server = SCPIServer(instrument, manager, host="127.0.0.1", port=0)
+    assert server.start()
+    payload = b"a\n\r;\xff"
+    block = b"#1" + str(len(payload)).encode("ascii") + payload
+    try:
+        with closing(socket.create_connection(("127.0.0.1", server.port), timeout=2)) as client:
+            client.settimeout(2)
+            client.sendall(b"MMEM:DATA " + block + b"\n")
+            assert client.recv(64) == b"5\n"
+    finally:
+        server.stop()
+
+
+def test_additional_client_is_rejected_while_session_is_active(running_server) -> None:
+    _, port = running_server
+    with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as first:
+        first.settimeout(2)
+        first.sendall(b"*IDN?\n")
+        assert receive_lines(first, 1)[0].startswith("SCPI_Emulator,")
+
+        with closing(socket.create_connection(("127.0.0.1", port), timeout=2)) as second:
+            second.settimeout(2)
+            second.sendall(b"SYST:VERS?\n")
+            try:
+                rejected = second.recv(64)
+            except (ConnectionAbortedError, ConnectionResetError):
+                rejected = b""
+            assert rejected == b""
+
+        first.sendall(b"SYST:VERS?\n")
+        assert receive_lines(first, 1) == ["1999.0"]
+
+
+def test_idle_session_closes_and_releases_instrument() -> None:
+    instrument = SCPIInstrument("Idle Test", "idle_test")
+    manager = SimpleNamespace(web_dashboard=None)
+    config = SocketTransportConfig(client_idle_timeout=0.15)
+    server = SCPIServer(
+        instrument,
+        manager,
+        host="127.0.0.1",
+        port=0,
+        transport_config=config,
+    )
+    assert server.start()
+    try:
+        with closing(socket.create_connection(("127.0.0.1", server.port), timeout=2)) as first:
+            first.settimeout(2)
+            assert first.recv(64) == b""
+        with closing(socket.create_connection(("127.0.0.1", server.port), timeout=2)) as second:
+            second.settimeout(2)
+            second.sendall(b"SYST:VERS?\n")
+            assert second.recv(64) == b"1999.0\n"
+    finally:
+        server.stop()
+
+
+def test_stop_closes_active_session_and_listener(running_server) -> None:
+    server, port = running_server
+    client = socket.create_connection(("127.0.0.1", port), timeout=2)
+    client.settimeout(2)
+    client.sendall(b"*IDN?\n")
+    assert receive_lines(client, 1)
+
+    server.stop()
+
+    assert client.recv(64) == b""
+    assert not server.thread.is_alive()
+    assert not server._client_thread.is_alive()
+    client.close()
+    with pytest.raises(OSError):
+        socket.create_connection(("127.0.0.1", port), timeout=0.2)
+
+
+def test_stalled_reader_is_bounded_by_send_timeout() -> None:
+    class StalledClient:
+        def __init__(self) -> None:
+            self.timeouts = []
+
+        def settimeout(self, value) -> None:
+            self.timeouts.append(value)
+
+        def sendall(self, data) -> None:
+            raise socket.timeout("simulated stalled reader")
+
+    instrument = SCPIInstrument("Backpressure Test", "backpressure_test")
+    config = SocketTransportConfig(send_timeout=0.25)
+    server = SCPIServer(
+        instrument,
+        SimpleNamespace(web_dashboard=None),
+        transport_config=config,
+    )
+    client = StalledClient()
+
+    with pytest.raises(socket.timeout, match="stalled reader"):
+        server._execute_message(client, b"*IDN?")
+
+    assert client.timeouts == [0.25]

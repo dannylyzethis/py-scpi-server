@@ -109,10 +109,11 @@ class OutputQueue:
         response: str | bytes | bytearray | memoryview | BinaryResponse,
         *,
         terminate: bool = True,
+        termination: bytes = b"\n",
     ) -> int:
         data = _response_bytes(response)
         if terminate:
-            data += b"\n"
+            data += bytes(termination)
         with self._lock:
             if self._byte_count + len(data) > self.capacity:
                 raise OutputQueueFull(

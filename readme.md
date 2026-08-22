@@ -115,13 +115,14 @@ scpi-emulator --load detailed_instruments.csv --start --verbose --log-file emula
 
 ## VISA and socket clients
 
-The current server accepts newline-terminated SCPI text over raw TCP. Use VISA SOCKET resource
-names, for example:
+The current server accepts CR, LF, or CRLF-terminated SCPI messages over a bounded, binary-safe raw
+TCP connection. Each instrument allows one active client session, matching normal instrument
+ownership. Use VISA SOCKET resource names, for example:
 
 ```text
-TCPIP0::localhost::5555::SOCKET
-TCPIP0::localhost::5559::SOCKET
-TCPIP0::localhost::5560::SOCKET
+TCPIP0::localhost::5025::SOCKET
+TCPIP0::localhost::5029::SOCKET
+TCPIP0::localhost::5030::SOCKET
 ```
 
 Example with a plain TCP client:
@@ -129,7 +130,7 @@ Example with a plain TCP client:
 ```python
 import socket
 
-with socket.create_connection(("localhost", 5555), timeout=2) as client:
+with socket.create_connection(("localhost", 5025), timeout=2) as client:
     client.sendall(b"*IDN?\n")
     print(client.recv(4096).decode().strip())
 ```
@@ -172,7 +173,7 @@ The repository includes:
 --start, -s           Start configured raw-TCP servers
 --web, -w             Start the optional dashboard
 --web-port PORT       Dashboard port; default 8081
---port, -p PORT       First automatically assigned instrument port; default 5555
+--port, -p PORT       First automatically assigned instrument port; default 5025
 --host HOST           Instrument bind host; default localhost
 --create-example      Write scpi_instruments_example.csv in the current directory
 --interactive, -i     Open the manager shell

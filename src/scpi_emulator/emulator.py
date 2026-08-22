@@ -47,6 +47,7 @@ from .scpi import (
     register_capability_commands,
     register_status_commands,
 )
+from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
 
 # Flask imports
 try:
@@ -345,7 +346,7 @@ class SCPIInstrument:
         payload = bytes(data)
         self.commands[command] = lambda: BinaryResponse(payload, definite=definite)
 
-    def queue_command_response(self, command):
+    def queue_command_response(self, command, *, termination=b'\n'):
         """Execute a program message and leave any response in the output queue."""
         if self.output_queue:
             self.output_queue.clear()
@@ -353,7 +354,11 @@ class SCPIInstrument:
         response = self.process_command(command)
         if response:
             try:
-                self.output_queue.enqueue(response)
+                self.output_queue.enqueue(
+                    response,
+                    terminate=bool(termination),
+                    termination=termination,
+                )
             except OutputQueueFull:
                 self.output_queue.clear()
                 self.error_queue.push(-430)
@@ -480,12 +485,19 @@ class SCPIInstrument:
 
     def process_command(self, command):
         """Process a SCPI command and return response"""
-        self.last_command = command
+        self.last_command = (
+            command.decode('utf-8', errors='replace') if isinstance(command, bytes) else command
+        )
         self.command_count += 1
         
         command = command.strip()
         if not command:
             return ''
+
+        # Byte input is used for binary-safe typed commands. The legacy fallback
+        # remains text-only until it is retired under scpi-604.
+        if isinstance(command, bytes):
+            return self._process_single_command(command)
         
         # Handle command chains
         if ';' in command:
@@ -511,6 +523,12 @@ class SCPIInstrument:
                 self.error_queue.push(error)
                 return ''
 
+        if isinstance(command, bytes):
+            try:
+                command = command.decode('utf-8')
+            except UnicodeDecodeError:
+                self.error_queue.push(-102, "binary data is not valid for a legacy command")
+                return ''
         command_upper = command.upper()
         
         # Try exact match first
@@ -547,17 +565,29 @@ class SCPIInstrument:
 
 
 class SCPIServer:
-    """TCP server for a single SCPI instrument"""
+    """Binary-safe TCP server for a single SCPI instrument session."""
 
-    def __init__(self, instrument, manager, host='localhost', port=5555):
+    def __init__(
+        self,
+        instrument,
+        manager,
+        host='localhost',
+        port=5025,
+        *,
+        transport_config=None,
+    ):
         self.instrument = instrument
-        self.manager = manager  # Store the manager
+        self.manager = manager
         self.host = host
         self.port = port
+        self.transport_config = transport_config or SocketTransportConfig()
         self.socket = None
         self.running = False
         self.clients = []
         self.thread = None
+        self._client_thread = None
+        self._clients_lock = threading.RLock()
+        self._session_lock = threading.Lock()
         
     def start(self):
         """Start the TCP server"""
@@ -565,7 +595,9 @@ class SCPIServer:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.bind((self.host, self.port))
-            self.socket.listen(5)
+            self.socket.listen(self.transport_config.backlog)
+            self.socket.settimeout(self.transport_config.accept_poll_interval)
+            self.port = self.socket.getsockname()[1]
             self.running = True
             
             self.thread = threading.Thread(target=self._server_loop, daemon=True)
@@ -576,25 +608,40 @@ class SCPIServer:
             
         except Exception as e:
             logger.error(f"Failed to start server for {self.instrument.name}: {e}")
+            if self.socket:
+                self.socket.close()
+                self.socket = None
             return False
 
     def stop(self):
         """Stop the TCP server"""
         self.running = False
-        
-        for client in self.clients[:]:
-            try:
-                client.close()
-            except OSError:
-                pass
-        self.clients.clear()
-        
+
         if self.socket:
             try:
                 self.socket.close()
             except OSError:
                 pass
-        
+            self.socket = None
+
+        with self._clients_lock:
+            clients = tuple(self.clients)
+        for client in clients:
+            try:
+                client.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            try:
+                client.close()
+            except OSError:
+                pass
+
+        current = threading.current_thread()
+        if self._client_thread and self._client_thread is not current:
+            self._client_thread.join(timeout=1)
+        if self.thread and self.thread is not current:
+            self.thread.join(timeout=1)
+
         logger.info(f"Stopped SCPI server for '{self.instrument.name}'")
 
     def _server_loop(self):
@@ -602,148 +649,127 @@ class SCPIServer:
         while self.running:
             try:
                 client_socket, address = self.socket.accept()
+                if not self._session_lock.acquire(blocking=False):
+                    logger.warning(
+                        "Rejected additional client for %s from %s",
+                        self.instrument.name,
+                        address,
+                    )
+                    client_socket.close()
+                    continue
                 logger.info(f"Client connected to {self.instrument.name} from {address}")
-                
-                client_thread = threading.Thread(
-                    target=self._handle_client,
+
+                self._client_thread = threading.Thread(
+                    target=self._run_client,
                     args=(client_socket, address),
                     daemon=True
                 )
-                client_thread.start()
-                
-            except socket.error:
+                self._client_thread.start()
+
+            except socket.timeout:
+                continue
+            except (OSError, AttributeError):
                 if self.running:
                     logger.error(f"Server socket error for {self.instrument.name}")
                 break
 
-    def _handle_client(self, client_socket, address):
-        """Handle individual client connection"""
-        self.clients.append(client_socket)
-        
+    def _run_client(self, client_socket, address):
         try:
-            # Simulate VISA device clear
+            self._handle_client(client_socket, address)
+        finally:
+            with self._clients_lock:
+                if client_socket in self.clients:
+                    self.clients.remove(client_socket)
+            try:
+                client_socket.close()
+            except OSError:
+                pass
+            self._session_lock.release()
+
+    def _handle_client(self, client_socket, address):
+        """Receive and execute framed messages for the active session."""
+        with self._clients_lock:
+            self.clients.append(client_socket)
+
+        try:
             self.instrument.visa_device_clear()
-            
-            buffer = b''
-            last_activity = time.time()
-            
+            config = self.transport_config
+            framer = SocketMessageFramer(config)
+            poll_timeout = min(0.1, config.accept_poll_interval)
+            client_socket.settimeout(poll_timeout)
+            last_activity = time.monotonic()
+
             while self.running:
                 try:
-                    client_socket.settimeout(0.1)
-                    
-                    try:
-                        data = client_socket.recv(1024)
-                        if not data:
-                            break
-                        
-                        buffer += data
-                        last_activity = time.time()
-                        
-                    except socket.timeout:
-                        current_time = time.time()
-                        if buffer and (current_time - last_activity) > 0.3:
-                            try:
-                                command = buffer.decode('utf-8').strip()
-                                if command:
-                                    response = self.instrument.queue_command_response(command)
-                                    
-                                    # Log to web dashboard
-                                    error = None
-                                    if self.instrument.error_queue:
-                                        error = self.instrument.error_queue.last_response()
-                                    
-                                    command_logger.log_command(
-                                        self.instrument.name, 
-                                        command, 
-                                        response or '(no response)', 
-                                        error
-                                    )
-                                    
-                                    # Emit to web clients
-                                    if HAS_FLASK and hasattr(self.manager, 'web_dashboard') and self.manager.web_dashboard:
-                                        self.manager.web_dashboard.socketio.emit('command_update', {
-                                            'timestamp': time.time(),
-                                            'time_str': datetime.fromtimestamp(time.time()).strftime('%H:%M:%S'),
-                                            'instrument': self.instrument.name,
-                                            'command': command,
-                                            'response': response or '(no response)',
-                                            'error': error
-                                        })
-                                    
-                                    if self.instrument.output_queue:
-                                        client_socket.sendall(self.instrument.read_output())
-                                    
-                                buffer = b''
-                                last_activity = current_time
-                            except UnicodeDecodeError:
-                                buffer = b''
-                        continue
-                    
-                    # Check for terminated commands
-                    while True:
-                        terminator_pos = -1
-                        terminator_len = 0
-                        
-                        for term, length in [(b'\r\n', 2), (b'\n', 1), (b'\r', 1)]:
-                            pos = buffer.find(term)
-                            if pos != -1:
-                                terminator_pos = pos
-                                terminator_len = length
-                                break
-                        
-                        if terminator_pos == -1:
-                            break
-                        
-                        command_bytes = buffer[:terminator_pos]
-                        buffer = buffer[terminator_pos + terminator_len:]
-                        
-                        try:
-                            command = command_bytes.decode('utf-8').strip()
-                            if command:
-                                response = self.instrument.queue_command_response(command)
-                                
-                                # Log to web dashboard
-                                error = None
-                                if self.instrument.error_queue:
-                                    error = self.instrument.error_queue.last_response()
-                                
-                                command_logger.log_command(
-                                    self.instrument.name, 
-                                    command, 
-                                    response or '(no response)', 
-                                    error
-                                )
-                                
-                                # Emit to web clients
-                                if HAS_FLASK and hasattr(self.manager, 'web_dashboard') and self.manager.web_dashboard:
-                                    self.manager.web_dashboard.socketio.emit('command_update', {
-                                        'timestamp': time.time(),
-                                        'time_str': datetime.fromtimestamp(time.time()).strftime('%H:%M:%S'),
-                                        'instrument': self.instrument.name,
-                                        'command': command,
-                                        'response': response or '(no response)',
-                                        'error': error
-                                    })
-                                
-                                if self.instrument.output_queue:
-                                    client_socket.sendall(self.instrument.read_output())
-                                
-                        except UnicodeDecodeError:
-                            continue
-                    
-                except ConnectionResetError:
+                    data = client_socket.recv(config.receive_chunk_size)
+                    if not data:
+                        break
+                    last_activity = time.monotonic()
+                    for message in framer.feed(data):
+                        if message.strip():
+                            self._execute_message(client_socket, message)
+                except socket.timeout:
+                    now = time.monotonic()
+                    if (
+                        framer.buffered_bytes
+                        and config.idle_frame_timeout is not None
+                        and now - last_activity >= config.idle_frame_timeout
+                    ):
+                        message = framer.flush_unterminated()
+                        if message and message.strip():
+                            self._execute_message(client_socket, message)
+                        last_activity = now
+                    if (
+                        config.client_idle_timeout is not None
+                        and now - last_activity >= config.client_idle_timeout
+                    ):
+                        break
+                except (ConnectionResetError, BrokenPipeError):
                     break
-                except Exception as e:
-                    logger.error(f"Client handling error: {e}")
+                except MessageTooLarge as exc:
+                    self.instrument.error_queue.push(-363, str(exc))
+                    logger.warning("Closed oversized SCPI message from %s: %s", address, exc)
                     break
-                    
-        except Exception as e:
-            logger.error(f"Client {address} error: {e}")
-        finally:
-            client_socket.close()
-            if client_socket in self.clients:
-                self.clients.remove(client_socket)
+                except Exception as exc:
+                    logger.error("Client handling error: %s", exc)
+                    break
+        except Exception as exc:
+            logger.error("Client %s error: %s", address, exc)
 
+    def _execute_message(self, client_socket, message):
+        response = self.instrument.queue_command_response(
+            message,
+            termination=self.transport_config.write_termination,
+        )
+        command_text = message.decode('utf-8', errors='replace')
+        if len(command_text) > 512:
+            command_text = f"{command_text[:509]}..."
+        error = None
+        if self.instrument.error_queue:
+            error = self.instrument.error_queue.last_response()
+
+        command_logger.log_command(
+            self.instrument.name,
+            command_text,
+            response or '(no response)',
+            error,
+        )
+
+        if HAS_FLASK and getattr(self.manager, 'web_dashboard', None):
+            timestamp = time.time()
+            self.manager.web_dashboard.socketio.emit('command_update', {
+                'timestamp': timestamp,
+                'time_str': datetime.fromtimestamp(timestamp).strftime('%H:%M:%S'),
+                'instrument': self.instrument.name,
+                'command': command_text,
+                'response': response or '(no response)',
+                'error': error,
+            })
+
+        if self.instrument.output_queue:
+            client_socket.settimeout(self.transport_config.send_timeout)
+            client_socket.sendall(self.instrument.read_output())
+            client_socket.settimeout(min(0.1, self.transport_config.accept_poll_interval))
 
 class WebDashboard:
     """Flask-based web dashboard for SCPI emulator"""
@@ -974,7 +1000,7 @@ class SCPIEmulatorManager:
             return
         raise ConfigurationError(f"row {row_num}: unsupported validation rule '{rule}'")
 
-    def load_from_file(self, file_path, port_start=5555):
+    def load_from_file(self, file_path, port_start=5025):
         """Load instrument definitions from Excel or CSV file"""
         try:
             file_path_obj = Path(file_path)
@@ -1374,7 +1400,7 @@ def build_parser():
     parser.add_argument('--start', '-s', action='store_true', help='Start TCP servers immediately')
     parser.add_argument('--web', '-w', action='store_true', help='Start web dashboard')
     parser.add_argument('--web-port', type=int, default=8081, help='Web dashboard port (default: 8081)')
-    parser.add_argument('--port', '-p', type=int, default=5555, help='Starting port for instruments (default: 5555)')
+    parser.add_argument('--port', '-p', type=int, default=5025, help='Starting port for instruments (default: 5025)')
     parser.add_argument('--host', default='localhost', help='Server host (default: localhost)')
     parser.add_argument('--create-example', action='store_true', help='Create example CSV file')
     parser.add_argument('--interactive', '-i', action='store_true', help='Start interactive mode')

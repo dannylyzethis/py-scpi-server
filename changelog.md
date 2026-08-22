@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Hardened raw-SCPI socket transport on the standard port 5025 with bounded binary-aware framing,
+  configurable termination, one active session per instrument, timeouts, backpressure, and clean
+  shutdown behavior.
 - Versioned virtual-bench definitions, JSON load/save, catalog-backed transactional composition,
   resource rendering, deployment-host overrides, and rollback-safe multi-server startup.
 - A generic deterministic scenario engine with queued scalar/trace/table/event/error streams,
