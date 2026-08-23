@@ -269,7 +269,7 @@ def test_native_pyvisa_opc_drives_vxi11_service_request() -> None:
         manager = pyvisa.ResourceManager()
     except OSError:
         pytest.skip("a native VISA library is not installed")
-    if "@py" in str(manager.visalib):
+    if type(manager.visalib).__module__.startswith("pyvisa_py"):
         manager.close()
         pytest.skip("native VISA is not available")
 
