@@ -1,7 +1,7 @@
 # SCPI Instrument Emulator
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](MIT%20License.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 [![Status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#current-limitations)
 [![CI](https://github.com/dannylyzethis/py-scpi-server/actions/workflows/ci.yml/badge.svg)](https://github.com/dannylyzethis/py-scpi-server/actions/workflows/ci.yml)
 
@@ -258,6 +258,7 @@ Run the automated checks:
 ```bash
 python -m pytest -ra
 ruff check src tests tools
+python tools/check_licenses.py
 ```
 
 The strict expected failures in `tests/test_instrument_behavior.py` document known legacy parser
@@ -284,4 +285,5 @@ bd close scpi-101
 
 ## License
 
-Licensed under the MIT License. See [MIT License.md](MIT%20License.md).
+Licensed under the MIT License. See [LICENSE.md](LICENSE.md) and
+[third-party dependency notices](THIRD_PARTY_NOTICES.md).

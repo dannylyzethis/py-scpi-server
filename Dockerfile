@@ -7,7 +7,8 @@ WORKDIR /app
 
 RUN groupadd --system emulator && useradd --system --gid emulator emulator
 
-COPY ["pyproject.toml", "readme.md", "MIT License.md", "./"]
+COPY ["pyproject.toml", "readme.md", "LICENSE.md", "THIRD_PARTY_NOTICES.md", "./"]
+COPY licenses ./licenses
 COPY src ./src
 COPY scpi_instruments_example.csv ./
 
