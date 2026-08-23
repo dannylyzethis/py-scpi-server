@@ -95,6 +95,7 @@ from .status import (
 from .sweeps import PNASweepChannel, PNASweepSystem, register_sweep_commands
 from .scalar_data import ScalarConfiguration, ScalarScenarioSystem, register_scalar_commands
 from .state_files import PNAStateFileStore, register_state_file_commands
+from .time_domain import PNATimeDomainSystem, TimeDomainChannel, register_time_domain_commands
 
 __all__ = [
     "BinaryBlock",
@@ -142,6 +143,7 @@ __all__ = [
     "PNASweepChannel",
     "PNASweepSystem",
     "PNAStateFileStore",
+    "PNATimeDomainSystem",
     "ProgramMessage",
     "QUEUE_OVERFLOW",
     "SCPIParseError",
@@ -158,6 +160,7 @@ __all__ = [
     "SweepMode",
     "TriggerSource",
     "TraceState",
+    "TimeDomainChannel",
     "WindowState",
     "classify_error",
     "command_spec_key",
@@ -177,5 +180,6 @@ __all__ = [
     "register_scalar_commands",
     "register_sweep_commands",
     "register_state_file_commands",
+    "register_time_domain_commands",
     "standard_error",
 ]

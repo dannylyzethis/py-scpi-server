@@ -44,6 +44,7 @@ from .scpi import (
     PNADataSystem,
     PNASweepSystem,
     PNAStateFileStore,
+    PNATimeDomainSystem,
     ScalarScenarioSystem,
     detect_pna_model,
     parse_program_message,
@@ -57,6 +58,7 @@ from .scpi import (
     register_sweep_commands,
     register_scalar_commands,
     register_state_file_commands,
+    register_time_domain_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
 
@@ -278,6 +280,7 @@ class SCPIInstrument:
         self.pna_sweeps = None
         self.pna_data = None
         self.pna_state_files = None
+        self.pna_time_domain = None
         self.scalar_data = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
@@ -303,6 +306,11 @@ class SCPIInstrument:
                 self.pna_measurements, self.data_format, self.pna_capabilities.ports
             )
             register_pna_data_commands(self.core_registry, self.pna_data)
+            self.pna_time_domain = PNATimeDomainSystem(
+                self.pna_measurements, self.pna_capabilities.ports
+            )
+            self.pna_data.application = self.pna_time_domain
+            register_time_domain_commands(self.core_registry, self.pna_time_domain)
             self.pna_state_files = PNAStateFileStore(
                 self.pna_measurements, str(instrument_id), state_directory
             )
@@ -354,6 +362,8 @@ class SCPIInstrument:
             self.pna_sweeps.reset()
         if self.pna_data is not None:
             self.pna_data.reset()
+        if self.pna_time_domain is not None:
+            self.pna_time_domain.reset()
         if self.scalar_data is not None:
             self.scalar_data.reset()
         self.status.clear_status()

@@ -23,6 +23,7 @@ class PNADataSystem:
         self.player: ScenarioPlayer | None = None
         self.bindings: dict[str, str] = {}
         self._event_error: ScenarioError | None = None
+        self.application = None
 
     def attach(self, player: ScenarioPlayer) -> None:
         self.player = player
@@ -55,7 +56,7 @@ class PNADataSystem:
     def values(self, channel: int, access: str):
         self._check_event_error()
         measurement = self.measurements.selected(channel)
-        samples = self._samples(measurement)
+        samples = self._application_samples(channel, self._samples(measurement), measurement.stimulus)
         if access in ("SDATa", "RDATa"):
             values = tuple(component for value in samples for component in (value.real, value.imag))
         else:
@@ -63,12 +64,18 @@ class PNADataSystem:
         return self.data_format.encode_values(values)
 
     def x_values(self, channel: int):
-        return self.data_format.encode_values(self.measurements.selected(channel).stimulus)
+        stimulus = self.measurements.selected(channel).stimulus
+        axis = self.application.axis(channel, stimulus) if self.application is not None else stimulus
+        return self.data_format.encode_values(axis)
 
     def receiver_values(self, channel: int, receiver: str):
         self._check_event_error()
         measurement = self.measurements.selected(channel)
-        samples = self._read_stream(receiver, len(measurement.stimulus))
+        samples = self._application_samples(
+            channel,
+            self._read_stream(receiver, len(measurement.stimulus)),
+            measurement.stimulus,
+        )
         return self.data_format.encode_values(
             component for value in samples for component in (value.real, value.imag)
         )
@@ -86,14 +93,28 @@ class PNADataSystem:
             or any(not 1 <= port <= self.maximum_ports for port in ports)
         ):
             raise SCPICommandError(-224, "Illegal parameter value; SNP ports")
-        columns: list[float] = list(measurement.stimulus)
+        axis = (
+            self.application.axis(channel, measurement.stimulus)
+            if self.application is not None
+            else measurement.stimulus
+        )
+        columns: list[float] = list(axis)
         for source in ports:
             for receiver in ports:
                 parameter = f"S{receiver}{source}"
-                samples = self._optional_stream(parameter, len(measurement.stimulus))
+                samples = self._application_samples(
+                    channel,
+                    self._optional_stream(parameter, len(measurement.stimulus)),
+                    measurement.stimulus,
+                )
                 columns.extend(value.real for value in samples)
                 columns.extend(value.imag for value in samples)
         return self.data_format.encode_values(columns)
+
+    def _application_samples(self, channel, samples, stimulus):
+        if self.application is None:
+            return samples
+        return self.application.samples(channel, samples, stimulus)
 
     def _samples(self, measurement: MeasurementState) -> tuple[complex, ...]:
         if self.player is None:
