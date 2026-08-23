@@ -1,5 +1,5 @@
 Equipment,Port,Command,Response,Validation
-Virtual PNA N5222B,5560,*IDN?,"SCPI Emulator,N5222B,US12345678,A.20.25.04",
+Virtual VNA N5222B-EMU,5560,*IDN?,"SCPI Emulator,N5222B-EMU,US12345678,E.1.0",
 ,,*OPC?,1,
 ,,*RST,OK,
 ,,*CLS,OK,

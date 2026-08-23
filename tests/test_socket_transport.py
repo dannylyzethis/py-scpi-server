@@ -55,7 +55,7 @@ def test_terminated_and_fragmented_commands(running_server) -> None:
 
         responses = receive_lines(client, 2)
 
-    assert responses == ["SCPI_Emulator,Socket Test,socket_test,2.3.0", "1999.0"]
+    assert responses == ["SCPI_Emulator,Socket Test,socket_test,E.1.0", "1999.0"]
 
 
 def test_legacy_timeout_processes_unterminated_command(running_server) -> None:
@@ -82,7 +82,7 @@ def test_cls_preserves_values_and_connection_remains_responsive(running_server) 
     assert responses == [
         "7.5",
         '0,"No error"',
-        "SCPI_Emulator,Socket Test,socket_test,2.3.0",
+        "SCPI_Emulator,Socket Test,socket_test,E.1.0",
     ]
 
 

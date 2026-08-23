@@ -3,9 +3,9 @@ import json
 from scpi_emulator.emulator import SCPIInstrument
 
 
-def pna(tmp_path, instrument_id="N5222B"):
+def pna(tmp_path, instrument_id="N5222B-EMU"):
     return SCPIInstrument(
-        "Virtual N5222B", instrument_id, state_directory=tmp_path
+        "Virtual N5222B-EMU", instrument_id, state_directory=tmp_path
     )
 
 
@@ -16,7 +16,7 @@ def test_named_state_file_round_trip_persists_existence_only(tmp_path):
     instrument.process_command("SENS2:FREQ:STAR 2GHz")
     instrument.process_command('MMEM:STOR:STAT "bench.sta"')
 
-    saved = json.loads((tmp_path / "N5222B" / "bench.sta").read_text())
+    saved = json.loads((tmp_path / "N5222B-EMU" / "bench.sta").read_text())
     assert set(saved) == {"schema_version", "channels", "windows"}
     assert "frequency" not in json.dumps(saved).lower()
     assert instrument.process_command("MMEM:CAT?") == '"bench.sta"'
@@ -53,7 +53,7 @@ def test_missing_unsafe_and_malformed_files_report_errors_without_mutation(tmp_p
         assert instrument.process_command(command) == ""
         assert instrument.process_command("SYST:ERR?").startswith(code)
 
-    directory = tmp_path / "N5222B"
+    directory = tmp_path / "N5222B-EMU"
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "bad.sta").write_text('{"schema_version": 1}', encoding="utf-8")
     assert instrument.process_command('MMEM:LOAD:STAT "bad.sta"') == ""
@@ -63,7 +63,7 @@ def test_missing_unsafe_and_malformed_files_report_errors_without_mutation(tmp_p
 
 def test_recall_rejects_dangling_trace_atomically(tmp_path):
     instrument = pna(tmp_path)
-    directory = tmp_path / "N5222B"
+    directory = tmp_path / "N5222B-EMU"
     directory.mkdir(parents=True)
     payload = {
         "schema_version": 1,

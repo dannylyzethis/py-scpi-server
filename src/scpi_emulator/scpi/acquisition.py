@@ -422,7 +422,7 @@ class AcquisitionController:
 def register_acquisition_commands(
     registry: CommandRegistry, acquisition: AcquisitionController
 ) -> None:
-    """Register common PNA acquisition, trigger, timing, and averaging commands."""
+    """Register common VNA acquisition, trigger, timing, and averaging commands."""
     channel_node = HeaderNode("INITiate", index="channel", index_default=1)
     sense_node = HeaderNode("SENSe", index="channel", index_default=1)
     for path in ((channel_node,), (channel_node, HeaderNode("IMMediate"))):

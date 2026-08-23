@@ -1,4 +1,4 @@
-"""Stateful PNA channels, measurements, display traces, and markers."""
+"""Stateful VNA channels, measurements, display traces, and markers."""
 
 from __future__ import annotations
 
@@ -110,7 +110,7 @@ class WindowState:
 
 
 class PNAMeasurementSystem:
-    """Own coherent PNA measurement and front-panel addressing state."""
+    """Own coherent VNA measurement and front-panel addressing state."""
 
     def __init__(self) -> None:
         self.channels: dict[int, ChannelState] = {}
@@ -403,7 +403,7 @@ class PNAMeasurementSystem:
 
 
 def register_measurement_commands(registry: CommandRegistry, state: PNAMeasurementSystem) -> None:
-    """Register indexed PNA measurement and display workflows."""
+    """Register indexed VNA measurement and display workflows."""
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     display = HeaderNode("DISPlay")
     window = HeaderNode("WINDow", index="window", index_default=1)

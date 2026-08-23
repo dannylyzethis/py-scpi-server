@@ -1,6 +1,6 @@
-# PNA measurement workflows
+# VNA measurement workflows
 
-The PNA emulator now models the configuration relationships that ordinary automation code expects,
+The VNA emulator now models the configuration relationships that ordinary automation code expects,
 rather than treating CALCulate and DISPlay commands as unrelated canned responses.
 
 ## State model
@@ -14,7 +14,7 @@ Each instrument owns an isolated measurement system:
 - the selected measurement, active channel, active window, and active trace move together when a
   measurement or display trace is selected.
 
-The supported bounds match the modeled PNA workflow: channels 1–200, windows 1–24, traces 1–24 per
+The supported bounds match the modeled VNA workflow: channels 1–200, windows 1–24, traces 1–24 per
 window, and markers 1–15 per measurement. Invalid or nonexistent addresses enter the normal SCPI
 error queue instead of leaking Python failures or silently creating impossible state.
 
@@ -43,7 +43,7 @@ DISPlay forms. The current lifecycle covers:
 - active channel and active measurement queries.
 
 Marker Y values are deterministic today so configuration and parsing code can be developed now.
-The subsequent PNA data issue will connect them, math memory, and trace reads to the shared scenario
+The subsequent VNA data issue will connect them, math memory, and trace reads to the shared scenario
 engine so queued complex DUT traces drive coherent results across commands.
 
 ## Example

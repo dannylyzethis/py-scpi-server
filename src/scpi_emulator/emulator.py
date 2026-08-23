@@ -28,7 +28,7 @@ from collections import deque
 import os
 from collections.abc import Sequence
 
-from . import __version__
+from . import EMULATOR_FIRMWARE, __version__
 from .scpi import (
     AcquisitionController,
     BinaryResponse,
@@ -370,7 +370,7 @@ class SCPIInstrument:
     def _add_legacy_fallback_commands(self):
         """Register only core commands not yet implemented by typed modules."""
         self.commands.update({
-            '*IDN?': lambda: f"SCPI_Emulator,{self.name},{self.id},2.3.0",
+            '*IDN?': lambda: f"SCPI_Emulator,{self.name},{self.id},{EMULATOR_FIRMWARE}",
             '*RST': self._reset,
             '*TST?': self._self_test,
             'SYST:VERS?': lambda: '1999.0',
@@ -1570,7 +1570,7 @@ def create_example_csv():
     """Create example CSV with validation examples"""
     data = [
         ['Equipment', 'Port', 'Command', 'Response', 'Validation'],
-        ['Virtual 34461A DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
+        ['Virtual 34461A-EMU DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
         ['', '', 'VOLT (.+)', 'OK', 'range:0,10'],
         ['', '', 'VOLT?', '5.0', ''],
         ['Debug Test Instrument', '5559', 'TEST_RANGE (.+)', 'Range OK: {value}', 'range:1,10'],

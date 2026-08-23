@@ -1,6 +1,6 @@
 """Built-in reference virtual DMM driver."""
 
-from scpi_emulator import __version__
+from scpi_emulator import EMULATOR_FIRMWARE, __version__
 
 from .catalog import (
     CatalogError,
@@ -25,10 +25,10 @@ class DMMDriver:
         maturity=DriverMaturity.ALPHA,
         models=(
             ModelDescriptor(
-                model="34461A",
-                display_name="Virtual 34461A DMM",
+                model="34461A-EMU",
+                display_name="Virtual 34461A-EMU DMM",
                 instrument_class="DMM",
-                firmware_snapshots=("3.0",),
+                firmware_snapshots=(EMULATOR_FIRMWARE,),
             ),
         ),
         transports=(

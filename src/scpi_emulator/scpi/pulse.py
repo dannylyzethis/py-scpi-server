@@ -1,4 +1,4 @@
-"""Licensed PNA pulse generators and Integrated Pulse measurements."""
+"""Profile-gated VNA pulse generators and Integrated Pulse measurements."""
 
 from __future__ import annotations
 

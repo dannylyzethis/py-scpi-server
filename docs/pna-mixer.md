@@ -1,6 +1,6 @@
-# PNA frequency-offset and converter behavior
+# VNA frequency-offset and converter behavior
 
-The converter layer is a licensed, per-channel processor in the shared PNA data pipeline. It uses
+The converter layer is a licensed, per-channel processor in the shared VNA data pipeline. It uses
 the same scenario trace as ordinary S-parameter reads, then applies frequency-offset, mixer,
 segment, source-role, and embedded-LO configuration. It can compose with time-domain processing;
 no application owns a private trace generator.

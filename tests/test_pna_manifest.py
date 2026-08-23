@@ -27,7 +27,7 @@ def test_packaged_manifest_has_required_metadata_and_unique_commands() -> None:
     assert manifest.snapshot["contract_revision"] == "1.0"
     assert len(manifest.commands) >= 35
     assert {command.models for command in manifest.commands} == {
-        frozenset({"N5222B", "N5242B"})
+        frozenset({"N5222B-EMU", "N5242B-EMU"})
     }
     assert all(command.parameters is not None for command in manifest.commands)
     assert all("type" in command.response for command in manifest.commands)
@@ -52,7 +52,7 @@ def test_command_spec_key_is_stable_across_abbreviations() -> None:
     assert registry.specifications == (specification,)
 
 
-@pytest.mark.parametrize("model", ["N5222B", "N5242B"])
+@pytest.mark.parametrize("model", ["N5222B-EMU", "N5242B-EMU"])
 def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None:
     manifest = load_command_manifest()
     instrument = SCPIInstrument(f"Virtual {model}", model)
@@ -61,7 +61,7 @@ def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None
         manifest,
         implementation_keys(instrument),
         model=model,
-        firmware="A.20.25.04",
+        firmware="E.1.0",
     )
 
     assert report["summary"]["documented"] == len(manifest.commands)
@@ -70,7 +70,7 @@ def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None
     assert report["summary"]["coverage_percent"] == 100
 
 
-@pytest.mark.parametrize("model", ["N5222B", "N5242B"])
+@pytest.mark.parametrize("model", ["N5222B-EMU", "N5242B-EMU"])
 def test_checked_in_coverage_report_is_current(model: str) -> None:
     manifest = load_command_manifest()
     instrument = SCPIInstrument(f"Virtual {model}", model)
@@ -78,9 +78,9 @@ def test_checked_in_coverage_report_is_current(model: str) -> None:
         manifest,
         implementation_keys(instrument),
         model=model,
-        firmware="A.20.25.04",
+        firmware="E.1.0",
     )
-    report_path = REPOSITORY_ROOT / "reports" / f"pna-coverage-{model}-A.20.25.04.json"
+    report_path = REPOSITORY_ROOT / "reports" / f"pna-coverage-{model}-E.1.0.json"
 
     assert json.loads(report_path.read_text(encoding="utf-8")) == expected
 
@@ -120,7 +120,7 @@ def test_manifest_rejects_external_source_metadata(tmp_path: Path) -> None:
         "snapshot": {
             "date": "2026-08-20",
             "contract_revision": "1.0",
-            "firmware_pattern": "^A\\.20\\.25\\.[0-9]{2}$",
+            "firmware_pattern": "^E\\.1\\.0$",
         },
         "sources": {"bad": {"title": "Unofficial", "url": "https://example.com"}},
         "commands": [],

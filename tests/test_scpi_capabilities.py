@@ -11,10 +11,10 @@ from scpi_emulator.scpi import (
 
 
 def test_default_n5222b_identity_options_and_hardware_are_consistent() -> None:
-    instrument = SCPIInstrument("Virtual PNA N5222B", "pna")
+    instrument = SCPIInstrument("Virtual VNA N5222B-EMU", "pna")
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,N5222B,US12345678,A.20.25.04"
+        "SCPI Emulator,N5222B-EMU,US12345678,E.1.0"
     )
     assert instrument.process_command("*OPT?") == "200"
     assert instrument.process_command("SYST:CAP:FREQ:MIN?") == "10000000"
@@ -25,17 +25,17 @@ def test_default_n5222b_identity_options_and_hardware_are_consistent() -> None:
     assert instrument.process_command("SYST:CAP:HARD:REC:INT:COUN?") == "3"
     assert instrument.process_command("SYST:CAP:HARD:REC:DACC?") == "0"
     assert instrument.process_command("SYST:CAP:HARD:LFEX:EXIS?") == "0"
-    assert instrument.process_command("SYST:CAP:LIC:CAT? VALID") == "N5222B-200"
+    assert instrument.process_command("SYST:CAP:LIC:CAT? VALID") == "N5222B-EMU-200"
 
 
 def test_configured_options_licenses_and_feature_queries_share_one_profile() -> None:
     profile = PNACapabilities.create(
-        "N5222B",
+        "N5222B-EMU",
         hardware_configuration="419",
         hardware_addons=("021",),
         application_options=("E93010B", "E930902B"),
     )
-    instrument = SCPIInstrument("Configured PNA", "configured", pna_capabilities=profile)
+    instrument = SCPIInstrument("Configured VNA", "configured", pna_capabilities=profile)
 
     assert instrument.process_command("*OPT?") == "419,021,010,090,902"
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
@@ -47,7 +47,7 @@ def test_configured_options_licenses_and_feature_queries_share_one_profile() -> 
     assert instrument.process_command("SYST:CAP:HARD:ATT:SOUR:MAX? 1") == "65"
     assert instrument.process_command("SYST:CAP:HARD:ATT:SOUR:STEP? 1") == "5"
     assert instrument.process_command("SYST:CAP:LIC:CAT? ALL") == (
-        "N5222B-419,N5222B-021,E93010B-1FP,E930902B-1FP"
+        "N5222B-EMU-419,N5222B-EMU-021,E93010B-1FP,E930902B-1FP"
     )
     assert instrument.process_command("SYST:CAP:LIC:FEAT:CAT?") == (
         "Time Domain,Spectrum Analysis 26 5 Ghz"
@@ -58,11 +58,11 @@ def test_configured_options_licenses_and_feature_queries_share_one_profile() -> 
 
 def test_n5242b_pna_x_configuration_exposes_lfe_and_pna_x_applications() -> None:
     profile = PNACapabilities.create(
-        "N5242B",
+        "N5242B-EMU",
         hardware_configuration="425",
         application_options=("E93080B", "E93029B"),
     )
-    instrument = SCPIInstrument("PNA-X", "pnax", pna_capabilities=profile)
+    instrument = SCPIInstrument("VNA-EXTENDED", "pnax", pna_capabilities=profile)
 
     assert instrument.process_command("*OPT?") == "425,080,028"
     assert instrument.process_command("SYST:CAP:HARD:PORT:INT:COUN?") == "4"
@@ -97,13 +97,13 @@ def test_n5242b_pna_x_configuration_exposes_lfe_and_pna_x_applications() -> None
     ],
 )
 def test_impossible_capability_profiles_are_rejected(kwargs: dict, message: str) -> None:
-    model = "N5222B" if kwargs.get("hardware_addons") == ("XSB",) else "N5242B"
+    model = "N5222B-EMU" if kwargs.get("hardware_addons") == ("XSB",) else "N5242B-EMU"
     with pytest.raises(CapabilityError, match=message):
         PNACapabilities.create(model, **kwargs)
 
 
 def test_capability_query_validates_port_and_license_selection() -> None:
-    instrument = SCPIInstrument("Virtual N5222B", "pna")
+    instrument = SCPIInstrument("Virtual N5222B-EMU", "pna")
 
     assert instrument.process_command("SYST:CAP:HARD:ATT:REC:EXIS? 3") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
@@ -113,7 +113,7 @@ def test_capability_query_validates_port_and_license_selection() -> None:
 
 def test_unaliased_software_product_uses_stable_three_digit_opt_code() -> None:
     profile = PNACapabilities.create(
-        "N5222B",
+        "N5222B-EMU",
         hardware_configuration="400",
         application_options=("E93072B",),
     )
@@ -123,11 +123,11 @@ def test_unaliased_software_product_uses_stable_three_digit_opt_code() -> None:
 
 def test_vendor_s9_application_identifiers_are_not_accepted() -> None:
     with pytest.raises(CapabilityError, match="not available"):
-        PNACapabilities.create("N5242B", application_options=("S" + "93080B",))
+        PNACapabilities.create("N5242B-EMU", application_options=("S" + "93080B",))
 
 
 def test_model_faithful_mode_is_the_default_and_keeps_only_installed_apps() -> None:
-    profile = PNACapabilities.create("N5242B", application_options=("E93080B",))
+    profile = PNACapabilities.create("N5242B-EMU", application_options=("E93080B",))
 
     assert profile.mode is CompatibilityMode.MODEL_FAITHFUL
     assert profile.application_options == ("E93080B",)
@@ -136,7 +136,7 @@ def test_model_faithful_mode_is_the_default_and_keeps_only_installed_apps() -> N
 
 
 def test_all_applications_mode_builds_a_coherent_developer_profile() -> None:
-    profile = PNACapabilities.create("N5242B", mode="all-applications")
+    profile = PNACapabilities.create("N5242B-EMU", mode="all-applications")
 
     assert profile.mode is CompatibilityMode.ALL_APPLICATIONS
     assert profile.hardware_configuration == "425"
@@ -151,7 +151,7 @@ def test_all_applications_mode_builds_a_coherent_developer_profile() -> None:
 
 def test_all_applications_mode_respects_an_explicit_physical_configuration() -> None:
     profile = PNACapabilities.create(
-        "N5222B",
+        "N5222B-EMU",
         mode=CompatibilityMode.ALL_APPLICATIONS,
         hardware_configuration="200",
         hardware_addons=(),
@@ -164,11 +164,11 @@ def test_all_applications_mode_respects_an_explicit_physical_configuration() -> 
 
 
 def test_pna_application_capabilities_gate_typed_commands() -> None:
-    strict = SCPIInstrument("Strict PNA-X", "strict", pna_capabilities=PNACapabilities.create("N5242B"))
+    strict = SCPIInstrument("Strict VNA-EXTENDED", "strict", pna_capabilities=PNACapabilities.create("N5242B-EMU"))
     developer = SCPIInstrument(
-        "Developer PNA-X",
+        "Developer VNA-EXTENDED",
         "developer",
-        pna_capabilities=PNACapabilities.create("N5242B", mode="all-applications"),
+        pna_capabilities=PNACapabilities.create("N5242B-EMU", mode="all-applications"),
     )
     specification = CommandSpec(
         path=(HeaderNode("CALCulate"), HeaderNode("NOISe")),
@@ -186,4 +186,4 @@ def test_pna_application_capabilities_gate_typed_commands() -> None:
 
 def test_unknown_compatibility_mode_is_rejected() -> None:
     with pytest.raises(CapabilityError, match="unsupported compatibility mode"):
-        PNACapabilities.create("N5222B", mode="everything")
+        PNACapabilities.create("N5222B-EMU", mode="everything")

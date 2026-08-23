@@ -1,4 +1,4 @@
-"""PNA stimulus, source, and sweep configuration tied to acquisition timing."""
+"""VNA stimulus, source, and sweep configuration tied to acquisition timing."""
 
 from __future__ import annotations
 
@@ -240,7 +240,7 @@ class PNASweepSystem:
 
 
 def register_sweep_commands(registry: CommandRegistry, state: PNASweepSystem) -> None:
-    """Register the common PNA frequency, power, IFBW, points, and type commands."""
+    """Register the common VNA frequency, power, IFBW, points, and type commands."""
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     source = HeaderNode("SOURce", index="channel", index_default=1)
     power = HeaderNode("POWer", index="port", index_default=1)

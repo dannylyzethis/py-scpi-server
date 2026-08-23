@@ -20,7 +20,7 @@ Each instrument card reports:
 - status byte, standard event register, ESE, SRE, SRQ, operation, questionable, and output-queue
   state without destructively reading any register;
 - pending overlapped operations and acquisition/trigger state;
-- PNA channels, measurements, windows, and traces, or scalar function/range/last-value state;
+- VNA channels, measurements, windows, and traces, or scalar function/range/last-value state;
 - capability-profile counts and the current deterministic scenario position;
 - queued SCPI errors without removing them from the instrument error queue.
 

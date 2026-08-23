@@ -23,15 +23,15 @@ Schema version 1 uses one entry per instrument instance:
 {
   "schema_version": 1,
   "name": "two-vna-development-bench",
-  "description": "Model-faithful PNA plus fully configured PNA-X.",
+  "description": "Model-faithful VNA plus fully configured VNA-EXTENDED.",
   "metadata": {"team": "ATE"},
   "instruments": [
     {
       "id": "pna1",
-      "name": "Input PNA",
-      "driver": "virtual-pna",
-      "model": "N5222B",
-      "firmware": "A.20.25.04",
+      "name": "Input VNA",
+      "driver": "virtual-vna",
+      "model": "N5222B-EMU",
+      "firmware": "E.1.0",
       "configuration": {
         "mode": "model-faithful",
         "hardware_configuration": "200"
@@ -44,8 +44,8 @@ Schema version 1 uses one entry per instrument instance:
     },
     {
       "id": "pnax1",
-      "driver": "virtual-pna",
-      "model": "N5242B",
+      "driver": "virtual-vna",
+      "model": "N5242B-EMU",
       "configuration": {
         "hardware_configuration": "425",
         "mode": "all-applications"
@@ -64,9 +64,9 @@ Instrument IDs and resource endpoints must be unique. Ports must be in the range
 transport must be advertised as implemented by the selected driver; catalog entries marked planned
 or partial cannot accidentally be started.
 
-Configuration contents are driver-specific. For the built-in PNA driver they include compatibility
+Configuration contents are driver-specific. For the built-in VNA driver they include compatibility
 mode, hardware configuration, hardware add-ons, application options, and serial number. The driver
-performs the same prerequisite and physical-coherence validation used by direct PNA profiles.
+performs the same prerequisite and physical-coherence validation used by direct VNA profiles.
 
 ## Loading, composing, and starting
 

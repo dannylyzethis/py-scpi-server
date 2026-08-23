@@ -1,4 +1,4 @@
-"""PNA frequency-offset, converter, mixer-segment, and embedded-LO behavior."""
+"""VNA frequency-offset, converter, mixer-segment, and embedded-LO behavior."""
 
 from __future__ import annotations
 
@@ -193,7 +193,7 @@ class PNAMixerSystem:
 
 
 def register_mixer_commands(registry: CommandRegistry, state: PNAMixerSystem) -> None:
-    """Register licensed FOM, mixer, segment, and embedded-LO commands."""
+    """Register profile-gated FOM, mixer, segment, and embedded-LO commands."""
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     fom = (sense, HeaderNode("FOM"))
     mixer = (sense, HeaderNode("MIXer"))

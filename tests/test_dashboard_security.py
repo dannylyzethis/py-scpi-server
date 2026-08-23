@@ -184,7 +184,7 @@ def test_status_snapshot_is_detailed_and_non_destructive() -> None:
 
 
 def test_pna_snapshot_exposes_capabilities_channels_measurements_and_traces() -> None:
-    instrument = SCPIInstrument("Virtual N5222B", "N5222B")
+    instrument = SCPIInstrument("Virtual N5222B-EMU", "N5222B-EMU")
     server = FakeServer(instrument)
     manager = SimpleNamespace(
         instruments={"pna1": {"instrument": instrument, "port": 5025}},
@@ -198,7 +198,7 @@ def test_pna_snapshot_exposes_capabilities_channels_measurements_and_traces() ->
         "snapshot"
     ]
 
-    assert snapshot["capabilities"]["model"] == "N5222B"
+    assert snapshot["capabilities"]["model"] == "N5222B-EMU"
     assert snapshot["measurements"]["channels"][0]["selected"] == "CH1_S11_1"
     assert snapshot["measurements"]["channels"][0]["measurements"][0]["parameter"] == "S11"
     assert snapshot["measurements"]["windows"][0]["traces"][0] == {

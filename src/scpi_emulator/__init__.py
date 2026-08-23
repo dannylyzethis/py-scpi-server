@@ -2,3 +2,6 @@
 
 __version__ = "0.1.0"
 
+# Public firmware identity for emulator instruments. This is intentionally
+# independent from the Python package release version.
+EMULATOR_FIRMWARE = "E.1.0"

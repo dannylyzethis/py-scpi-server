@@ -58,10 +58,10 @@ def bench_json(first_port: int, second_port: int) -> dict:
         "instruments": [
             {
                 "id": "pna1",
-                "name": "Input PNA",
-                "driver": "virtual-pna",
-                "model": "N5222B",
-                "firmware": "A.20.25.04",
+                "name": "Input VNA",
+                "driver": "virtual-vna",
+                "model": "N5222B-EMU",
+                "firmware": "E.1.0",
                 "configuration": {
                     "mode": "model-faithful",
                     "hardware_configuration": "200",
@@ -75,8 +75,8 @@ def bench_json(first_port: int, second_port: int) -> dict:
             },
             {
                 "id": "pnax1",
-                "driver": "virtual-pna",
-                "model": "N5242B",
+                "driver": "virtual-vna",
+                "model": "N5242B-EMU",
                 "configuration": {
                     "hardware_configuration": "425",
                     "application_options": ["E93080B", "E93029B"],
@@ -177,10 +177,10 @@ def test_same_definition_starts_two_real_socket_instruments_with_bind_override()
     try:
         assert runtime.running is True
         assert receive_line(first_port, "*IDN?").startswith(
-            "SCPI Emulator,N5222B,"
+            "SCPI Emulator,N5222B-EMU,"
         )
         assert receive_line(second_port, "*IDN?").startswith(
-            "SCPI Emulator,N5242B,"
+            "SCPI Emulator,N5242B-EMU,"
         )
     finally:
         runtime.stop()
@@ -196,14 +196,14 @@ def test_bind_override_conflicts_are_rejected_before_any_server_starts() -> None
         (
             BenchInstrument(
                 "pna1",
-                "virtual-pna",
-                "N5222B",
+                "virtual-vna",
+                "N5222B-EMU",
                 ResourceAddress("raw-socket", "127.0.0.1", port),
             ),
             BenchInstrument(
                 "pna2",
-                "virtual-pna",
-                "N5222B",
+                "virtual-vna",
+                "N5222B-EMU",
                 ResourceAddress("raw-socket", "localhost", port),
             ),
         ),
@@ -240,8 +240,8 @@ def test_composed_vxi11_resource_starts_transactionally() -> None:
         (
             BenchInstrument(
                 "pna1",
-                "virtual-pna",
-                "N5222B",
+                "virtual-vna",
+                "N5222B-EMU",
                 ResourceAddress("vxi-11", "127.0.0.1", portmapper_port),
             ),
         ),
@@ -266,8 +266,8 @@ def test_composed_hislip_resource_starts_transactionally() -> None:
         (
             BenchInstrument(
                 "pna1",
-                "virtual-pna",
-                "N5222B",
+                "virtual-vna",
+                "N5222B-EMU",
                 ResourceAddress("hislip", "127.0.0.1", port),
             ),
         ),

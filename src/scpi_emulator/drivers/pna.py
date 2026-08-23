@@ -1,4 +1,4 @@
-"""Built-in Virtual PNA/PNA-X instrument driver."""
+"""Built-in Virtual VNA/VNA-EXTENDED instrument driver."""
 
 from __future__ import annotations
 
@@ -21,12 +21,12 @@ from .catalog import (
 )
 
 
-PNA_DRIVER_ID = "virtual-pna"
+PNA_DRIVER_ID = "virtual-vna"
 PNA_MANIFEST_RESOURCE = "profiles/pna_commands.v1.json"
 
 
 class PNADriver:
-    """Create PNA instruments and advertise the pinned compatibility snapshot."""
+    """Create VNA instruments and advertise the pinned compatibility snapshot."""
 
     def __init__(self) -> None:
         self._matrix = _load_json("profiles/pna_compatibility.v1.json")
@@ -51,7 +51,7 @@ class PNADriver:
         }
         unknown = set(request.configuration) - allowed
         if unknown:
-            raise CatalogError(f"unsupported PNA configuration fields: {sorted(unknown)}")
+            raise CatalogError(f"unsupported VNA configuration fields: {sorted(unknown)}")
         configuration: dict[str, Any] = dict(request.configuration)
         for sequence_name in ("hardware_addons", "application_options"):
             if sequence_name in configuration:
@@ -85,7 +85,7 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
     )
     return DriverDescriptor(
         id=PNA_DRIVER_ID,
-        display_name="Virtual PNA/PNA-X",
+        display_name="Virtual VNA/VNA-EXTENDED",
         version=__version__,
         maturity=DriverMaturity.ALPHA,
         models=models,

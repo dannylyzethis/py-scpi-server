@@ -1,6 +1,6 @@
-# PNA scenario data
+# VNA scenario data
 
-The PNA does not have a separate DUT playback engine. It adapts the same immutable scenario
+The VNA does not have a separate DUT playback engine. It adapts the same immutable scenario
 definitions and `ScenarioPlayer` used by scalar instruments, so a bench has one policy model for
 queued values, triggers, completed operations, timing, exhaustion, looping, seeds, and reset.
 
@@ -31,7 +31,7 @@ back silently to unrelated canned data.
   and imaginary columns. Missing matrix elements are zero-filled, matching documented SNP behavior.
 
 `FORM:DATA` and `FORM:BORD` control ASCII versus IEEE definite binary blocks, numeric width, and byte
-order for every view. Startup and `*RST` select `ASCII` and normal byte order, matching the PNA;
+order for every view. Startup and `*RST` select `ASCII` and normal byte order, matching the VNA;
 `*CLS` and Device Clear do not change the selected transfer format.
 
 ## Advancement and reset
@@ -42,4 +42,4 @@ which keeps OPC/status completion and scenario state aligned. Manual and timed b
 by the generic player.
 
 `*CLS` changes status reporting without moving scenario position. `*RST` rewinds the shared player to
-its original seed and first sample while restoring the PNA measurement and sweep preset.
+its original seed and first sample while restoring the VNA measurement and sweep preset.

@@ -1,4 +1,4 @@
-# PNA time-domain and fixture behavior
+# VNA time-domain and fixture behavior
 
 The time-domain application layer consumes the same deterministic complex trace streams used by
 `CALC:DATA? SDAT`, receiver data, and SNP queries. It does not create a private data generator.
@@ -19,7 +19,7 @@ between frequency-domain and application workflows.
 - Application state is per channel. `*CLS` preserves it, while `*RST` returns it to disabled defaults.
 - A missing channel or selected measurement is rejected before the handler runs. Time-domain and
   fixture command families are unavailable unless their corresponding application option is
-  installed in the PNA capability profile.
+  installed in the VNA capability profile.
 
 ## Deliberate fidelity boundary
 

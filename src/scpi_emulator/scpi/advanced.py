@@ -1,4 +1,4 @@
-"""Licensed PNA spectrum, distortion, phase-noise, and I/Q applications."""
+"""Profile-gated VNA spectrum, distortion, phase-noise, and I/Q applications."""
 
 from __future__ import annotations
 

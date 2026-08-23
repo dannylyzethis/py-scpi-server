@@ -1,4 +1,4 @@
-"""Existence-only PNA composition persistence through named MMEM files."""
+"""Existence-only VNA composition persistence through named MMEM files."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class PNAStateFileStore:
 
 
 def register_state_file_commands(registry: CommandRegistry, store: PNAStateFileStore) -> None:
-    """Register named PNA save/recall commands."""
+    """Register named VNA save/recall commands."""
     memory = HeaderNode("MMEMory")
     filename = (ParameterSpec(ParameterType.STRING, name="filename"),)
 

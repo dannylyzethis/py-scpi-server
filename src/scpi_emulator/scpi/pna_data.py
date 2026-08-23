@@ -1,4 +1,4 @@
-"""Scenario-backed PNA measurement and receiver data access."""
+"""Scenario-backed VNA measurement and receiver data access."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, P
 
 
 class PNADataSystem:
-    """Adapt generic scenario trace streams to PNA data access points."""
+    """Adapt generic scenario trace streams to VNA data access points."""
 
     def __init__(
         self, measurements: PNAMeasurementSystem, data_format: DataFormat, maximum_ports: int

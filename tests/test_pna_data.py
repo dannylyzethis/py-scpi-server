@@ -21,7 +21,7 @@ def trace_stream(name, traces, *, advance=AdvancePolicy.READ):
 
 
 def instrument_with(stream) -> SCPIInstrument:
-    instrument = SCPIInstrument("Virtual N5222B", "N5222B")
+    instrument = SCPIInstrument("Virtual N5222B-EMU", "N5222B-EMU")
     instrument.process_command("SENS:SWE:POIN 2")
     instrument.attach_scenario(ScenarioDefinition("dut", (stream,), seed=19))
     return instrument
@@ -81,7 +81,7 @@ def test_reset_rewinds_same_shared_player_while_cls_preserves_position() -> None
 
 
 def test_receiver_and_snp_queries_use_named_streams_and_column_order() -> None:
-    instrument = SCPIInstrument("Virtual N5222B", "N5222B")
+    instrument = SCPIInstrument("Virtual N5222B-EMU", "N5222B-EMU")
     instrument.process_command("SENS:SWE:POIN 2")
     streams = (
         trace_stream("A", ((10 + 1j, 20 + 2j),)),

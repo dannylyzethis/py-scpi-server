@@ -1,4 +1,4 @@
-# PNA pulse and Integrated Pulse behavior
+# VNA pulse and Integrated Pulse behavior
 
 The pulse layer implements project-defined pulsed-RF generator controls and integrated pulse
 measurement setup. Availability comes from the selected emulator capability profile; individual
@@ -22,7 +22,7 @@ master/profile timing with SCPI `-222` errors.
 
 ## Scenario results
 
-Integrated Pulse is another processor in the shared PNA data pipeline. It does not own a separate
+Integrated Pulse is another processor in the shared VNA data pipeline. It does not own a separate
 queue or trigger engine.
 
 - Standard mode (`SENS:SWE:PULS:MODE STD`) consumes `pulse.point` complex trace streams.

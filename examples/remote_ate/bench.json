@@ -7,7 +7,7 @@
       "id": "dmm1",
       "name": "DUT supply monitor",
       "driver": "virtual-3446x",
-      "model": "34461A",
+      "model": "34461A-EMU",
       "configuration": {},
       "resource": {
         "transport": "raw-socket",

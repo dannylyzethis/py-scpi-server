@@ -9,16 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Stateful PNA channels, measurements, selected context, display windows and traces, formats, math
+- Stateful VNA channels, measurements, selected context, display windows and traces, formats, math
   memory, markers, limits, and equations, including indexed and abbreviated CALC/DISP commands.
-- PNA measurement reset semantics that preserve configuration across `*CLS` and Device Clear while
+- VNA measurement reset semantics that preserve configuration across `*CLS` and Device Clear while
   restoring a coherent channel-1/S11/window-1 preset on `*RST`.
-- Expanded model-specific PNA coverage reports from 64 to 154 implemented documented commands.
-- Coherent PNA linear, logarithmic, CW, power, and segmented sweep configuration with frequency
+- Expanded model-specific VNA coverage reports from 64 to 154 implemented documented commands.
+- Coherent VNA linear, logarithmic, CW, power, and segmented sweep configuration with frequency
   axes, source power, receiver attenuation, IF bandwidth, dwell, and acquisition-derived timing.
-- PNA adapters over the shared deterministic scenario engine for SDATA, FDATA, RDATA, receiver,
+- VNA adapters over the shared deterministic scenario engine for SDATA, FDATA, RDATA, receiver,
   SNP, and X-axis queries with ASCII/binary encoding and trigger/operation playback policies.
-- A built-in Virtual 34461A reference DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
+- A built-in Virtual 34461A-EMU reference DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
   function/range configuration, queued values, trigger/operation policies, errors, and reset.
 - VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
   lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and
@@ -36,11 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioned JSON and compressed-binary scenario codecs with complex and typed binary-vector values.
 - An immutable instrument-driver metadata contract, catalog, model lookup, factory API, and
   `scpi_emulator.drivers` entry-point discovery for external emulator families.
-- A built-in PNA/PNA-X catalog driver derived from the pinned compatibility snapshot.
-- Explicit model-faithful and all-applications PNA compatibility modes.
+- A built-in VNA/VNA-EXTENDED catalog driver derived from the pinned compatibility snapshot.
+- Explicit model-faithful and all-applications VNA compatibility modes.
 - Coherent developer profiles that select capable modeled hardware and compatible application
   licenses while preserving truthful identity, option, and hardware queries.
-- PNA application capability names wired into typed command availability gates.
+- VNA application capability names wired into typed command availability gates.
 
 ### Planned
 - Advanced SCPI subsystem support

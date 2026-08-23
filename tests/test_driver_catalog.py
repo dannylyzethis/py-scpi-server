@@ -73,13 +73,13 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
 
     assert [descriptor.id for descriptor in catalog.descriptors] == [
         "virtual-3446x",
-        "virtual-pna",
+        "virtual-vna",
     ]
-    driver = catalog.get("VIRTUAL-PNA")
+    driver = catalog.get("VIRTUAL-VNA")
     descriptor = driver.descriptor
     assert descriptor.maturity is DriverMaturity.ALPHA
-    assert {model.model for model in descriptor.models} == {"N5222B", "N5242B"}
-    assert descriptor.model("n5242b").instrument_class == "PNA-X"
+    assert {model.model for model in descriptor.models} == {"N5222B-EMU", "N5242B-EMU"}
+    assert descriptor.model("n5242b-emu").instrument_class == "VNA-EXTENDED"
     assert {item.name: item.support for item in descriptor.transports} == {
         "raw-socket": SupportLevel.IMPLEMENTED,
         "vxi-11": SupportLevel.IMPLEMENTED,
@@ -94,14 +94,14 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
 
 def test_builtin_dmm_driver_advertises_and_creates_scalar_scenario_instrument() -> None:
     driver = DMMDriver()
-    assert driver.descriptor.model("34461a").instrument_class == "DMM"
+    assert driver.descriptor.model("34461a-emu").instrument_class == "DMM"
     assert driver.descriptor.scenario_inputs[0].support is SupportLevel.IMPLEMENTED
 
-    instrument = driver.create_instrument(InstrumentRequest("meter", "34461A"))
+    instrument = driver.create_instrument(InstrumentRequest("meter", "34461A-EMU"))
     assert instrument.scalar_data is not None
     with pytest.raises(CatalogError, match="no configurable"):
         driver.create_instrument(
-            InstrumentRequest("meter", "34461A", configuration={"option": "imaginary"})
+            InstrumentRequest("meter", "34461A-EMU", configuration={"option": "imaginary"})
         )
 
 
@@ -138,10 +138,10 @@ def test_pna_coverage_metadata_matches_checked_in_reports() -> None:
 def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
     instrument = catalog.create(
-        "virtual-pna",
+        "virtual-vna",
         InstrumentRequest(
             instrument_id="bench_pna",
-            model="N5242B",
+            model="N5242B-EMU",
             configuration={
                 "mode": "model-faithful",
                 "hardware_configuration": "425",
@@ -151,7 +151,7 @@ def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
     )
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,N5242B,US12345678,A.20.25.04"
+        "SCPI Emulator,N5242B-EMU,US12345678,E.1.0"
     )
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
@@ -203,8 +203,8 @@ def test_pna_factory_rejects_unverified_firmware_and_unknown_configuration() -> 
     driver = PNADriver()
 
     with pytest.raises(CatalogError, match="no verified"):
-        driver.create_instrument(InstrumentRequest("pna", "N5222B", firmware="A.99.00.00"))
-    with pytest.raises(CatalogError, match="unsupported PNA configuration"):
+        driver.create_instrument(InstrumentRequest("pna", "N5222B-EMU", firmware="A.99.00.00"))
+    with pytest.raises(CatalogError, match="unsupported VNA configuration"):
         driver.create_instrument(
-            InstrumentRequest("pna", "N5222B", configuration={"imaginary_option": True})
+            InstrumentRequest("pna", "N5222B-EMU", configuration={"imaginary_option": True})
         )

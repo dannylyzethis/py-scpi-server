@@ -15,10 +15,10 @@ from scpi_emulator.scpi import CapabilityError, PNACapabilities
 def pulse_pna(*streams: ScenarioStream, integrated=True) -> SCPIInstrument:
     options = ("E93025B", "E93026B") if integrated else ("E93025B",)
     capabilities = PNACapabilities.create(
-        "N5222B", hardware_addons=("021",), application_options=options
+        "N5222B-EMU", hardware_addons=("021",), application_options=options
     )
     instrument = SCPIInstrument(
-        "Virtual N5222B", "pulse", pna_capabilities=capabilities
+        "Virtual N5222B-EMU", "pulse", pna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
@@ -158,7 +158,7 @@ def test_pulse_timing_and_scenario_shape_errors_are_scpi_errors() -> None:
 
 def test_pulse_license_hardware_address_and_reset_semantics() -> None:
     with pytest.raises(CapabilityError, match="requires one"):
-        PNACapabilities.create("N5222B", application_options=("E93026B",))
+        PNACapabilities.create("N5222B-EMU", application_options=("E93026B",))
 
     basic = pulse_pna(integrated=False)
     assert basic.process_command("SENS:PULS1:STAT ON") == ""

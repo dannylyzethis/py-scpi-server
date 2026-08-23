@@ -1,8 +1,8 @@
-# PNA emulator compatibility contract
+# VNA emulator compatibility contract
 
 Snapshot date: **2026-08-20**
 Profile revision: **1.0**
-Reference firmware token: **A.20.25.04**
+Reference firmware token: **E.1.0**
 
 The machine-readable source of truth is
 [`pna_compatibility.v1.json`](../src/scpi_emulator/profiles/pna_compatibility.v1.json).
@@ -16,8 +16,8 @@ identifiers.
 
 | Model | Class | Frequency | Ports | Sources | Hardware configurations |
 | --- | --- | --- | --- | --- | --- |
-| N5222B | PNA | 10 MHz to 26.5 GHz | 2 or 4 | 1 on 2-port; 2 on 4-port | 200, 201, 205, 217, 219, 220, 400, 401, 405, 417, 419, 420 |
-| N5242B | PNA-X | 10 MHz to 26.5 GHz | 2 or 4 | 1 or 2, configuration-dependent | 201, 205, 217, 219, 222, 224, 401, 417, 419, 422, 423, 425 |
+| N5222B-EMU | VNA | 10 MHz to 26.5 GHz | 2 or 4 | 1 on 2-port; 2 on 4-port | 200, 201, 205, 217, 219, 220, 400, 401, 405, 417, 419, 420 |
+| N5242B-EMU | VNA-EXTENDED | 10 MHz to 26.5 GHz | 2 or 4 | 1 or 2, configuration-dependent | 201, 205, 217, 219, 222, 224, 401, 417, 419, 422, 423, 425 |
 
 The model tokens select different internal port, source, frequency, and feature shapes. They are
 compatibility labels, not a claim that every behavior of physical hardware is reproduced.
@@ -31,11 +31,11 @@ response types, defaults, supersession metadata, and the internal `emulator_cont
 Generate a report against the runtime's typed registry and literal built-in commands with:
 
 ```powershell
-python tools/pna_manifest.py --model N5222B --firmware A.20.25.04
+python tools/pna_manifest.py --model N5222B-EMU --firmware E.1.0
 ```
 
 The command exits with status 1 while internal contract gaps remain. Add
-`--allow-gaps --output reports/pna-coverage-N5222B-A.20.25.04.json` to refresh a checked-in report.
+`--allow-gaps --output reports/pna-coverage-N5222B-EMU-E.1.0.json` to refresh a checked-in report.
 
 ## Runtime capability profiles
 
@@ -44,7 +44,7 @@ add-ons, installed application licenses, serial number, and firmware. The same i
 drives `*IDN?`, `*OPT?`, `SYSTem:CAPability` frequency and hardware queries, port/source catalogs,
 attenuator and receiver-access queries, and license/feature catalogs.
 
-The default profiles are N5222B-200 and N5242B-201. Explicit profiles reject incompatible internal
+The default profiles are N5222B-EMU-200 and N5242B-EMU-201. Explicit profiles reject incompatible internal
 configurations and unmet capability predicates.
 
 Profiles have two explicit compatibility policies:

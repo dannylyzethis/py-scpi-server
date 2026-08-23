@@ -20,7 +20,7 @@ def instrument() -> SCPIInstrument:
 
 def test_standard_identity_and_version_are_available(instrument: SCPIInstrument) -> None:
     assert instrument.process_command("*IDN?") == (
-        "SCPI_Emulator,Test Instrument,test_instrument,2.3.0"
+        "SCPI_Emulator,Test Instrument,test_instrument,E.1.0"
     )
     assert instrument.process_command("SYST:VERS?") == "1999.0"
 

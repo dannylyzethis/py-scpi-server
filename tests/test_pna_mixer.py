@@ -13,8 +13,8 @@ def mixer_pna(*, scalar_only=False) -> SCPIInstrument:
     options = ("E93010B", "E93080B", "E93082B") if scalar_only else (
         "E93010B", "E93080B", "E93082B", "E93083B", "E93084B"
     )
-    capabilities = PNACapabilities.create("N5222B", application_options=options)
-    instrument = SCPIInstrument("Virtual N5222B", "mixer", pna_capabilities=capabilities)
+    capabilities = PNACapabilities.create("N5222B-EMU", application_options=options)
+    instrument = SCPIInstrument("Virtual N5222B-EMU", "mixer", pna_capabilities=capabilities)
     instrument.process_command("SENS:SWE:POIN 4")
     stream = ScenarioStream(
         "S11",
@@ -117,7 +117,7 @@ def test_correction_status_is_static_zero_and_reset_semantics_are_preserved() ->
 
 
 def test_licenses_ranges_and_sources_report_correct_errors() -> None:
-    strict = SCPIInstrument("Virtual N5222B", "strict")
+    strict = SCPIInstrument("Virtual N5222B-EMU", "strict")
     assert strict.process_command("SENS:MIX:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 

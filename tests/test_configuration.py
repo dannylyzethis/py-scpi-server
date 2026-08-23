@@ -71,15 +71,15 @@ def test_pna_identity_response_is_not_truncated() -> None:
     manager = SCPIEmulatorManager()
     assert manager.load_from_file(REPOSITORY_ROOT / "pna-commands.csv")
 
-    pna = manager.instruments["virtual_pna_n5222b"]["instrument"]
+    pna = manager.instruments["virtual_vna_n5222b_emu"]["instrument"]
     assert pna.process_command("*IDN?") == (
-        "SCPI Emulator,N5222B,US12345678,A.20.25.04"
+        "SCPI Emulator,N5222B-EMU,US12345678,E.1.0"
     )
     assert pna.process_command("SYST:CAP:FREQ:MAX?") == "26500000000"
     assert pna.process_command("SENS1:FREQ:STOP?") == "26500000000"
     assert pna.process_command("SENS1:FREQ:STOP 30e9") == ""
     assert pna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
-    # Typed PNA data owns this command now; validate sweep shape instead of the old canned row.
+    # Typed VNA data owns this command now; validate sweep shape instead of the old canned row.
     formatted = pna.process_command("CALC1:DATA? FDAT").split(",")
     assert len(formatted) == 201
     assert set(formatted) == {"-inf"}

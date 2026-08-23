@@ -1,4 +1,4 @@
-"""Model-faithful PNA hardware, option, and license capabilities."""
+"""Model-faithful VNA hardware, option, and license capabilities."""
 
 from __future__ import annotations
 
@@ -12,9 +12,9 @@ from typing import Any
 from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, ParameterType
 
 
-DEFAULT_HARDWARE_CONFIGURATION = {"N5222B": "200", "N5242B": "201"}
-DEVELOPER_HARDWARE_CONFIGURATION = {"N5222B": "419", "N5242B": "425"}
-DEVELOPER_HARDWARE_ADDONS = {"N5222B": ("021",), "N5242B": ("021",)}
+DEFAULT_HARDWARE_CONFIGURATION = {"N5222B-EMU": "200", "N5242B-EMU": "201"}
+DEVELOPER_HARDWARE_CONFIGURATION = {"N5222B-EMU": "419", "N5242B-EMU": "425"}
+DEVELOPER_HARDWARE_ADDONS = {"N5222B-EMU": ("021",), "N5242B-EMU": ("021",)}
 
 OPTION_QUERY_CODES: dict[str, tuple[str, ...]] = {
     "E93007A": ("007",),
@@ -61,11 +61,11 @@ OPTION_QUERY_CODES: dict[str, tuple[str, ...]] = {
 
 
 class CapabilityError(ValueError):
-    """Raised when a requested PNA configuration cannot exist."""
+    """Raised when a requested VNA configuration cannot exist."""
 
 
 class CompatibilityMode(str, Enum):
-    """Policy used to choose installed PNA application capabilities."""
+    """Policy used to choose installed VNA application capabilities."""
 
     MODEL_FAITHFUL = "model-faithful"
     ALL_APPLICATIONS = "all-applications"
@@ -98,7 +98,7 @@ class PNACapabilities:
         hardware_addons: tuple[str, ...] | None = None,
         application_options: tuple[str, ...] | None = None,
         serial: str = "US12345678",
-        firmware: str = "A.20.25.04",
+        firmware: str = "E.1.0",
     ) -> "PNACapabilities":
         matrix = _load_compatibility_matrix()
         model = model.upper()
@@ -109,7 +109,7 @@ class PNACapabilities:
             raise CapabilityError(f"unsupported compatibility mode {mode!r}; choose {choices}") from error
         models = matrix["models"]
         if model not in models:
-            raise CapabilityError(f"unsupported PNA model {model!r}")
+            raise CapabilityError(f"unsupported VNA model {model!r}")
         model_data = models[model]
         default_configurations = (
             DEVELOPER_HARDWARE_CONFIGURATION
@@ -133,7 +133,7 @@ class PNACapabilities:
         if unknown_addons:
             raise CapabilityError(f"hardware add-ons are not available on {model}: {sorted(unknown_addons)}")
         if "XSB" in requested_addons and configuration not in {"422", "423"}:
-            raise CapabilityError("XSB requires N5242B hardware configuration 422 or 423")
+            raise CapabilityError("XSB requires N5242B-EMU hardware configuration 422 or 423")
 
         hardware = configurations[configuration]
         explicit_apps = tuple(
@@ -247,7 +247,7 @@ class PNACapabilities:
 
 def detect_pna_model(*values: str) -> str | None:
     combined = " ".join(values).upper()
-    match = re.search(r"\b(N5222B|N5242B)\b", combined)
+    match = re.search(r"\b(N5222B-EMU|N5242B-EMU)\b", combined)
     return match.group(1) if match else None
 
 

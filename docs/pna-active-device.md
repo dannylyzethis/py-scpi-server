@@ -1,9 +1,9 @@
-# PNA gain-compression and noise-figure behavior
+# VNA gain-compression and noise-figure behavior
 
 The active-device layer models the parts of gain-compression and noise-figure applications that
 ATE software normally controls: configuration, acquisition-shaped data arrays, summary results,
-licensing, and SCPI errors. It is another processor in the shared PNA scenario pipeline; it does
-not create a separate PNA-specific data source.
+licensing, and SCPI errors. It is another processor in the shared VNA scenario pipeline; it does
+not create a separate VNA-specific data source.
 
 ## Gain compression
 
@@ -40,7 +40,7 @@ fallback from the selected trace so basic control programs can still run.
 - `*CLS` clears status and errors but preserves application configuration and scenario data.
 - `*RST` restores disabled application defaults.
 - Calibration/correction status always returns `0`. Calibration standards, ECal, correction math,
-  and real PNA calibration state are intentionally outside this emulator's product scope.
+  and real VNA calibration state are intentionally outside this emulator's product scope.
 
 The objective is behavioral parity for software development: an ATE program can configure the
 application, trigger deterministic DUT cases, read realistic result shapes, and exercise its error

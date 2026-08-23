@@ -1,13 +1,13 @@
-# PNA spectrum, distortion, phase-noise, and I/Q behavior
+# VNA spectrum, distortion, phase-noise, and I/Q behavior
 
 The advanced-application layer implements deterministic development workflows for Spectrum
 Analyzer, Swept IMD, Modulation Distortion, Phase Noise, Differential I/Q, and wideband-I/Q option
 branches. It uses the same channel addresses, scenario player, trigger notifications, data format,
-error queue, and reset rules as the rest of the PNA emulator.
+error queue, and reset rules as the rest of the VNA emulator.
 
 ## Creating an application measurement
 
-Real PNA programs normally create these measurement classes with `CALC:CUST:DEF`. The emulator
+Real VNA programs normally create these measurement classes with `CALC:CUST:DEF`. The emulator
 supports that entry point and selects the new measurement immediately. For example:
 
 ```text
@@ -19,11 +19,11 @@ CALC:SA:DATA? TRACE
 
 The accepted class names are `Spectrum Analyzer`, `Swept IMD`, `Intermodulation Distortion`,
 `Modulation Distortion`, `Modulation Distortion Converters`, `Phase Noise`, `Differential I/Q`, and
-`Wideband I/Q`. The relevant model option must be present. An unlicensed class reports `-113`; an
+`Wideband I/Q`. The relevant model option must be present. A disabled class reports `-113`; an
 unknown class reports `-224`.
 
 `SENS:<class>:STAT` is also available as an emulator convenience for compact scenario tests. It is
-not presented as a replacement for the PNA's documented custom-measurement creation command. A PNA
+not presented as a replacement for the VNA's documented custom-measurement creation command. A VNA
 channel has one active advanced measurement class; activating another class changes that channel's
 class instead of layering unrelated applications on one trace.
 

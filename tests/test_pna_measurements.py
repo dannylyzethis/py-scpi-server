@@ -6,9 +6,9 @@ from scpi_emulator.scpi import PNACapabilities, SCPICommandError
 
 def pna() -> SCPIInstrument:
     return SCPIInstrument(
-        "Virtual N5222B",
+        "Virtual N5222B-EMU",
         "pna",
-        pna_capabilities=PNACapabilities.create("N5222B"),
+        pna_capabilities=PNACapabilities.create("N5222B-EMU"),
     )
 
 

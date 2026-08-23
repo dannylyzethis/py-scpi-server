@@ -1,4 +1,4 @@
-"""Generate a PNA documented-command coverage report."""
+"""Generate a VNA documented-command coverage report."""
 
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ def implementation_keys(instrument: SCPIInstrument) -> frozenset[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path)
-    parser.add_argument("--model", choices=("N5222B", "N5242B"), default="N5222B")
-    parser.add_argument("--firmware", default="A.20.25.04")
+    parser.add_argument("--model", choices=("N5222B-EMU", "N5242B-EMU"), default="N5222B-EMU")
+    parser.add_argument("--firmware", default="E.1.0")
     parser.add_argument("--output", type=Path)
     parser.add_argument(
         "--allow-gaps",

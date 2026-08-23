@@ -78,3 +78,43 @@ def test_documentation_does_not_explain_individual_application_ids() -> None:
         if concrete_application_id.search(path.read_text(encoding="utf-8")):
             found.append(str(path.relative_to(REPOSITORY_ROOT)))
     assert found == []
+
+
+def test_public_model_labels_use_emulator_suffix() -> None:
+    legacy_models = (
+        "N5222" + "B",
+        "N5242" + "B",
+        "34461" + "A",
+        "E36312" + "A",
+        "TDS2024" + "B",
+        "33220" + "A",
+        "8846" + "A",
+        "E5071" + "C",
+        "8753" + "D",
+    )
+    pattern = re.compile(
+        rf"\b(?:{'|'.join(re.escape(model) for model in legacy_models)})\b(?!-EMU)"
+    )
+    found: list[str] = []
+    for path in _repository_files():
+        if ".beads" in path.parts:
+            # Tracker exports and interaction logs are historical records, not
+            # shipped instrument identities.
+            continue
+        if path.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        if pattern.search(path.read_text(encoding="utf-8", errors="replace")):
+            found.append(str(path.relative_to(REPOSITORY_ROOT)))
+    assert found == []
+
+
+def test_public_vna_profile_uses_project_owned_identity() -> None:
+    profile_path = REPOSITORY_ROOT / "src/scpi_emulator/profiles/pna_compatibility.v1.json"
+    text = profile_path.read_text(encoding="utf-8")
+    assert '"reference_firmware": "E.1.0"' in text
+    assert '"firmware_pattern": "^E\\\\.1\\\\.0$"' in text
+    assert '"instrument_class": "VNA"' in text
+    assert '"instrument_class": "VNA-EXTENDED"' in text
+    legacy_class = "PN" + "A"
+    assert '"instrument_class": "' + legacy_class + '"' not in text
+    assert '"instrument_class": "' + legacy_class + '-X"' not in text

@@ -16,8 +16,8 @@ Each driver provides an immutable `DriverDescriptor` containing:
 - supported scenario input shapes and their implementation status;
 - model-specific documented-command coverage and report locations.
 
-Support status is explicit. For example, the built-in PNA driver advertises raw TCP sockets and
-VXI-11 and HiSLIP as implemented, and PNA trace/scalar scenario inputs as implemented. The
+Support status is explicit. For example, the built-in VNA driver advertises raw TCP sockets and
+VXI-11 and HiSLIP as implemented, and VNA trace/scalar scenario inputs as implemented. The
 generic scenario engine exists independently; catalog presence therefore does not falsely imply
 that every instrument-specific command family or adapter is complete.
 
@@ -32,10 +32,10 @@ from scpi_emulator.drivers import InstrumentRequest, build_driver_catalog
 
 catalog = build_driver_catalog(discover_plugins=False)
 instrument = catalog.create(
-    "virtual-pna",
+    "virtual-vna",
     InstrumentRequest(
         instrument_id="vna1",
-        model="N5242B",
+        model="N5242B-EMU",
         configuration={
             "mode": "all-applications",
             "hardware_configuration": "425",
@@ -44,7 +44,7 @@ instrument = catalog.create(
 )
 ```
 
-The PNA descriptor is generated from the packaged compatibility matrix. Its coverage records are
+The VNA descriptor is generated from the packaged compatibility matrix. Its coverage records are
 checked against the versioned reports, and its factory uses the same `PNACapabilities` object that
 drives identity, option, license, hardware, and command-availability behavior.
 
@@ -76,5 +76,5 @@ metadata and duplicate registration fail before a bench is created.
 
 The catalog describes and creates instrument emulators. It does not assign ports, start servers,
 compose benches, play DUT scenarios, or render a UI. Those consumers depend on this contract instead
-of importing PNA-specific code. This separation is what allows `scpi-703` to build one generic
-scenario engine and later attach DMM, PNA, and additional driver families to it.
+of importing VNA-specific code. This separation is what allows `scpi-703` to build one generic
+scenario engine and later attach DMM, VNA, and additional driver families to it.

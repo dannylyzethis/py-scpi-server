@@ -1,7 +1,7 @@
 # Deterministic scenario and queued-data engine
 
 The scenario engine provides one instrument-neutral way to describe changing DUT measurements and
-events. A DMM adapter can consume scalar readings from it; a PNA adapter can consume complex traces;
+events. A DMM adapter can consume scalar readings from it; a VNA adapter can consume complex traces;
 and future instruments can use the same timing, advancement, reset, and exhaustion behavior.
 
 The engine does not implement SCPI commands itself. Instrument drivers map their commands,

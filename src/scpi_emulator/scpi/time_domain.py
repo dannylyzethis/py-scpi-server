@@ -1,4 +1,4 @@
-"""Deterministic PNA time-domain, gating, and fixture-simulation behavior."""
+"""Deterministic VNA time-domain, gating, and fixture-simulation behavior."""
 
 from __future__ import annotations
 
@@ -126,7 +126,7 @@ class PNATimeDomainSystem:
 def register_time_domain_commands(
     registry: CommandRegistry, state: PNATimeDomainSystem
 ) -> None:
-    """Register licensed CALCulate time-domain and fixture command families."""
+    """Register profile-gated CALCulate time-domain and fixture command families."""
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     transform = (calc, HeaderNode("TRANsform"), HeaderNode("TIME"))
     gate = (calc, HeaderNode("FILTer"), HeaderNode("TIME"))

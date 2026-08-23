@@ -15,7 +15,7 @@ def test_pna_compatibility_snapshot_is_versioned_and_pinned() -> None:
     assert matrix["snapshot"] == {
         "date": "2026-08-20",
         "profile_revision": "1.0",
-        "reference_firmware": "A.20.25.04",
+        "reference_firmware": "E.1.0",
         "firmware_release_date": "2026-07-15",
     }
     policy = matrix["compatibility_policy"]
@@ -28,7 +28,7 @@ def test_pna_compatibility_snapshot_is_versioned_and_pinned() -> None:
 def test_initial_model_matrix_has_physical_capabilities() -> None:
     models = load_matrix()["models"]
 
-    assert set(models) == {"N5222B", "N5242B"}
+    assert set(models) == {"N5222B-EMU", "N5242B-EMU"}
     for model in models.values():
         assert model["frequency_hz"] == {"minimum": 10_000_000, "maximum": 26_500_000_000}
         configurations = model["hardware_configurations"]
@@ -36,14 +36,14 @@ def test_initial_model_matrix_has_physical_capabilities() -> None:
         assert all(config["sources"] in {1, 2} for config in configurations.values())
         assert all(config["features"] for config in configurations.values())
 
-    pna = models["N5222B"]
+    pna = models["N5222B-EMU"]
     assert all(
         config["sources"] == (1 if config["ports"] == 2 else 2)
         for config in pna["hardware_configurations"].values()
     )
     assert "noise_receiver" in pna["unsupported_features"]
 
-    pna_x = models["N5242B"]
+    pna_x = models["N5242B-EMU"]
     assert {config["sources"] for config in pna_x["hardware_configurations"].values()} == {1, 2}
     assert pna_x["unsupported_features"] == []
 
@@ -59,8 +59,8 @@ def test_every_application_references_known_models_and_options() -> None:
         assert application["options"]
         assert all(option.startswith("E9") for option in application["options"])
 
-    assert matrix["applications"]["noise_figure"]["models"] == ["N5242B"]
-    assert matrix["applications"]["active_hot_parameters"]["models"] == ["N5242B"]
+    assert matrix["applications"]["noise_figure"]["models"] == ["N5242B-EMU"]
+    assert matrix["applications"]["active_hot_parameters"]["models"] == ["N5242B-EMU"]
 
 
 def test_snapshot_uses_internal_contract_metadata_without_external_sources() -> None:

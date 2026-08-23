@@ -1026,8 +1026,8 @@ def create_example_csv():
         # Header
         ['Equipment', 'Port', 'Command', 'Response', 'Validation'],
 
-        # Virtual 34461A Digital Multimeter
-        ['Virtual 34461A DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
+        # Virtual 34461A-EMU Digital Multimeter
+        ['Virtual 34461A-EMU DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
         ['', '', 'MEAS:VOLT:AC?', '0.987654E+00', ''],
         ['', '', 'MEAS:CURR:DC?', '1.234567E-03', ''],
         ['', '', 'MEAS:RES?', '1.000000E+03', ''],
@@ -1036,8 +1036,8 @@ def create_example_csv():
         ['', '', 'NPLC (.+)', 'OK', 'range:0.02,200'],
         ['', '', 'NPLC?', '10', ''],
         
-        # Virtual E36312A Power Supply
-        ['Virtual E36312A PSU', '5556', 'OUTP ON', 'OK', ''],
+        # Virtual E36312A-EMU Power Supply
+        ['Virtual E36312A-EMU PSU', '5556', 'OUTP ON', 'OK', ''],
         ['', '', 'OUTP OFF', 'OK', ''],
         ['', '', 'OUTP (.+)', 'OK', 'bool'],
         ['', '', 'OUTP?', '1', ''],
@@ -1048,8 +1048,8 @@ def create_example_csv():
         ['', '', 'MEAS:VOLT?', '4.987654E+00', ''],
         ['', '', 'MEAS:CURR?', '9.876543E-01', ''],
         
-        # Virtual TDS2024B Oscilloscope
-        ['Virtual TDS2024B Scope', '5557', 'ACQ:MODE?', 'SAMPLE', ''],
+        # Virtual TDS2024B-EMU Oscilloscope
+        ['Virtual TDS2024B-EMU Scope', '5557', 'ACQ:MODE?', 'SAMPLE', ''],
         ['', '', 'ACQ:MODE (.+)', 'OK', 'enum:SAMPLE,PEAKDETECT,HIRES,AVERAGE'],
         ['', '', 'CH1:SCAL?', '1.0E+0', ''],
         ['', '', 'CH1:SCAL (.+)', 'OK', 'range:0.001,10'],
@@ -1063,8 +1063,8 @@ def create_example_csv():
         ['', '', 'MEAS:AMPL? CH1', '2.500000E+00', ''],
         ['', '', 'CURV?', '#42000-127,-126,-125,-124,-123,-122,-121,-120', ''],
         
-        # Virtual 33220A Function Generator
-        ['Virtual 33220A Generator', '5558', 'FREQ (.+)', 'OK', 'range:0.000001,20000000'],
+        # Virtual 33220A-EMU Function Generator
+        ['Virtual 33220A-EMU Generator', '5558', 'FREQ (.+)', 'OK', 'range:0.000001,20000000'],
         ['', '', 'FREQ?', '1.000000E+03', ''],
         ['', '', 'VOLT (.+)', 'OK', 'range:0.001,10'],
         ['', '', 'VOLT?', '1.000000E+00', ''],

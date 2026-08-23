@@ -1,4 +1,4 @@
-"""Versioned PNA command manifests and implementation coverage reporting."""
+"""Versioned VNA command manifests and implementation coverage reporting."""
 
 from __future__ import annotations
 

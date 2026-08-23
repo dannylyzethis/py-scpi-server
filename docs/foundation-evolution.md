@@ -25,7 +25,7 @@ The important change is not merely that more commands exist. Commands now intera
 instrument state. Errors affect the Standard Event Status Register. `*OPC` follows pending
 operations. `*ESE` and `*SRE` promote events into the status byte. Trigger commands move acquisition
 channels through defined states. `*CLS` clears status without erasing measurement configuration.
-PNA option queries agree with the selected physical model and installed licenses.
+VNA option queries agree with the selected physical model and installed licenses.
 
 That shared behavior is what turns a list of canned responses into an instrument emulator.
 
@@ -88,9 +88,9 @@ response. The underlying error was present, but the client could not retrieve it
 take precedence through the typed registry, so static profile data cannot silently disable live
 status behavior.
 
-### PNA identity was only a label
+### VNA identity was only a label
 
-The original PNA catalog could identify itself as an N5222B while advertising a 50 GHz range and
+The original VNA catalog could identify itself as an N5222B-EMU while advertising a 50 GHz range and
 placeholder firmware. Port count, source count, hardware options, application licenses, and command
 availability did not come from a single model definition. This made internally contradictory
 instruments possible.
@@ -241,10 +241,10 @@ until the response has been fully consumed. The core also models:
 Why this is better: clients can exercise the same read loops, binary decoding, MAV polling, and query
 error handling they use against physical instruments.
 
-### 9. Versioned PNA and PNA-X capabilities
+### 9. Versioned VNA and VNA-EXTENDED capabilities
 
-The initial compatibility baseline pins Virtual N5222B PNA and N5242B PNA-X behavior to an
-internal profile with A.20.25.04 as its firmware token. Machine-readable profiles
+The initial compatibility baseline pins Virtual N5222B-EMU VNA and N5242B-EMU VNA-EXTENDED behavior to an
+internal profile with E.1.0 as its firmware token. Machine-readable profiles
 describe physical frequency limits, hardware configurations, ports, sources, hardware features,
 add-ons, application options, and prerequisites.
 
@@ -256,14 +256,14 @@ An immutable runtime profile drives all related queries, including:
 - receiver access, low-frequency extension, and attenuator capabilities;
 - installed-license and enabled-feature catalogs.
 
-Impossible combinations are rejected when the profile is created. For example, a PNA cannot be
-given the PNA-X noise receiver, a four-port application cannot be installed on a two-port profile,
+Impossible combinations are rejected when the profile is created. For example, a VNA cannot be
+given the VNA-EXTENDED noise receiver, a four-port application cannot be installed on a two-port profile,
 and software prerequisites cannot be omitted.
 
 The default model-faithful mode enables only explicitly installed application licenses. The
 all-applications developer mode selects a capable physical configuration when one is not supplied
 and enables every application compatible with that model and hardware. Both modes feed the same
-typed command-availability gates, so an unlicensed application command is unavailable in strict
+typed command-availability gates, so a disabled application command is unavailable in strict
 mode without making hardware or option queries contradictory in developer mode.
 
 Option queries and internal application identifiers are modeled separately. Individual application
@@ -275,12 +275,12 @@ allows.
 
 ### 10. A documented-command manifest and coverage reports
 
-The versioned PNA command manifest records syntax, model and firmware applicability, parameters,
+The versioned VNA command manifest records syntax, model and firmware applicability, parameters,
 responses, defaults, supersession metadata, and official documentation provenance. A coverage tool
 compares that snapshot with the active typed registry and produces model-specific reports.
 
-The current reports show 393 of 393 commands implemented for the expanded foundation, PNA
-measurement-lifecycle, and sweep snapshot. This is not a claim that all PNA commands are complete. The
+The current reports show 393 of 393 commands implemented for the expanded foundation, VNA
+measurement-lifecycle, and sweep snapshot. This is not a claim that all VNA commands are complete. The
 snapshot includes common synchronization, acquisition, identity, option and capability commands,
 plus the first stateful channel, measurement, display, format, math, marker, limit, and equation
 workflows, plus linear, logarithmic, CW, power, and segment sweep configuration. Named MMEM state
@@ -304,7 +304,7 @@ documentation snapshot rather than being inferred from a collection of CSV rows.
 | Status byte | Mostly independent values | Derived from queues, events, enables, and operations | Polling behaves like an instrument |
 | Triggering | Canned command responses | Acquisition state machines | Commands affect real pending work |
 | Query output | Direct strings | Byte queue, MAV, partial reads, binary blocks | Realistic client read behavior |
-| PNA identity | Static model string | Validated model/configuration/license profile | Internally consistent capabilities |
+| VNA identity | Static model string | Validated model/configuration/license profile | Internally consistent capabilities |
 | Coverage | Number of configured rows | Versioned documentation-to-code report | Gaps are visible and testable |
 
 ## What is deliberately not finished
@@ -354,8 +354,8 @@ advances. For example:
 - a DMM can return queued readings representing nominal voltage, gradual drift, a limit failure, and
   recovery;
 - a power meter or supply can return ordered scalar measurements and status changes;
-- a base PNA measurement can return successive complex traces with their stimulus axes;
-- PNA applications such as gain compression can return coherent traces, scalar summaries, markers,
+- a base VNA measurement can return successive complex traces with their stimulus axes;
+- VNA applications such as gain compression can return coherent traces, scalar summaries, markers,
   and status for each scenario step;
 - a scenario can inject an error, timeout, overload, unlock, or other instrument-visible condition at
   a defined point.
@@ -366,7 +366,7 @@ triggered operation, hold the final value, loop, or report exhaustion. Playback 
 timing, and random seeds will be controlled so the same automation run can be reproduced.
 
 Instrument drivers remain responsible for instrument semantics. For example, a DMM adapter maps a
-scenario value into `READ?`, `FETCh?`, and status behavior, while a PNA adapter maps trace data into
+scenario value into `READ?`, `FETCh?`, and status behavior, while a VNA adapter maps trace data into
 the selected channel, measurement, format, byte order, trigger model, and OPC handshake. This keeps
 scenario data generic without weakening the behavior of each emulated instrument.
 
@@ -378,7 +378,7 @@ firmware-facing protocols. Keeping these as separate systems prevents either cor
 to one DUT or one bench, while still allowing future orchestration to start both systems with a
 shared scenario and timeline.
 
-For PNA and PNA-X profiles, completion means:
+For VNA and VNA-EXTENDED profiles, completion means:
 
 - identity, options, licenses, ports, sources, receivers, and command availability agree;
 - sweeps and applications produce deterministic but physically meaningful data;
@@ -409,7 +409,7 @@ developer or build agent to have a costly instrument attached.
 - **Documented compatibility.** Every claim should name a model, firmware snapshot, option set, and
   source.
 - **Legacy use remains possible.** CSV instruments continue to provide a quick way to emulate simple
-  equipment while core and PNA behavior migrate to typed modules.
+  equipment while core and VNA behavior migrate to typed modules.
 - **Tests protect instrument semantics.** Regressions are checked at parser, registry, state-machine,
   status, output-queue, profile, and socket levels.
 
@@ -419,10 +419,10 @@ As of 2026-08-22:
 
 - 295 automated tests pass, with 2 expected failures documenting legacy CSV parser limitations.
 - Two known legacy-parser limitations are retained as explicit expected failures.
-- The N5222B and N5242B manifests each report 393/393 documented commands in the current snapshot.
+- The N5222B-EMU and N5242B-EMU manifests each report 393/393 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
-- The versioned PNA capability milestone is complete.
-- The first PNA measurement lifecycle is stateful: channels own uniquely named measurements,
+- The versioned VNA capability milestone is complete.
+- The first VNA measurement lifecycle is stateful: channels own uniquely named measurements,
   display traces feed those measurements, selected context remains coherent, and `*RST` restores
   the preset while `*CLS` and Device Clear preserve configuration.
 - Channel stimulus produces coherent linear, logarithmic, CW, power, and segment axes; point count,
@@ -432,7 +432,7 @@ As of 2026-08-22:
 - Named MMEM save/recall files persist only channel, measurement, window, and trace existence.
   Registry predicates reject nonexistent addressed objects before their handlers can run, while
   malformed files are rejected before any live composition is changed.
-- Licensed time-domain transforms, time gates, fixture file references, per-port de-embedding, and
+- Profile-gated time-domain transforms, time gates, fixture file references, per-port de-embedding, and
   balanced topology settings alter the shared deterministic trace and X-axis pipeline.
 - Frequency-offset ranges, scalar/vector conversion, mixer segments, source roles, and embedded-LO
   estimation compose with that same trace pipeline; calibration/correction status remains static 0.
@@ -440,13 +440,13 @@ As of 2026-08-22:
   streams with license, address-existence, trigger-policy, and malformed-data enforcement.
 - Basic and Integrated Pulse applications model five generators, point/profile operation, IF
   filters and gate routing, time axes, timing constraints, and shared scenario trigger policies.
-- The catalog-visible 34461A reference DMM consumes scalar streams through the same player, proving
+- The catalog-visible 34461A-EMU reference DMM consumes scalar streams through the same player, proving
   nominal, drift, range-failure, recovery, exhaustion, trigger/operation, fetch, and reset behavior
   on a second instrument shape.
 - The instrument-driver/catalog contract can enumerate built-in and third-party emulator families
   without coupling them to the dashboard or future bench composer.
 - The generic deterministic scenario engine provides shared scalar, trace, table, event, and error
-  playback for future DMM, PNA, and additional instrument adapters.
+  playback for future DMM, VNA, and additional instrument adapters.
 - Raw socket transport now provides bounded binary-aware framing, one active session per instrument,
   configurable termination, timeouts, and clean shutdown on the standard port 5025.
 - Versioned virtual bench files can select catalog instruments, validate configurations and resource
@@ -455,5 +455,5 @@ As of 2026-08-22:
   playback per instrument; injected faults flow through the normal SCPI error/status registers. A
   runnable remote bench/client example reproduces the complete workflow over TCP and HTTP.
 
-See [PNA compatibility baseline](pna-compatibility.md) for model and firmware details, and
+See [VNA compatibility baseline](pna-compatibility.md) for model and firmware details, and
 [TODO.md](../TODO.md) or `bd ready` for the live implementation backlog.

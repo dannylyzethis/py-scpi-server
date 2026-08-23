@@ -7,7 +7,7 @@
 
 A stateful SCPI instrument emulator for developing and testing automation software without
 physical instruments. The current alpha provides configurable raw-TCP, VXI-11, and HiSLIP
-instruments on a standards-oriented SCPI, IEEE 488.2, and PNA/PNA-X foundation.
+instruments on a standards-oriented SCPI, IEEE 488.2, and VNA/VNA-EXTENDED foundation.
 
 For a detailed, plain-language explanation of the architecture changes and completed-system vision,
 see [From command responder to instrument emulator](docs/foundation-evolution.md).
@@ -31,25 +31,25 @@ Dashboard state visibility and scenario/fault controls are documented in
 - A bounded FIFO error queue connected to IEEE 488.2 event and status registers.
 - Active `*CLS`, `*OPC`, `*OPC?`, `*WAI`, ESE/SRE/status-byte, trigger, and acquisition behavior.
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
-- Versioned N5222B PNA and N5242B PNA-X hardware, option, license, and capability profiles,
+- Versioned N5222B-EMU VNA and N5242B-EMU VNA-EXTENDED hardware, option, license, and capability profiles,
   including model-faithful and all-applications developer modes.
-- Stateful PNA channel, measurement, display-window, trace, format, math, marker, limit, and
+- Stateful VNA channel, measurement, display-window, trace, format, math, marker, limit, and
   equation workflows with indexed and abbreviated SCPI forms.
-- PNA frequency, CW, power, and segment sweep axes with IF-bandwidth/dwell-derived acquisition
+- VNA frequency, CW, power, and segment sweep axes with IF-bandwidth/dwell-derived acquisition
   timing, source-port power, and receiver attenuation.
-- Scenario-backed PNA SDATA, FDATA, RDATA, SNP, and X-axis data in ASCII or IEEE binary formats,
+- Scenario-backed VNA SDATA, FDATA, RDATA, SNP, and X-axis data in ASCII or IEEE binary formats,
   using the same deterministic playback engine as scalar instruments.
-- Licensed PNA time-domain transforms, time gating, and deterministic fixture-removal/topology
+- Profile-gated VNA time-domain transforms, time gating, and deterministic fixture-removal/topology
   workflows that process those same scenario traces.
-- Licensed frequency-offset ranges, scalar/vector converters, mixer segments, source roles, and
+- Profile-gated frequency-offset ranges, scalar/vector converters, mixer segments, source roles, and
   embedded-LO behavior with coherent scenario-backed axes and data.
-- Licensed gain-compression and noise-figure configuration, scenario-backed arrays, threshold
-  results, and deterministic trigger behavior in the shared PNA data pipeline.
-- Licensed basic and Integrated Pulse generators, point-in-pulse/profile traces, time axes, IF
+- Profile-gated gain-compression and noise-figure configuration, scenario-backed arrays, threshold
+  results, and deterministic trigger behavior in the shared VNA data pipeline.
+- Profile-gated basic and Integrated Pulse generators, point-in-pulse/profile traces, time axes, IF
   filters/gates, and shared deterministic trigger playback.
-- Licensed Spectrum Analyzer, Swept IMD, Modulation Distortion, Phase Noise, Differential I/Q, and
+- Profile-gated Spectrum Analyzer, Swept IMD, Modulation Distortion, Phase Noise, Differential I/Q, and
   wideband-I/Q workflows with option gates, scenario results, application axes, and markers.
-- A catalog-visible Virtual 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
+- A catalog-visible Virtual 34461A-EMU reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
@@ -75,7 +75,7 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
   library users can enable standards-shaped `_hislip._tcp` and `_vxi-11._tcp` advertisements.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
-- PNA configuration, sweep/stimulus, base trace-data workflows, and the selected licensed
+- VNA configuration, sweep/stimulus, base trace-data workflows, and the selected profile-gated
   application families are stateful, but complete behavioral coverage of every command in those
   large applications remains iterative. The current command manifest is a growing verified
   snapshot, not exhaustive command coverage.
@@ -83,19 +83,19 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
   control plane rather than an internet-facing service.
 
 See [TODO.md](TODO.md) and `bd ready` for the implementation backlog.
-PNA state semantics are described in [PNA measurement workflows](docs/pna-measurements.md).
-Scenario trace mapping is described in [PNA scenario data](docs/pna-scenario-data.md).
+VNA state semantics are described in [VNA measurement workflows](docs/pna-measurements.md).
+Scenario trace mapping is described in [VNA scenario data](docs/pna-scenario-data.md).
 Scalar/DMM playback is described in [DMM scenario data](docs/dmm-scenario-data.md).
 Time-domain and fixture behavior is described in
-[PNA time-domain and fixture behavior](docs/pna-time-domain.md).
+[VNA time-domain and fixture behavior](docs/pna-time-domain.md).
 Frequency-offset and converter behavior is described in
-[PNA frequency-offset and converter behavior](docs/pna-mixer.md).
+[VNA frequency-offset and converter behavior](docs/pna-mixer.md).
 Gain-compression and noise-figure behavior is described in
-[PNA active-device behavior](docs/pna-active-device.md).
+[VNA active-device behavior](docs/pna-active-device.md).
 Pulse generator and Integrated Pulse behavior is described in
-[PNA pulse behavior](docs/pna-pulse.md).
+[VNA pulse behavior](docs/pna-pulse.md).
 Spectrum, IMD, modulation-distortion, phase-noise, and I/Q behavior is described in
-[PNA advanced-application behavior](docs/pna-advanced.md).
+[VNA advanced-application behavior](docs/pna-advanced.md).
 The end-to-end bench/scenario workflow is in
 [Remote ATE development workflow](docs/remote-ate-workflow.md).
 
@@ -227,7 +227,7 @@ The repository includes:
 
 - `scpi_instruments_example.csv` — two small development instruments.
 - `detailed_instruments.csv` — eight legacy instrument command catalogs.
-- `pna-commands.csv` — the current static N5222B PNA catalog.
+- `pna-commands.csv` — the current static N5222B-EMU VNA catalog.
 
 ## CLI reference
 

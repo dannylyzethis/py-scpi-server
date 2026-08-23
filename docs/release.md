@@ -11,8 +11,8 @@ From a clean checkout, create a virtual environment and run:
 python -m pip install -e ".[all,dev]"
 python -m ruff check src tests tools
 python -m pytest --cov --cov-report=term-missing --cov-fail-under=82
-python tools/pna_manifest.py --model N5222B --firmware A.20.25.04
-python tools/pna_manifest.py --model N5242B --firmware A.20.25.04
+python tools/pna_manifest.py --model N5222B-EMU --firmware E.1.0
+python tools/pna_manifest.py --model N5242B-EMU --firmware E.1.0
 python -m build
 python -m pip install --force-reinstall dist/*.whl
 scpi-emulator --version
@@ -42,7 +42,7 @@ docker run --rm -p 5025:5025 `
 
 GitHub Actions runs the suite on Linux and Windows with the oldest and newest declared Python
 families, executes the real PyVISA-Py VXI-11 INSTR smoke test, enforces at least 82% branch-aware
-package coverage, validates both PNA manifests, builds and reinstalls the wheel, and queries the
+package coverage, validates both VNA manifests, builds and reinstalls the wheel, and queries the
 Docker image over a real raw-SCPI socket.
 
 ## Release checklist
@@ -52,4 +52,4 @@ Docker image over a real raw-SCPI socket.
 3. Run the local verification commands above from a clean checkout.
 4. Tag the verified commit as `v<version>` and publish the wheel and source archive from `dist/`.
 5. Keep the manifest model, firmware, source provenance, and known limitations explicit; do not
-   describe the growing snapshot as complete PNA coverage.
+   describe the growing snapshot as complete VNA coverage.

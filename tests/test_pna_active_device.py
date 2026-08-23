@@ -11,9 +11,9 @@ from scpi_emulator.scpi import PNACapabilities
 
 
 def active_device_pna(*streams: ScenarioStream) -> SCPIInstrument:
-    capabilities = PNACapabilities.create("N5242B", mode="all-applications")
+    capabilities = PNACapabilities.create("N5242B-EMU", mode="all-applications")
     instrument = SCPIInstrument(
-        "Virtual N5242B", "active-device", pna_capabilities=capabilities
+        "Virtual N5242B-EMU", "active-device", pna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
@@ -118,9 +118,9 @@ def test_active_device_state_survives_cls_and_resets_with_rst() -> None:
 
 def test_application_commands_enforce_license_and_address_existence() -> None:
     strict = SCPIInstrument(
-        "Virtual N5222B",
+        "Virtual N5222B-EMU",
         "strict",
-        pna_capabilities=PNACapabilities.create("N5222B"),
+        pna_capabilities=PNACapabilities.create("N5222B-EMU"),
     )
     assert strict.process_command("SENS:GC:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
