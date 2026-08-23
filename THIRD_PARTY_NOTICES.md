@@ -4,6 +4,11 @@ This project is MIT licensed. Its base installation has no mandatory runtime dep
 Optional Excel, web-dashboard, discovery, and development features install the packages listed in
 `licenses/dependencies.json`; those packages are not copied into this project's wheel.
 
+Project policy permits only dependencies whose licenses allow commercial and enterprise use without
+a mandatory license fee or royalty. The CI license check enforces that policy against the reviewed
+dependency inventory. License-notice, source-availability, and modification obligations still apply
+where required by an individual open-source license.
+
 The machine-readable inventory records the reviewed version, dependency scope, and SPDX license for
 every package in the `all` and `dev` dependency closure. Run `python tools/check_licenses.py` after
 installing `.[all,dev]` to verify the installed closure against that review.

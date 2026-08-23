@@ -14,7 +14,12 @@ def test_license_inventory_is_complete_and_explicit() -> None:
         (REPOSITORY_ROOT / "licenses" / "dependencies.json").read_text(encoding="utf-8")
     )
     packages = inventory["packages"]
+    requirements = inventory["policy"]["requirements"]
 
+    assert requirements == {
+        "commercial_enterprise_use": True,
+        "mandatory_license_fee_or_royalty": False,
+    }
     assert set(inventory["roots"]) <= set(packages)
     assert all(entry["license"] for entry in packages.values())
     assert all(entry["reviewed_version"] for entry in packages.values())

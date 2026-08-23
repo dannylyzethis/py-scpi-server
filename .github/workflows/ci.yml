@@ -25,7 +25,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[all,dev]"
       - run: python -m ruff check src tests tools
-      - name: Verify dependency license policy
+      - name: Verify royalty-free commercial and enterprise dependency licenses
         run: python tools/check_licenses.py
       - name: Run tests
         run: python tools/ci_pytest.py

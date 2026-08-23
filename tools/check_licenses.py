@@ -69,11 +69,17 @@ def _detected_license(distribution: metadata.Distribution) -> str | None:
 
 def main() -> int:
     inventory = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
+    requirements = inventory["policy"].get("requirements", {})
     packages = {
         canonicalize_name(name): entry for name, entry in inventory["packages"].items()
     }
     permitted = set(inventory["policy"]["permitted_licenses"])
     errors: list[str] = []
+
+    if requirements.get("commercial_enterprise_use") is not True:
+        errors.append("policy must require commercial and enterprise use")
+    if requirements.get("mandatory_license_fee_or_royalty") is not False:
+        errors.append("policy must prohibit mandatory license fees and royalties")
 
     for name, entry in packages.items():
         if entry["license"] not in permitted:
@@ -111,7 +117,10 @@ def main() -> int:
         for error in errors:
             print(f"- {error}")
         return 1
-    print(f"\nLicense policy passed for {len(installed)} installed dependencies.")
+    print(
+        f"\nRoyalty-free commercial/enterprise license policy passed for "
+        f"{len(installed)} installed dependencies."
+    )
     return 0
 
 
