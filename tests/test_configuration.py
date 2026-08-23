@@ -4,6 +4,14 @@ from pathlib import Path
 import pytest
 
 from scpi_emulator.emulator import SCPIEmulatorManager
+from scpi_emulator.scenario import (
+    AdvancePolicy,
+    EndPolicy,
+    ScenarioDefinition,
+    ScenarioSample,
+    ScenarioStream,
+    StreamKind,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).parents[1]
@@ -201,3 +209,41 @@ def test_command_with_empty_response_is_loaded(tmp_path: Path) -> None:
     manager = SCPIEmulatorManager()
     assert manager.load_from_file(config)
     assert manager.instruments["device"]["instrument"].process_command("ACTION") == ""
+
+
+def test_csv_response_marker_reads_and_advances_attached_scenario(tmp_path: Path) -> None:
+    config = tmp_path / "scenario.csv"
+    config.write_text(
+        "Equipment,Port,Command,Response,Validation\n"
+        "Queue Reader,6101,VALUE?,{{scenario:dut.value}},\n"
+        ",,NEXT (.+),{{scenario:dut.value}},\n"
+        ",,STATUS?,READY,\n",
+        encoding="utf-8",
+    )
+    manager = SCPIEmulatorManager()
+    assert manager.load_from_file(config)
+    instrument = manager.instruments["queue_reader"]["instrument"]
+
+    assert instrument.process_command("VALUE?") == "0"
+    assert instrument.process_command("NEXT ignored") == "0"
+    assert instrument.process_command("STATUS?") == "READY"
+
+    instrument.attach_scenario(
+        ScenarioDefinition(
+            "csv-values",
+            (
+                ScenarioStream(
+                    "dut.value",
+                    StreamKind.SCALAR,
+                    (ScenarioSample(1.25), ScenarioSample(2.5)),
+                    advance=AdvancePolicy.READ,
+                    end=EndPolicy.HOLD_LAST,
+                ),
+            ),
+        )
+    )
+
+    assert instrument.process_command("VALUE?") == "1.25"
+    assert instrument.process_command("NEXT ignored") == "2.5"
+    assert instrument.process_command("VALUE?") == "2.5"
+    assert instrument.process_command("STATUS?") == "READY"

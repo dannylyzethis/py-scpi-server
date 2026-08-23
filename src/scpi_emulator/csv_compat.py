@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .scpi.errors import ErrorQueue
 from .scpi.output import BinaryResponse
+
+if TYPE_CHECKING:
+    from .scenario import ScenarioPlayer
+
+
+_SCENARIO_RESPONSE = re.compile(r"\A\{\{scenario:(?P<stream>.+?)\}\}\Z")
 
 
 class CSVCommandAdapter:
@@ -18,6 +24,11 @@ class CSVCommandAdapter:
         self.state: dict[str, str] = {}
         self.validation_rules: dict[str, str] = {}
         self.default_values: dict[str, str] = {}
+        self.player: ScenarioPlayer | None = None
+
+    def attach(self, player: ScenarioPlayer) -> None:
+        """Attach the shared deterministic scenario player used by this instrument."""
+        self.player = player
 
     def add_command(self, command: str, response: str, validation: str | None = None) -> None:
         command = command.strip().upper()
@@ -27,7 +38,7 @@ class CSVCommandAdapter:
                 self.validation_rules[pattern] = validation
             self.commands[pattern] = self._parameterized_response(response, validation)
         else:
-            self.commands[command] = lambda resp=response: str(resp)
+            self.commands[command] = lambda resp=response: self._response(resp)
 
     def add_binary_query(self, command: str, data: bytes, *, definite: bool = True) -> None:
         command = command.strip().upper()
@@ -98,9 +109,17 @@ class CSVCommandAdapter:
             for index, argument in enumerate(args, 1):
                 response = response.replace(f"{{param{index}}}", argument)
                 response = response.replace("{value}", argument)
-            return response
+            return self._response(response)
 
         return respond
+
+    def _response(self, template: str):
+        match = _SCENARIO_RESPONSE.fullmatch(str(template))
+        if match is None:
+            return str(template)
+        if self.player is None:
+            return "0"
+        return self.player.read(match.group("stream"))
 
     def _stateful_set(self, base_name: str, validation: str | None):
         def set_value(*args: str) -> str:

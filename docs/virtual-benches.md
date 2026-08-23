@@ -4,6 +4,18 @@ A virtual bench file selects instrument drivers and models from the catalog, sup
 and application configuration, and assigns client resource addresses. The same versioned file can be
 loaded on a developer computer, a remote machine, or a CI worker.
 
+The catalog always includes the built-in VNA and DMM drivers. Legacy five-column CSV instruments can
+be added as a third driver family by passing their directory when building the catalog:
+
+```python
+catalog = build_driver_catalog(csv_directory="instrument-definitions")
+```
+
+Each `Equipment` block becomes a model under the experimental `csv-instruments` driver and can be
+selected in a bench with the `raw-socket` transport. Equipment names use the same normalized IDs as
+the legacy `--load file.csv` path—for example, `Bench Relay` becomes `bench_relay`. The directory is
+configuration supplied by the host; it is not added to the versioned bench schema.
+
 Bench composition and server startup are separate phases:
 
 1. Parse and validate the entire bench document.
@@ -67,6 +79,24 @@ or partial cannot accidentally be started.
 Configuration contents are driver-specific. For the built-in VNA driver they include compatibility
 mode, hardware configuration, hardware add-ons, application options, and serial number. The driver
 performs the same prerequisite and physical-coherence validation used by direct VNA profiles.
+CSV models do not advertise additional configuration or scenario-input guarantees because their
+available commands depend on their source files.
+
+## Scenario-backed CSV responses
+
+The existing CSV schema is unchanged. A command can consume a named deterministic scenario stream by
+placing `{{scenario:<stream_name>}}` in its existing `Response` column. For example:
+
+```csv
+Equipment,Port,Command,Response,Validation
+Queue Reader,5025,VALUE?,{{scenario:dut.value}},
+```
+
+After `attach_scenario()` supplies a shared player, every `VALUE?` query calls
+`player.read("dut.value")`, including the stream's configured advancement and end policies. Without
+an attached scenario the marker returns `0`; ordinary canned responses remain unchanged. This keeps
+existing CSV instruments operational while allowing selected responses to use the same deterministic
+engine as the VNA and DMM drivers.
 
 ## Loading, composing, and starting
 

@@ -120,6 +120,32 @@ def test_catalog_composition_creates_each_selected_model_and_resource() -> None:
     }
 
 
+def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> None:
+    (tmp_path / "device.csv").write_text(
+        "Equipment,Port,Command,Response,Validation\n"
+        "Bench Relay,6101,STATE?,OPEN,\n",
+        encoding="utf-8",
+    )
+    definition = BenchDefinition(
+        "csv-bench",
+        (
+            BenchInstrument(
+                id="relay1",
+                driver="csv-instruments",
+                model="bench_relay",
+                resource=ResourceAddress("raw-socket", "127.0.0.1", 6201),
+            ),
+        ),
+    )
+
+    composed = BenchComposer(
+        build_driver_catalog(discover_plugins=False, csv_directory=tmp_path)
+    ).compose(definition)
+
+    assert composed.instrument("relay1").instrument.process_command("STATE?") == "OPEN"
+    assert composed.resources() == {"relay1": "TCPIP::127.0.0.1::6201::SOCKET"}
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [

@@ -412,6 +412,8 @@ class SCPIInstrument:
             self.pna_data.attach(player)
         if self.scalar_data is not None:
             self.scalar_data.attach(player)
+        if self.csv_compatibility is not None:
+            self.csv_compatibility.attach(player)
         self.scenario_control.attach(player)
         return player
 
@@ -1091,6 +1093,141 @@ class WebDashboard:
             return False
 
 
+def compatibility_instrument_id(name: str) -> str:
+    """Return the stable identifier used by legacy Equipment blocks."""
+    instrument_id = re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
+    if not instrument_id:
+        raise ConfigurationError("equipment name must contain a letter or number")
+    return instrument_id
+
+
+def validate_compatibility_rule(rule: str, row_num: int) -> None:
+    """Validate one legacy CSV parameter rule."""
+    if not rule or rule == 'bool':
+        return
+    if rule.startswith('range:'):
+        values = rule.split(':', 1)[1].split(',')
+        if len(values) != 2:
+            raise ConfigurationError(
+                f"row {row_num}: range validation requires exactly two bounds"
+            )
+        try:
+            lower, upper = map(float, values)
+        except ValueError as error:
+            raise ConfigurationError(f"row {row_num}: range bounds must be numeric") from error
+        if lower > upper:
+            raise ConfigurationError(f"row {row_num}: range lower bound exceeds upper bound")
+        return
+    if rule.startswith('enum:'):
+        values = [value.strip() for value in rule.split(':', 1)[1].split(',')]
+        if not values or any(not value for value in values):
+            raise ConfigurationError(
+                f"row {row_num}: enum validation requires non-empty values"
+            )
+        return
+    raise ConfigurationError(f"row {row_num}: unsupported validation rule '{rule}'")
+
+
+def load_compatibility_instruments(file_path, port_start=5025):
+    """Parse and construct legacy CSV/XLSX instruments without mutating a manager."""
+    file_path_obj = Path(file_path)
+    if not file_path_obj.exists():
+        raise ConfigurationError(f"file not found: {file_path}")
+    if file_path_obj.suffix.lower() == '.xlsx':
+        data = ExcelReader.read_excel_as_csv(file_path)
+    elif file_path_obj.suffix.lower() == '.csv':
+        data = ExcelReader.read_csv(file_path)
+    else:
+        raise ConfigurationError(f"unsupported file type: {file_path_obj.suffix}")
+    if not data:
+        raise ConfigurationError(f"no data found in file: {file_path}")
+
+    loaded_instruments = {}
+    used_ports = set()
+    current_instrument = None
+    current_commands = set()
+    current_port = port_start
+    commands_added = 0
+
+    logger.info(f"Processing {len(data)} rows from {file_path}")
+    for row_num, row in enumerate(data, 2):
+        equipment_name = row.get('Equipment', '').strip()
+        port_text = row.get('Port', '').strip()
+        command = row.get('Command', '').strip()
+        response = row.get('Response', '').strip()
+        validation = row.get('Validation', '').strip()
+
+        if not equipment_name and port_text:
+            raise ConfigurationError(
+                f"row {row_num}: port is only allowed when declaring equipment"
+            )
+        if not command and (response or validation):
+            raise ConfigurationError(
+                f"row {row_num}: response or validation provided without a command"
+            )
+
+        if equipment_name:
+            instrument_id = compatibility_instrument_id(equipment_name)
+            if instrument_id in loaded_instruments:
+                raise ConfigurationError(
+                    f"row {row_num}: duplicate equipment identifier '{instrument_id}'"
+                )
+            if port_text:
+                try:
+                    port = int(port_text)
+                except ValueError as error:
+                    raise ConfigurationError(
+                        f"row {row_num}: port must be an integer"
+                    ) from error
+            else:
+                while current_port in used_ports:
+                    current_port += 1
+                port = current_port
+                current_port += 1
+            if not 1 <= port <= 65535:
+                raise ConfigurationError(f"row {row_num}: port must be between 1 and 65535")
+            if port in used_ports:
+                raise ConfigurationError(f"row {row_num}: duplicate port {port}")
+
+            current_instrument = SCPIInstrument(equipment_name, instrument_id)
+            loaded_instruments[instrument_id] = {
+                'instrument': current_instrument,
+                'port': port,
+            }
+            used_ports.add(port)
+            current_commands = set()
+            logger.info(f"Row {row_num}: Created instrument: {equipment_name} (Port: {port})")
+
+        if command:
+            if current_instrument is None:
+                raise ConfigurationError(
+                    f"row {row_num}: command appears before any equipment declaration"
+                )
+            command_key = command.upper()
+            if command_key in current_commands:
+                raise ConfigurationError(
+                    f"row {row_num}: duplicate command '{command}' for "
+                    f"'{current_instrument.name}'"
+                )
+            if validation and '(.+)' not in command and '{value}' not in command:
+                raise ConfigurationError(
+                    f"row {row_num}: validation requires a parameterized command"
+                )
+            validate_compatibility_rule(validation, row_num)
+            if command_key == "*IDN?" and current_instrument.pna_capabilities is None:
+                current_instrument.identification = response
+            if command_key not in {"*IDN?", "*RST", "*TST?", "SYST:VERS?"}:
+                current_instrument.csv_compatibility.add_command(command, response, validation)
+            current_commands.add(command_key)
+            commands_added += 1
+
+    for instrument_data in loaded_instruments.values():
+        instrument_data['instrument'].csv_compatibility.link_stateful_commands()
+    if not loaded_instruments:
+        raise ConfigurationError(f"no valid instruments found in file: {file_path}")
+    return loaded_instruments, commands_added
+
+
 class SCPIEmulatorManager:
     """Manages multiple SCPI instrument emulators with web dashboard"""
 
@@ -1112,161 +1249,24 @@ class SCPIEmulatorManager:
 
     @staticmethod
     def _instrument_id(name):
-        instrument_id = re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
-        if not instrument_id:
-            raise ConfigurationError("equipment name must contain a letter or number")
-        return instrument_id
+        return compatibility_instrument_id(name)
 
     @staticmethod
     def _validate_rule(rule, row_num):
-        if not rule or rule == 'bool':
-            return
-        if rule.startswith('range:'):
-            values = rule.split(':', 1)[1].split(',')
-            if len(values) != 2:
-                raise ConfigurationError(
-                    f"row {row_num}: range validation requires exactly two bounds"
-                )
-            try:
-                lower, upper = map(float, values)
-            except ValueError as error:
-                raise ConfigurationError(
-                    f"row {row_num}: range bounds must be numeric"
-                ) from error
-            if lower > upper:
-                raise ConfigurationError(
-                    f"row {row_num}: range lower bound exceeds upper bound"
-                )
-            return
-        if rule.startswith('enum:'):
-            values = [value.strip() for value in rule.split(':', 1)[1].split(',')]
-            if not values or any(not value for value in values):
-                raise ConfigurationError(
-                    f"row {row_num}: enum validation requires non-empty values"
-                )
-            return
-        raise ConfigurationError(f"row {row_num}: unsupported validation rule '{rule}'")
+        validate_compatibility_rule(rule, row_num)
 
     def load_from_file(self, file_path, port_start=5025):
         """Load instrument definitions from Excel or CSV file"""
         try:
-            file_path_obj = Path(file_path)
-            
-            if not file_path_obj.exists():
-                logger.error(f"File not found: {file_path}")
-                return False
-            
-            # Read data based on file type
-            if file_path_obj.suffix.lower() == '.xlsx':
-                data = ExcelReader.read_excel_as_csv(file_path)
-            elif file_path_obj.suffix.lower() == '.csv':
-                data = ExcelReader.read_csv(file_path)
-            else:
-                logger.error(f"Unsupported file type: {file_path_obj.suffix}")
-                return False
-            
-            if not data:
-                logger.error("No data found in file")
-                return False
-            
-            loaded_instruments = {}
-            used_ports = set()
-            current_instrument = None
-            current_commands = set()
-            current_port = port_start
-            commands_added = 0
-            
-            logger.info(f"Processing {len(data)} rows from {file_path}")
-            
-            for row_num, row in enumerate(data, 2):
-                equipment_name = row.get('Equipment', '').strip()
-                port_text = row.get('Port', '').strip()
-                command = row.get('Command', '').strip()
-                response = row.get('Response', '').strip()
-                validation = row.get('Validation', '').strip()
-
-                if not equipment_name and port_text:
-                    raise ConfigurationError(
-                        f"row {row_num}: port is only allowed when declaring equipment"
-                    )
-                if not command and (response or validation):
-                    raise ConfigurationError(
-                        f"row {row_num}: response or validation provided without a command"
-                    )
-
-                if equipment_name:
-                    instrument_id = self._instrument_id(equipment_name)
-                    if instrument_id in loaded_instruments:
-                        raise ConfigurationError(
-                            f"row {row_num}: duplicate equipment identifier '{instrument_id}'"
-                        )
-
-                    if port_text:
-                        try:
-                            port = int(port_text)
-                        except ValueError as error:
-                            raise ConfigurationError(
-                                f"row {row_num}: port must be an integer"
-                            ) from error
-                    else:
-                        while current_port in used_ports:
-                            current_port += 1
-                        port = current_port
-                        current_port += 1
-
-                    if not 1 <= port <= 65535:
-                        raise ConfigurationError(
-                            f"row {row_num}: port must be between 1 and 65535"
-                        )
-                    if port in used_ports:
-                        raise ConfigurationError(f"row {row_num}: duplicate port {port}")
-
-                    current_instrument = SCPIInstrument(equipment_name, instrument_id)
-                    loaded_instruments[instrument_id] = {
-                        'instrument': current_instrument,
-                        'port': port
-                    }
-                    used_ports.add(port)
-                    current_commands = set()
-                    logger.info(f"Row {row_num}: Created instrument: {equipment_name} (Port: {port})")
-
-                if command:
-                    if current_instrument is None:
-                        raise ConfigurationError(
-                            f"row {row_num}: command appears before any equipment declaration"
-                        )
-                    command_key = command.upper()
-                    if command_key in current_commands:
-                        raise ConfigurationError(
-                            f"row {row_num}: duplicate command '{command}' for "
-                            f"'{current_instrument.name}'"
-                        )
-                    if validation and '(.+)' not in command and '{value}' not in command:
-                        raise ConfigurationError(
-                            f"row {row_num}: validation requires a parameterized command"
-                        )
-                    self._validate_rule(validation, row_num)
-                    if command_key == "*IDN?" and current_instrument.pna_capabilities is None:
-                        current_instrument.identification = response
-                    if command_key not in {"*IDN?", "*RST", "*TST?", "SYST:VERS?"}:
-                        current_instrument.csv_compatibility.add_command(
-                            command, response, validation
-                        )
-                    current_commands.add(command_key)
-                    commands_added += 1
-
-            # Link stateful commands
-            for instrument_data in loaded_instruments.values():
-                instrument = instrument_data['instrument']
-                instrument.csv_compatibility.link_stateful_commands()
-
-            if loaded_instruments:
-                self.instruments = loaded_instruments
-                logger.info(f"Successfully loaded {len(loaded_instruments)} instruments with {commands_added} commands")
-                return True
-
-            logger.error("No valid instruments found in file")
-            return False
+            loaded_instruments, commands_added = load_compatibility_instruments(
+                file_path, port_start
+            )
+            self.instruments = loaded_instruments
+            logger.info(
+                f"Successfully loaded {len(loaded_instruments)} instruments with "
+                f"{commands_added} commands"
+            )
+            return True
         except ConfigurationError as e:
             logger.error(f"Invalid instrument configuration: {e}")
             return False

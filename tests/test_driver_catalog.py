@@ -5,6 +5,8 @@ from importlib.resources import files
 import pytest
 
 from scpi_emulator.drivers import (
+    CSV_DRIVER_ID,
+    CSVDriver,
     CatalogError,
     DriverCatalog,
     DriverDescriptor,
@@ -103,6 +105,37 @@ def test_builtin_dmm_driver_advertises_and_creates_scalar_scenario_instrument() 
         driver.create_instrument(
             InstrumentRequest("meter", "34461A-EMU", configuration={"option": "imaginary"})
         )
+
+
+def test_configured_csv_directory_adds_catalog_models_and_creates_instrument(tmp_path) -> None:
+    (tmp_path / "devices.csv").write_text(
+        "Equipment,Port,Command,Response,Validation\n"
+        'Queue Reader,6101,*IDN?,"Emulator,Queue Reader,SN1,E.1.0",\n'
+        ",,VALUE?,READY,\n",
+        encoding="utf-8",
+    )
+
+    catalog = build_driver_catalog(discover_plugins=False, csv_directory=tmp_path)
+    descriptors = {descriptor.id: descriptor for descriptor in catalog.descriptors}
+
+    assert CSV_DRIVER_ID in descriptors
+    descriptor = descriptors[CSV_DRIVER_ID]
+    assert descriptor.maturity is DriverMaturity.EXPERIMENTAL
+    assert descriptor.scenario_inputs == ()
+    assert descriptor.model("queue_reader").instrument_class == "CSV"
+    assert {item.name: item.support for item in descriptor.transports} == {
+        "raw-socket": SupportLevel.IMPLEMENTED
+    }
+
+    instrument = catalog.create(
+        CSV_DRIVER_ID,
+        InstrumentRequest("bench_reader", "queue_reader", name="Bench queue reader"),
+    )
+    assert instrument.id == "bench_reader"
+    assert instrument.name == "Bench queue reader"
+    assert instrument.process_command("VALUE?") == "READY"
+
+    assert isinstance(catalog.get(CSV_DRIVER_ID), CSVDriver)
 
 
 def test_pna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:
