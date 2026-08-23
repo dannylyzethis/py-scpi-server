@@ -15,14 +15,8 @@ from scpi_emulator.scpi import (
 
 
 def implementation_keys(instrument: SCPIInstrument) -> frozenset[str]:
-    """Collect typed commands plus literal built-in legacy commands."""
-    typed = registry_implementation_keys(instrument.core_registry)
-    legacy = frozenset(
-        key.upper()
-        for key in instrument.commands
-        if not any(marker in key for marker in ("(", "[", "\\"))
-    )
-    return typed | legacy
+    """Collect the typed commands that define the VNA implementation contract."""
+    return registry_implementation_keys(instrument.core_registry)
 
 
 def main(argv: list[str] | None = None) -> int:

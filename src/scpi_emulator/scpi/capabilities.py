@@ -255,7 +255,6 @@ def register_capability_commands(
     registry: CommandRegistry, capabilities: PNACapabilities
 ) -> None:
     """Register model identity and the core Virtual capability catalogs."""
-    _register_query(registry, (HeaderNode("*IDN"),), lambda: capabilities.identification, common=True)
     _register_query(
         registry,
         (HeaderNode("*OPT"),),

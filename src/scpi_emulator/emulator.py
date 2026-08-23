@@ -1,15 +1,5 @@
 #!/usr/bin/env python3
-"""
-SCPI Equipment Emulator - VERSION 2.3
-ADDED: Web Dashboard with real-time monitoring and control
-
-New Features:
-- Web dashboard on http://localhost:8081
-- Real-time command/response monitoring
-- Remote instrument control
-- Performance metrics visualization
-- Configuration upload via web interface
-"""
+"""SCPI emulator process, transports, dashboard, and configuration loading."""
 
 import csv
 import json
@@ -29,6 +19,7 @@ import os
 from collections.abc import Sequence
 
 from . import EMULATOR_FIRMWARE, __version__
+from .csv_compat import CSVCommandAdapter
 from .scpi import (
     AcquisitionController,
     BinaryResponse,
@@ -59,6 +50,7 @@ from .scpi import (
     register_acquisition_commands,
     register_format_commands,
     register_capability_commands,
+    register_common_commands,
     register_status_commands,
     register_measurement_commands,
     register_mixer_commands,
@@ -276,10 +268,9 @@ class SCPIInstrument:
     def __init__(self, name, instrument_id, *, pna_capabilities=None, state_directory=None):
         self.name = name
         self.id = instrument_id
-        self.commands = {}
-        self.state = {}
         self.status = StatusSystem()
         self.error_queue = self.status.error_queue
+        self.csv_compatibility = CSVCommandAdapter(self.error_queue)
         self.operation_manager = OperationManager(self.status)
         self.acquisition = AcquisitionController(self.operation_manager, self.status)
         self.data_format = DataFormat()
@@ -307,6 +298,12 @@ class SCPIInstrument:
             else ()
         )
         self.core_registry = CommandRegistry(registry_capabilities)
+        self.identification = (
+            self.pna_capabilities.identification
+            if self.pna_capabilities is not None
+            else f"SCPI_Emulator,{self.name},{self.id},{EMULATOR_FIRMWARE}"
+        )
+        register_common_commands(self.core_registry, lambda: self.identification, self._reset)
         register_status_commands(self.core_registry, self.status)
         register_operation_commands(self.core_registry, self.operation_manager)
         register_acquisition_commands(self.core_registry, self.acquisition)
@@ -359,22 +356,6 @@ class SCPIInstrument:
         self.last_command = ""
         self.command_count = 0
         
-        # Store validation info separately to survive device clear
-        self.validation_rules = {}
-        self.default_values = {}
-        
-        # Commands not yet owned by the typed registry remain on the legacy
-        # dispatcher for CSV compatibility.
-        self._add_legacy_fallback_commands()
-
-    def _add_legacy_fallback_commands(self):
-        """Register only core commands not yet implemented by typed modules."""
-        self.commands.update({
-            '*IDN?': lambda: f"SCPI_Emulator,{self.name},{self.id},{EMULATOR_FIRMWARE}",
-            '*RST': self._reset,
-            '*TST?': self._self_test,
-            'SYST:VERS?': lambda: '1999.0',
-        })
 
     def visa_device_clear(self):
         """Simulate VISA Device Clear operation"""
@@ -386,11 +367,11 @@ class SCPIInstrument:
         self.last_command = ""
         self.command_count = 0
         
-        self.link_stateful_commands()
+        self.csv_compatibility.link_stateful_commands()
 
     def _reset(self):
         self.operation_manager.abort()
-        self.state.clear()
+        self.csv_compatibility.reset()
         self.data_format.reset()
         if self.pna_measurements is not None:
             self.pna_measurements.reset()
@@ -413,9 +394,6 @@ class SCPIInstrument:
         self.status.clear_status()
         self.output_queue.clear()
         return ''
-
-    def _self_test(self):
-        return '0'
 
     def begin_operation(self, name):
         """Start overlapped work that participates in OPC, OPC?, WAI, and ABORt."""
@@ -469,28 +447,12 @@ class SCPIInstrument:
         }
 
     def add_command(self, command, response, validation=None):
-        """Add a command-response pair"""
-        command = command.strip().upper()
-        
-        if '(.+)' in command or '{value}' in command:
-            pattern = command.replace('{value}', r'(.+)')
-            if '(.+)' not in pattern:
-                pattern = pattern.replace('(.+)', r'(.+)')
-            
-            if validation:
-                self.validation_rules[pattern] = validation
-            
-            self.commands[pattern] = self._create_parameterized_response(response, validation)
-        else:
-            self.commands[command] = lambda resp=response: str(resp)
+        """Compatibility wrapper for programmatic five-column CSV commands."""
+        self.csv_compatibility.add_command(command, response, validation)
 
     def add_binary_query(self, command, data, *, definite=True):
         """Add a byte-preserving binary query response to the active instrument."""
-        command = command.strip().upper()
-        if not command.endswith('?'):
-            raise ValueError("binary response commands must be queries")
-        payload = bytes(data)
-        self.commands[command] = lambda: BinaryResponse(payload, definite=definite)
+        self.csv_compatibility.add_binary_query(command, data, definite=definite)
 
     def queue_command_response(self, command, *, termination=b'\n'):
         """Execute a program message and leave any response in the output queue."""
@@ -515,119 +477,14 @@ class SCPIInstrument:
         """Read queued response bytes, preserving MAV until fully drained."""
         return self.output_queue.read(maximum)
 
-    def _create_parameterized_response(self, response_template, validation=None):
-        """Create a function for parameterized responses"""
-        def parameterized_response(*args, template=response_template, val=validation):
-            if args and val:
-                error = self._validate_generic(args[0], val)
-                if error:
-                    self.error_queue.push(error[0], error[1])
-                    return ''
-            
-            response = template
-            for i, arg in enumerate(args, 1):
-                response = response.replace(f'{{param{i}}}', str(arg))
-                response = response.replace('{value}', str(arg))
-            
-            return response
-        
-        parameterized_response._validation = validation
-        return parameterized_response
-    
-    def _validate_generic(self, param, validation):
-        """Generic validation"""
-        if not validation:
-            return None
-        
-        if validation.startswith('range:'):
-            try:
-                _, range_str = validation.split(':', 1)
-                min_val, max_val = map(float, range_str.split(','))
-                value = float(param)
-                if not (min_val <= value <= max_val):
-                    return -222, f"expected {min_val} to {max_val}, got {value}"
-            except ValueError:
-                return -104, f"cannot convert '{param}' to number"
-        elif validation.startswith('enum:'):
-            try:
-                _, enum_str = validation.split(':', 1)
-                valid_values = [v.strip().upper() for v in enum_str.split(',')]
-                if param.upper() not in valid_values:
-                    return -108, f"expected one of {valid_values}, got '{param}'"
-            except Exception:
-                return -108, "invalid enum format in validation rule"
-        elif validation == 'bool':
-            if param.upper() not in ['ON', 'OFF', '1', '0']:
-                return -108, f"expected ON/OFF/1/0, got '{param}'"
-        
-        return None
-
     def link_stateful_commands(self):
-        """Link SET/QUERY pairs"""
-        command_groups = {}
-        
-        for cmd in self.commands.keys():
-            if cmd.startswith('*') or cmd.startswith('SYST:'):
-                continue
-                
-            if '(.+)' in cmd:
-                base_name = cmd.replace(' (.+)', '').replace('(.+)', '')
-                if base_name not in command_groups:
-                    command_groups[base_name] = {}
-                command_groups[base_name]['set'] = cmd
-                validation = self.validation_rules.get(cmd)
-                command_groups[base_name]['validation'] = validation
-                
-            elif cmd.endswith('?'):
-                base_name = cmd[:-1]
-                if base_name not in command_groups:
-                    command_groups[base_name] = {}
-                command_groups[base_name]['query'] = cmd
-        
-        for base_name, group in command_groups.items():
-            if 'set' in group and 'query' in group:
-                set_cmd = group['set']
-                query_cmd = group['query']
-                validation = group.get('validation')
-                
-                if base_name in self.default_values:
-                    default_value = self.default_values[base_name]
-                else:
-                    original_query_handler = self.commands[query_cmd]
-                    try:
-                        default_value = original_query_handler() if callable(original_query_handler) else "0"
-                        self.default_values[base_name] = default_value
-                    except Exception:
-                        default_value = "0"
-                        self.default_values[base_name] = default_value
-                
-                self.commands[set_cmd] = self._create_stateful_set(base_name, validation)
-                self.commands[query_cmd] = self._create_stateful_query(base_name, default_value)
+        """Compatibility wrapper for linking CSV SET/QUERY pairs."""
+        self.csv_compatibility.link_stateful_commands()
 
-    def _create_stateful_set(self, base_name, validation=None):
-        """Create SET command that stores value"""
-        def set_value(*args):
-            if args:
-                key = f'{base_name}_VALUE'
-                
-                if validation:
-                    error = self._validate_generic(args[0], validation)
-                    if error:
-                        self.error_queue.push(error[0], error[1])
-                        return ''
-                
-                self.state[key] = args[0]
-                return 'OK'
-            return ''
-        return set_value
-
-    def _create_stateful_query(self, base_name, default_value):
-        """Create QUERY command that returns stored or default value"""
-        def get_value():
-            key = f'{base_name}_VALUE'
-            value = self.state.get(key, default_value)
-            return str(value)
-        return get_value
+    @property
+    def state(self):
+        """Compatibility view of state owned by the CSV adapter."""
+        return self.csv_compatibility.state
 
     def process_command(self, command):
         """Process a SCPI command and return response"""
@@ -640,8 +497,8 @@ class SCPIInstrument:
         if not command:
             return ''
 
-        # Byte input is used for binary-safe typed commands. The legacy fallback
-        # remains text-only until it is retired under scpi-604.
+        # Byte input remains binary-safe for typed commands. The CSV adapter is
+        # intentionally text-only and rejects undecodable input.
         if isinstance(command, bytes):
             return self._process_single_command(command)
         
@@ -669,43 +526,15 @@ class SCPIInstrument:
                 self.error_queue.push(error)
                 return ''
 
-        if isinstance(command, bytes):
-            try:
-                command = command.decode('utf-8')
-            except UnicodeDecodeError:
-                self.error_queue.push(-102, "binary data is not valid for a legacy command")
-                return ''
-        command_upper = command.upper()
-        
-        # Try exact match first
-        if command_upper in self.commands:
-            try:
-                handler = self.commands[command_upper]
-                result = handler()
-                if isinstance(result, (BinaryResponse, bytes, bytearray, memoryview)):
-                    return result
-                return str(result) if result is not None else ''
-            except Exception:
-                self.error_queue.push(-310, f"command execution failed; {command}")
-                return ''
-        
-        # Try regex matching for parameterized commands
-        for pattern, handler in self.commands.items():
-            try:
-                if '(' in pattern:
-                    regex = "(.+)".join(
-                        re.escape(literal) for literal in pattern.split("(.+)")
-                    )
-                    match = re.fullmatch(regex, command_upper)
-                    if match:
-                        args = match.groups()
-                        result = handler(*args)
-                        return str(result) if result is not None else ''
-            except Exception as e:
-                logger.error(f"Error in regex matching for '{command}': {e}")
-                continue
-        
-        # Command not found
+        try:
+            handled, result = self.csv_compatibility.dispatch(command)
+        except Exception:
+            self.error_queue.push(-310, f"command execution failed; {command}")
+            return ''
+        if handled:
+            if isinstance(result, (BinaryResponse, bytes, bytearray, memoryview)):
+                return result
+            return str(result) if result is not None else ''
         self.error_queue.push(-113, command)
         return ''
 
@@ -1417,14 +1246,19 @@ class SCPIEmulatorManager:
                             f"row {row_num}: validation requires a parameterized command"
                         )
                     self._validate_rule(validation, row_num)
-                    current_instrument.add_command(command, response, validation)
+                    if command_key == "*IDN?" and current_instrument.pna_capabilities is None:
+                        current_instrument.identification = response
+                    if command_key not in {"*IDN?", "*RST", "*TST?", "SYST:VERS?"}:
+                        current_instrument.csv_compatibility.add_command(
+                            command, response, validation
+                        )
                     current_commands.add(command_key)
                     commands_added += 1
 
             # Link stateful commands
             for instrument_data in loaded_instruments.values():
                 instrument = instrument_data['instrument']
-                instrument.link_stateful_commands()
+                instrument.csv_compatibility.link_stateful_commands()
 
             if loaded_instruments:
                 self.instruments = loaded_instruments
@@ -1483,7 +1317,7 @@ class SCPIEmulatorManager:
 
     def interactive_mode(self):
         """Interactive command-line interface"""
-        print("\n SCPI Emulator Manager v2.3 - Interactive Mode")
+        print(f"\n SCPI Emulator Manager {__version__} - Interactive Mode")
         print("=" * 60)
         print("Commands:")
         print("  load <file>       - Load instruments from Excel/CSV")
@@ -1587,127 +1421,6 @@ def create_example_csv():
     print(f"Created example file: {filename}")
 
 
-def create_dashboard_template():
-    """Create the HTML template for the dashboard"""
-    template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-    os.makedirs(template_dir, exist_ok=True)
-    
-    template_path = os.path.join(template_dir, 'dashboard.html')
-    
-    if not os.path.exists(template_path):
-        # Create a simple template - in a real implementation, you'd want the full HTML
-        template_content = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>SCPI Emulator Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .status { background: #f0f8ff; padding: 15px; margin: 10px 0; border-radius: 5px; }
-        .instrument { background: #f9f9f9; padding: 10px; margin: 5px 0; border-left: 4px solid #4CAF50; }
-        .commands { background: #2c3e50; color: white; padding: 15px; font-family: monospace; height: 300px; overflow-y: auto; }
-        button { padding: 10px 20px; margin: 5px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background: #45a049; }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-</head>
-<body>
-    <h1>🔬 SCPI Emulator Dashboard</h1>
-    
-    <div class="status" id="status">
-        Loading system status...
-    </div>
-    
-    <div>
-        <button onclick="startAll()">▶️ Start All</button>
-        <button onclick="stopAll()">⏹️ Stop All</button>
-        <button onclick="refreshStatus()">🔄 Refresh</button>
-    </div>
-    
-    <h2>📡 Instruments</h2>
-    <div id="instruments">
-        Loading instruments...
-    </div>
-    
-    <h2>🖥️ Live Commands</h2>
-    <div class="commands" id="commands">
-        Waiting for commands...
-    </div>
-
-    <script>
-        const socket = io();
-        
-        function refreshStatus() {
-            fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    updateStatus(data);
-                });
-        }
-        
-        function updateStatus(data) {
-            document.getElementById('status').innerHTML = `
-                <strong>System Status:</strong> 
-                ${data.system.total_instruments} instruments, 
-                ${data.system.running_servers} running, 
-                ${data.stats.total_commands} total commands, 
-                ${data.stats.errors} errors
-            `;
-            
-            const instrumentsHtml = data.instruments.map(inst => `
-                <div class="instrument">
-                    <strong>${inst.name}</strong> (Port ${inst.port}) - 
-                    Status: ${inst.running ? '🟢 Running' : '🔴 Stopped'} - 
-                    Clients: ${inst.clients} - 
-                    Commands: ${inst.commands}
-                </div>
-            `).join('');
-            
-            document.getElementById('instruments').innerHTML = instrumentsHtml;
-        }
-        
-        function startAll() {
-            fetch('/api/start_all', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    refreshStatus();
-                });
-        }
-        
-        function stopAll() {
-            fetch('/api/stop_all', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    refreshStatus();
-                });
-        }
-        
-        socket.on('command_update', function(data) {
-            const commands = document.getElementById('commands');
-            const newCommand = document.createElement('div');
-            newCommand.innerHTML = `[${data.instrument}] ${data.command} → ${data.response}`;
-            commands.appendChild(newCommand);
-            commands.scrollTop = commands.scrollHeight;
-        });
-        
-        // Refresh status every 5 seconds
-        setInterval(refreshStatus, 5000);
-        
-        // Initial load
-        refreshStatus();
-    </script>
-</body>
-</html>
-        """
-        
-        with open(template_path, 'w', encoding='utf-8') as f:
-            f.write(template_content)
-        
-        logger.info(f"Created dashboard template: {template_path}")
-
-
 def build_parser():
     """Build the command-line parser without starting the emulator."""
     parser = argparse.ArgumentParser(
@@ -1733,7 +1446,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose, log_file=args.log_file)
 
-    print(f"SCPI Instrument Emulator {__version__} (legacy engine 2.3)")
+    print(f"SCPI Instrument Emulator {__version__}")
     print("=" * 60)
 
     if args.create_example:

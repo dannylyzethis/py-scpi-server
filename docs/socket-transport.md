@@ -57,7 +57,7 @@ bench composition.
 
 Commands remain bytes through transport framing and typed SCPI parsing. Definite binary-block
 payloads can contain arbitrary bytes, including CR, LF, semicolons, and non-UTF-8 values. Text
-decoding is used only for legacy command fallback and human-readable dashboard logging. Responses
+decoding is used only for the isolated CSV compatibility adapter and human-readable dashboard logging. Responses
 use the output queue's configured termination and preserve IEEE binary blocks without conversion.
 
 The regression suite covers fragmented and chained messages, quoted terminators, binary input,

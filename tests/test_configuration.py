@@ -30,8 +30,38 @@ def test_csv_configuration_loads_multiple_instruments(tmp_path: Path) -> None:
 
     dmm = manager.instruments["dmm"]["instrument"]
     assert dmm.process_command("*IDN?") == "Vendor,DMM,SN1,1.0"
+    assert "*IDN?" not in dmm.csv_compatibility.commands
+    assert "VOLT (.+)" in dmm.csv_compatibility.commands
     assert dmm.process_command("VOLT 6") == "OK"
     assert dmm.process_command("VOLT?") == "6"
+
+
+def test_typed_common_commands_cannot_be_replaced_by_csv_rows(tmp_path: Path) -> None:
+    config = tmp_path / "common_commands.csv"
+    config.write_text(
+        "Equipment,Port,Command,Response,Validation\n"
+        'Device,6101,*IDN?,"CSV,Device,SN,9.9",\n'
+        ",,*RST,NOT-A-RESET,\n"
+        ',,*TST?,"not zero",\n'
+        ",,SYST:VERS?,1234,\n"
+        ',,VOLT (.+),OK,"range:0,10"\n'
+        ",,VOLT?,5,\n",
+        encoding="utf-8",
+    )
+
+    manager = SCPIEmulatorManager()
+    assert manager.load_from_file(config)
+    instrument = manager.instruments["device"]["instrument"]
+
+    assert instrument.process_command("*IDN?") == "CSV,Device,SN,9.9"
+    assert instrument.process_command("VOLT 7") == "OK"
+    assert instrument.process_command("*RST") == ""
+    assert instrument.process_command("VOLT?") == "5"
+    assert instrument.process_command("*TST?") == "0"
+    assert instrument.process_command("SYST:VERS?") == "1999.0"
+    assert {"*IDN?", "*RST", "*TST?", "SYST:VERS?"}.isdisjoint(
+        instrument.csv_compatibility.commands
+    )
 
 
 def test_configuration_rejects_missing_required_columns(tmp_path: Path) -> None:

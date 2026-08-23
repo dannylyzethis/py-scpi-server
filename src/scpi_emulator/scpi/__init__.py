@@ -24,6 +24,7 @@ from .capabilities import (
     detect_pna_model,
     register_capability_commands,
 )
+from .common import register_common_commands
 from .errors import (
     ErrorCategory,
     ErrorQueue,
@@ -205,6 +206,7 @@ __all__ = [
     "register_operation_commands",
     "register_acquisition_commands",
     "register_capability_commands",
+    "register_common_commands",
     "register_format_commands",
     "register_measurement_commands",
     "register_mixer_commands",
