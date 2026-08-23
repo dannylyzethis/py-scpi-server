@@ -135,7 +135,10 @@ class StatusSystem:
     def set_service_request_enable(self, value: int) -> None:
         value = _register_value(value, EVENT_REGISTER_MASK, "service request enable")
         with self._lock:
-            self._service_request_enable = value & ~StatusByteBit.MASTER_STATUS_SUMMARY
+            # Python 3.10 preserves the IntFlag type for ``int & ~IntFlag`` while
+            # newer versions return an int. Store a plain integer so *SRE? has
+            # identical numeric text on every supported Python version.
+            self._service_request_enable = value & ~int(StatusByteBit.MASTER_STATUS_SUMMARY)
 
     @property
     def output_queue_count(self) -> int:

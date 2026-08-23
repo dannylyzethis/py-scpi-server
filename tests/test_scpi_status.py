@@ -81,6 +81,7 @@ def test_service_request_enable_bit_six_is_ignored() -> None:
     status.set_service_request_enable(255)
 
     assert status.service_request_enable == 191
+    assert type(status.service_request_enable) is int
     assert not status.requesting_service
 
 
