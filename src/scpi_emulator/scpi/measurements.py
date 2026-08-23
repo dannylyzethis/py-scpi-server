@@ -132,6 +132,51 @@ class PNAMeasurementSystem:
             self.active_window = 1
             channel.selected = measurement.name
 
+    def inspect(self) -> dict[str, object]:
+        """Return channel, measurement, window, and trace front-panel state."""
+        with self._lock:
+            channels = []
+            for channel in sorted(self.channels.values(), key=lambda item: item.number):
+                channels.append(
+                    {
+                        "number": channel.number,
+                        "selected": channel.selected,
+                        "measurements": [
+                            {
+                                "name": measurement.name,
+                                "parameter": measurement.parameter,
+                                "number": measurement.number,
+                                "format": measurement.format,
+                                "limit_enabled": measurement.limit_enabled,
+                                "limit_failed": measurement.limit_failed,
+                                "points": len(measurement.samples),
+                            }
+                            for measurement in channel.measurements.values()
+                        ],
+                    }
+                )
+            windows = [
+                {
+                    "number": window.number,
+                    "active_trace": window.active_trace,
+                    "traces": [
+                        {
+                            "number": trace.number,
+                            "measurement": trace.measurement,
+                            "visible": trace.visible,
+                            "title": trace.title,
+                        }
+                        for trace in sorted(window.traces.values(), key=lambda item: item.number)
+                    ],
+                }
+                for window in sorted(self.windows.values(), key=lambda item: item.number)
+            ]
+            return {
+                "active_window": self.active_window,
+                "channels": channels,
+                "windows": windows,
+            }
+
     def create_channel(self, number: int) -> ChannelState:
         _bounded(number, MAX_CHANNEL, "channel")
         with self._lock:

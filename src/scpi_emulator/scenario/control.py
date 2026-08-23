@@ -66,6 +66,16 @@ class ScenarioController:
         self.last_fault = {"code": code, "message": message}
         return self.inspect()
 
+    def set_noise(self, stream: str, amplitude: float):
+        if not isinstance(stream, str) or not stream.strip():
+            raise ScenarioControlError("stream must be non-empty text")
+        player = self._require_player()
+        try:
+            player.set_noise(stream, amplitude)
+        except (KeyError, ValueError) as error:
+            raise ScenarioControlError(str(error)) from error
+        return self.inspect()
+
     def inspect(self) -> dict[str, object]:
         if self.player is None:
             return {
@@ -75,6 +85,7 @@ class ScenarioController:
                 "seed": None,
                 "streams": [],
                 "last_fault": self.last_fault,
+                "noise": {},
             }
         return {
             "selected": True,
@@ -84,6 +95,7 @@ class ScenarioController:
             "elapsed_seconds": self.player.elapsed_seconds(),
             "streams": [asdict(position) for position in self.player.positions()],
             "last_fault": self.last_fault,
+            "noise": self.player.noise_settings,
         }
 
     def _require_player(self):

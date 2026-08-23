@@ -19,6 +19,8 @@ Multi-instrument selection, addressing, and startup are documented in
 [Reusable virtual bench composition](docs/virtual-benches.md).
 HiSLIP sessions and optional LXI discovery are documented in
 [HiSLIP transport and LXI discovery](docs/hislip-discovery.md).
+Dashboard state visibility and scenario/fault controls are documented in
+[Dashboard control room](docs/dashboard.md).
 
 ## Current capabilities
 
@@ -59,7 +61,8 @@ HiSLIP sessions and optional LXI discovery are documented in
   deployment-host overrides, and rollback-safe raw-TCP, VXI-11, or HiSLIP startup.
 - HiSLIP 1.0 paired sessions with Device Clear, trigger, locking, status polling, OPC-driven SRQ,
   real PyVISA-Py interoperability, and optional LXI mDNS discovery.
-- Optional Flask/Socket.IO monitoring dashboard.
+- Optional Flask/Socket.IO control room with live SCPI registers, acquisition, channel/trace,
+  scenario, deterministic-noise, and fault visibility and controls.
 - A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 
 ## Current limitations

@@ -167,6 +167,18 @@ class ErrorQueue:
         with self._lock:
             return self._errors[-1].response if self._errors else None
 
+    def snapshot(self) -> tuple[dict[str, object], ...]:
+        """Return queued errors without changing the queue or event registers."""
+        with self._lock:
+            return tuple(
+                {
+                    "code": record.code,
+                    "message": record.message,
+                    "category": record.category.value,
+                }
+                for record in self._errors
+            )
+
     def count_response(self) -> str:
         """Implement the response payload for ``SYSTem:ERRor:COUNt?``."""
         return str(len(self))

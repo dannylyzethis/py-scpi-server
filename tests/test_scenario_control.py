@@ -17,6 +17,9 @@ class FakeServer:
     def execute_control_command(self, command):
         return self.instrument.process_command(command)
 
+    def execute_control_action(self, action):
+        return action(self.instrument)
+
 
 def controlled_dashboard():
     instrument = SCPIInstrument("Virtual 34461A", "34461A")
@@ -108,6 +111,66 @@ def test_fault_injection_uses_the_scpi_error_and_status_system() -> None:
         '-222,"Data out of range; simulated DUT overload"'
     )
     assert int(instrument.process_command("*STB?")) & 4 == 0
+
+
+def test_noise_control_is_bounded_repeatable_and_part_of_scenario_playback() -> None:
+    instrument, dashboard, client = controlled_dashboard()
+    client.put(
+        "/api/scenario/dmm1",
+        headers=headers(dashboard),
+        json={"scenario": dmm_scenario()},
+    )
+
+    configured = client.post(
+        "/api/scenario/dmm1/noise",
+        headers=headers(dashboard),
+        json={"stream": "voltage.dc", "amplitude": 0.1},
+    )
+    first = float(instrument.process_command("READ?"))
+    second = float(instrument.process_command("READ?"))
+    client.post(
+        "/api/scenario/dmm1/reset",
+        headers=headers(dashboard),
+        json={"seed": 41},
+    )
+    replayed = float(instrument.process_command("READ?"))
+
+    assert configured.status_code == 200
+    assert configured.get_json()["scenario"]["noise"] == {"voltage.dc": 0.1}
+    assert 3.2 <= first <= 3.4
+    assert second == first
+    assert replayed == first
+
+    removed = client.post(
+        "/api/scenario/dmm1/noise",
+        headers=headers(dashboard),
+        json={"stream": "voltage.dc", "amplitude": 0},
+    )
+    assert removed.get_json()["scenario"]["noise"] == {}
+    assert float(instrument.process_command("READ?")) == 3.3
+
+
+def test_noise_control_rejects_unknown_streams_and_invalid_amplitudes() -> None:
+    _, dashboard, client = controlled_dashboard()
+    client.put(
+        "/api/scenario/dmm1",
+        headers=headers(dashboard),
+        json={"scenario": dmm_scenario()},
+    )
+
+    unknown = client.post(
+        "/api/scenario/dmm1/noise",
+        headers=headers(dashboard),
+        json={"stream": "missing", "amplitude": 1},
+    )
+    negative = client.post(
+        "/api/scenario/dmm1/noise",
+        headers=headers(dashboard),
+        json={"stream": "voltage.dc", "amplitude": -1},
+    )
+
+    assert unknown.status_code == 400
+    assert negative.status_code == 400
 
 
 def test_invalid_control_requests_do_not_replace_or_mutate_the_scenario() -> None:

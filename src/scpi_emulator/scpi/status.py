@@ -182,6 +182,20 @@ class StatusSystem:
         self.operation.preset()
         self.questionable.preset()
 
+    def inspect(self) -> dict[str, object]:
+        """Return a non-destructive status-register snapshot for observability."""
+        return {
+            "status_byte": self.status_byte,
+            "requesting_service": self.requesting_service,
+            "event_status": self.event_status,
+            "event_status_enable": self.event_status_enable,
+            "service_request_enable": self.service_request_enable,
+            "output_queue_count": self.output_queue_count,
+            "errors": list(self.error_queue.snapshot()),
+            "operation": _inspect_group(self.operation),
+            "questionable": _inspect_group(self.questionable),
+        }
+
 
 def register_status_commands(registry: CommandRegistry, status: StatusSystem) -> None:
     """Register IEEE common and SCPI status commands on a typed registry."""
@@ -281,3 +295,15 @@ def _register_value(value: int, mask: int, name: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= mask:
         raise ValueError(f"{name} register must be between 0 and {mask}")
     return value
+
+
+def _inspect_group(group: StatusRegisterGroup) -> dict[str, int | bool]:
+    with group._lock:
+        return {
+            "condition": group.condition,
+            "event": group.event,
+            "enable": group.enable,
+            "positive_transition": group.positive_transition,
+            "negative_transition": group.negative_transition,
+            "summary": bool(group.event & group.enable),
+        }

@@ -53,6 +53,16 @@ class ScalarScenarioSystem:
         if self.player is not None:
             self.player.reset()
 
+    def inspect(self) -> dict[str, object]:
+        """Return scalar configuration without consuming a scenario value."""
+        return {
+            "function": self.configuration.function,
+            "range": self.configuration.range,
+            "resolution": self.configuration.resolution,
+            "last_value": self.last_value,
+            "bindings": dict(self.bindings),
+        }
+
     def configure(self, function: str, measurement_range=None, resolution=None) -> None:
         self.configuration = ScalarConfiguration(
             _function(function),

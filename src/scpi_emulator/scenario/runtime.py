@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import math
 import random
 import threading
 import time
@@ -60,6 +62,7 @@ class ScenarioPlayer:
         self._seed = definition.seed
         self._random = random.Random(self._seed)
         self._random_draws = 0
+        self._noise_amplitudes: dict[str, float] = {}
         self._started_at = self._clock()
         self._paused = False
         self._paused_at: float | None = None
@@ -106,6 +109,7 @@ class ScenarioPlayer:
         with self._lock:
             state = self._state(stream)
             sample = self._current_ready_sample(state)
+            sample = self._sample_with_noise(state, sample)
             state.reads += 1
             if state.definition.advance is AdvancePolicy.READ:
                 self._advance(state)
@@ -113,7 +117,27 @@ class ScenarioPlayer:
 
     def peek(self, stream: str):
         with self._lock:
-            return self._current_ready_sample(self._state(stream)).value
+            state = self._state(stream)
+            return self._sample_with_noise(state, self._current_ready_sample(state)).value
+
+    def set_noise(self, stream: str, amplitude: float) -> None:
+        """Apply repeatable absolute noise to numeric values in one stream."""
+        if isinstance(amplitude, bool) or not isinstance(amplitude, (int, float)):
+            raise ValueError("noise amplitude must be numeric")
+        amplitude = float(amplitude)
+        if not math.isfinite(amplitude) or amplitude < 0:
+            raise ValueError("noise amplitude must be finite and non-negative")
+        with self._lock:
+            self._state(stream)
+            if amplitude == 0:
+                self._noise_amplitudes.pop(stream, None)
+            else:
+                self._noise_amplitudes[stream] = amplitude
+
+    @property
+    def noise_settings(self) -> dict[str, float]:
+        with self._lock:
+            return dict(self._noise_amplitudes)
 
     def step(self, stream: str) -> PlaybackPosition:
         """Explicitly advance one stream regardless of its automatic policy."""
@@ -191,6 +215,21 @@ class ScenarioPlayer:
             )
         return sample
 
+    def _sample_with_noise(
+        self, state: _StreamState, sample: ScenarioSample
+    ) -> ScenarioSample:
+        amplitude = self._noise_amplitudes.get(state.definition.name)
+        if amplitude is None:
+            return sample
+        value = _apply_noise(
+            sample.value,
+            amplitude,
+            seed=self._seed,
+            stream=state.definition.name,
+            index=state.index,
+        )
+        return ScenarioSample(value, at_seconds=sample.at_seconds, label=sample.label)
+
     def _advance(self, state: _StreamState, *, manual: bool = False) -> bool:
         if self._paused and not manual:
             return False
@@ -228,3 +267,35 @@ class ScenarioPlayer:
     def _elapsed(self) -> float:
         now = self._paused_at if self._paused else self._clock()
         return max(0.0, now - self._started_at - self._paused_total)
+
+
+def _apply_noise(value, amplitude: float, *, seed: int, stream: str, index: int, path=""):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, complex):
+        return complex(
+            value.real + _noise_delta(amplitude, seed, stream, index, f"{path}.real"),
+            value.imag + _noise_delta(amplitude, seed, stream, index, f"{path}.imag"),
+        )
+    if isinstance(value, (int, float)):
+        return value + _noise_delta(amplitude, seed, stream, index, path)
+    if isinstance(value, tuple):
+        return tuple(
+            _apply_noise(
+                item,
+                amplitude,
+                seed=seed,
+                stream=stream,
+                index=index,
+                path=f"{path}.{item_index}",
+            )
+            for item_index, item in enumerate(value)
+        )
+    return value
+
+
+def _noise_delta(amplitude: float, seed: int, stream: str, index: int, path: str) -> float:
+    material = f"{seed}\0{stream}\0{index}\0{path}".encode()
+    integer = int.from_bytes(hashlib.sha256(material).digest()[:8], "big")
+    unit = integer / ((1 << 64) - 1)
+    return amplitude * (2 * unit - 1)

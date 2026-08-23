@@ -134,6 +134,32 @@ class AcquisitionController:
                 )
             return self._channels[number]
 
+    def inspect(self) -> dict[str, object]:
+        """Return trigger and acquisition state without creating channels."""
+        with self._lock:
+            channels = [
+                {
+                    "number": channel.number,
+                    "state": channel.state.value,
+                    "trigger_source": channel.trigger_source.value,
+                    "trigger_delay": channel.trigger_delay,
+                    "sweep_time": channel.sweep_time,
+                    "continuous": channel.continuous,
+                    "sweep_mode": channel.sweep_mode.value,
+                    "group_count": channel.group_count,
+                    "averaging_enabled": channel.averaging_enabled,
+                    "averaging_count": channel.averaging_count,
+                    "averages_completed": channel.averages_completed,
+                    "trigger_received": channel.trigger_received,
+                }
+                for channel in sorted(self._channels.values(), key=lambda item: item.number)
+            ]
+            return {
+                "default_trigger_source": self._default_trigger_source.value,
+                "default_trigger_delay": self._default_trigger_delay,
+                "channels": channels,
+            }
+
     def initiate(self, number: int = 1) -> OperationHandle:
         with self._lock:
             channel = self.channel(number)

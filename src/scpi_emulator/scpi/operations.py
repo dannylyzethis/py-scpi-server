@@ -146,6 +146,24 @@ class OperationManager:
             if listener not in self._abort_listeners:
                 self._abort_listeners.append(listener)
 
+    def inspect(self) -> dict[str, object]:
+        """Return operation counts and pending work without changing fences."""
+        with self._condition:
+            counts = {state.value: 0 for state in OperationState}
+            for state in self._states.values():
+                counts[state.value] += 1
+            pending = [
+                {"id": identifier, "name": self._names[identifier]}
+                for identifier in sorted(self._states)
+                if self._states[identifier] is OperationState.PENDING
+            ]
+            return {
+                "pending_count": len(pending),
+                "pending": pending,
+                "counts": counts,
+                "opc_fences": len(self._opc_fences),
+            }
+
     def _finish(self, identifier: int, state: OperationState) -> bool:
         if state is OperationState.PENDING:
             raise ValueError("cannot finish an operation as pending")

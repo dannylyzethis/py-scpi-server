@@ -437,6 +437,37 @@ class SCPIInstrument:
         self.scenario_control.attach(player)
         return player
 
+    def inspect_state(self):
+        """Return a non-destructive snapshot of instrument-owned runtime state."""
+        capabilities = None
+        if self.pna_capabilities is not None:
+            profile = self.pna_capabilities
+            capabilities = {
+                'model': profile.model,
+                'instrument_class': profile.instrument_class,
+                'firmware': profile.firmware,
+                'mode': profile.mode.value,
+                'hardware_configuration': profile.hardware_configuration,
+                'hardware_addons': list(profile.hardware_addons),
+                'application_options': list(profile.application_options),
+                'ports': profile.ports,
+                'sources': profile.sources,
+                'features': sorted(profile.features),
+                'frequency_minimum': profile.frequency_minimum,
+                'frequency_maximum': profile.frequency_maximum,
+            }
+        return {
+            'status': self.status.inspect(),
+            'operations': self.operation_manager.inspect(),
+            'acquisition': self.acquisition.inspect(),
+            'scenario': self.scenario_control.inspect(),
+            'measurements': (
+                self.pna_measurements.inspect() if self.pna_measurements is not None else None
+            ),
+            'scalar': self.scalar_data.inspect() if self.scalar_data is not None else None,
+            'capabilities': capabilities,
+        }
+
     def add_command(self, command, response, validation=None):
         """Add a command-response pair"""
         command = command.strip().upper()
@@ -888,10 +919,16 @@ class SCPIServer:
 
     def execute_control_command(self, command):
         """Serialize dashboard execution with the physical-style TCP session."""
+        return self.execute_control_action(
+            lambda instrument: instrument.process_command(command)
+        )
+
+    def execute_control_action(self, action):
+        """Run one dashboard mutation under the instrument session lock."""
         if not self._session_lock.acquire(blocking=False):
             raise RuntimeError("instrument is busy with an active client session")
         try:
-            return self.instrument.process_command(command)
+            return action(self.instrument)
         finally:
             self._session_lock.release()
 
@@ -976,7 +1013,8 @@ class WebDashboard:
                     'clients': len(getattr(server, 'clients', ())) if server else 0,
                     'commands': instrument.command_count,
                     'errors': len(instrument.error_queue),
-                    'state': dict(instrument.state)
+                    'state': dict(instrument.state),
+                    'snapshot': instrument.inspect_state(),
                 })
             
             return jsonify({
@@ -984,7 +1022,10 @@ class WebDashboard:
                 'stats': command_logger.get_stats(),
                 'system': {
                     'total_instruments': len(self.manager.instruments),
-                    'running_servers': len(self.manager.servers),
+                    'running_servers': sum(
+                        bool(getattr(server, 'running', False))
+                        for server in self.manager.servers.values()
+                    ),
                     'timestamp': time.time()
                 }
             })
@@ -1007,6 +1048,13 @@ class WebDashboard:
                 return entry.get('instrument')
             return getattr(entry, 'instrument', None)
 
+        def execute_scenario_action(instrument_id, instrument, action):
+            server = self.manager.servers.get(instrument_id)
+            if server is None:
+                with self._mutation_lock:
+                    return action(instrument)
+            return server.execute_control_action(action)
+
         @self.app.route('/api/scenario/<instrument_id>')
         def api_scenario_status(instrument_id):
             instrument = scenario_instrument(instrument_id)
@@ -1027,9 +1075,15 @@ class WebDashboard:
                 return jsonify({'status': 'error', 'message': 'scenario must be an object'}), 400
             try:
                 definition = loads_scenario(json.dumps(raw))
-                selected = instrument.scenario_control.select(
-                    definition, start=payload.get('start', False) is True
+                selected = execute_scenario_action(
+                    instrument_id,
+                    instrument,
+                    lambda target: target.scenario_control.select(
+                        definition, start=payload.get('start', False) is True
+                    ),
                 )
+            except RuntimeError as exc:
+                return jsonify({'status': 'error', 'message': str(exc)}), 409
             except (ScenarioError, ValueError, TypeError) as exc:
                 return jsonify({'status': 'error', 'message': str(exc)}), 400
             return jsonify({'status': 'success', 'scenario': selected})
@@ -1042,26 +1096,38 @@ class WebDashboard:
             payload = request.get_json(silent=True) if request.data else {}
             if not isinstance(payload, dict):
                 return jsonify({'status': 'error', 'message': 'JSON object required'}), 415
-            control = instrument.scenario_control
+            if action not in {'start', 'pause', 'reset', 'step', 'fault', 'noise'}:
+                return jsonify({'status': 'error', 'message': 'Unknown action'}), 404
             try:
-                if action == 'start':
-                    result = control.start(
-                        reset=payload.get('reset', False) is True,
-                        seed=payload.get('seed'),
-                    )
-                elif action == 'pause':
-                    result = control.pause()
-                elif action == 'reset':
-                    result = control.reset(seed=payload.get('seed'))
-                elif action == 'step':
-                    stream = payload.get('stream')
-                    if stream is not None and not isinstance(stream, str):
-                        raise ScenarioControlError('stream must be text')
-                    result = {'positions': control.step(stream)}
-                elif action == 'fault':
-                    result = control.inject_fault(payload.get('code'), payload.get('message'))
-                else:
-                    return jsonify({'status': 'error', 'message': 'Unknown action'}), 404
+                def mutate(target):
+                    target_control = target.scenario_control
+                    if action == 'start':
+                        return target_control.start(
+                            reset=payload.get('reset', False) is True,
+                            seed=payload.get('seed'),
+                        )
+                    if action == 'pause':
+                        return target_control.pause()
+                    if action == 'reset':
+                        return target_control.reset(seed=payload.get('seed'))
+                    if action == 'step':
+                        stream = payload.get('stream')
+                        if stream is not None and not isinstance(stream, str):
+                            raise ScenarioControlError('stream must be text')
+                        return {'positions': target_control.step(stream)}
+                    if action == 'fault':
+                        return target_control.inject_fault(
+                            payload.get('code'), payload.get('message')
+                        )
+                    if action == 'noise':
+                        return target_control.set_noise(
+                            payload.get('stream'), payload.get('amplitude')
+                        )
+                    raise AssertionError('validated scenario action was not handled')
+
+                result = execute_scenario_action(instrument_id, instrument, mutate)
+            except RuntimeError as exc:
+                return jsonify({'status': 'error', 'message': str(exc)}), 409
             except (ScenarioError, ValueError, TypeError) as exc:
                 return jsonify({'status': 'error', 'message': str(exc)}), 400
             return jsonify({'status': 'success', 'scenario': result})

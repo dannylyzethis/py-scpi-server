@@ -176,6 +176,49 @@ def test_seeded_randomness_and_playback_reset_are_repeatable() -> None:
     assert player.random_uniform() != first_draws[0]
 
 
+def test_deterministic_noise_covers_scalar_and_complex_trace_values() -> None:
+    player = ScenarioPlayer(
+        scenario(
+            stream("reading", (10.0,), end=EndPolicy.HOLD_LAST),
+            stream(
+                "trace",
+                ((1 + 2j, 3.0),),
+                kind=StreamKind.TRACE,
+                end=EndPolicy.HOLD_LAST,
+            ),
+            seed=73,
+        )
+    )
+    player.pause()
+    player.set_noise("reading", 0.25)
+    player.set_noise("trace", 0.5)
+
+    reading = player.read("reading")
+    trace_value = player.read("trace")
+
+    assert 9.75 <= reading <= 10.25
+    assert abs(trace_value[0].real - 1) <= 0.5
+    assert abs(trace_value[0].imag - 2) <= 0.5
+    assert abs(trace_value[1] - 3) <= 0.5
+    assert player.read("reading") == reading
+    assert player.read("trace") == trace_value
+    assert player.noise_settings == {"reading": 0.25, "trace": 0.5}
+
+    player.reset(seed=73)
+    assert player.read("reading") == reading
+    assert player.read("trace") == trace_value
+    player.set_noise("reading", 0)
+    assert player.read("reading") == 10.0
+
+
+@pytest.mark.parametrize("amplitude", [-1, float("inf"), float("nan"), True, "1"])
+def test_noise_rejects_invalid_amplitudes(amplitude) -> None:
+    player = ScenarioPlayer(scenario(stream("reading", (1.0,))))
+
+    with pytest.raises(ValueError, match="noise amplitude"):
+        player.set_noise("reading", amplitude)
+
+
 def test_json_codec_supports_all_stream_shapes_and_immutable_values() -> None:
     raw = {
         "schema_version": 1,
