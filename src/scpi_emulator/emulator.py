@@ -41,6 +41,7 @@ from .scpi import (
     StatusSystem,
     PNACapabilities,
     PNAMeasurementSystem,
+    PNAMixerSystem,
     PNADataSystem,
     PNASweepSystem,
     PNAStateFileStore,
@@ -54,6 +55,7 @@ from .scpi import (
     register_capability_commands,
     register_status_commands,
     register_measurement_commands,
+    register_mixer_commands,
     register_pna_data_commands,
     register_sweep_commands,
     register_scalar_commands,
@@ -281,6 +283,7 @@ class SCPIInstrument:
         self.pna_data = None
         self.pna_state_files = None
         self.pna_time_domain = None
+        self.pna_mixer = None
         self.scalar_data = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(model)
@@ -306,10 +309,18 @@ class SCPIInstrument:
                 self.pna_measurements, self.data_format, self.pna_capabilities.ports
             )
             register_pna_data_commands(self.core_registry, self.pna_data)
+            self.pna_mixer = PNAMixerSystem(
+                self.pna_measurements,
+                float(self.pna_capabilities.frequency_minimum),
+                float(self.pna_capabilities.frequency_maximum),
+                self.pna_capabilities.sources,
+            )
+            self.pna_data.add_application(self.pna_mixer)
+            register_mixer_commands(self.core_registry, self.pna_mixer)
             self.pna_time_domain = PNATimeDomainSystem(
                 self.pna_measurements, self.pna_capabilities.ports
             )
-            self.pna_data.application = self.pna_time_domain
+            self.pna_data.add_application(self.pna_time_domain)
             register_time_domain_commands(self.core_registry, self.pna_time_domain)
             self.pna_state_files = PNAStateFileStore(
                 self.pna_measurements, str(instrument_id), state_directory
@@ -364,6 +375,8 @@ class SCPIInstrument:
             self.pna_data.reset()
         if self.pna_time_domain is not None:
             self.pna_time_domain.reset()
+        if self.pna_mixer is not None:
+            self.pna_mixer.reset()
         if self.scalar_data is not None:
             self.scalar_data.reset()
         self.status.clear_status()

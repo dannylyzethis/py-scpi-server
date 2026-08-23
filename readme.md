@@ -37,6 +37,8 @@ Multi-instrument selection, addressing, and startup are documented in
   using the same deterministic playback engine as scalar instruments.
 - Licensed PNA time-domain transforms, time gating, and deterministic fixture-removal/topology
   workflows that process those same scenario traces.
+- Licensed frequency-offset ranges, scalar/vector converters, mixer segments, source roles, and
+  embedded-LO behavior with coherent scenario-backed axes and data.
 - A catalog-visible Keysight 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
@@ -69,6 +71,8 @@ Scenario trace mapping is described in [PNA scenario data](docs/pna-scenario-dat
 Scalar/DMM playback is described in [DMM scenario data](docs/dmm-scenario-data.md).
 Time-domain and fixture behavior is described in
 [PNA time-domain and fixture behavior](docs/pna-time-domain.md).
+Frequency-offset and converter behavior is described in
+[PNA frequency-offset and converter behavior](docs/pna-mixer.md).
 
 ## Requirements
 

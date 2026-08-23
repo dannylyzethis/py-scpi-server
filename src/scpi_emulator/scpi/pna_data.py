@@ -23,7 +23,10 @@ class PNADataSystem:
         self.player: ScenarioPlayer | None = None
         self.bindings: dict[str, str] = {}
         self._event_error: ScenarioError | None = None
-        self.application = None
+        self.applications = []
+
+    def add_application(self, application) -> None:
+        self.applications.append(application)
 
     def attach(self, player: ScenarioPlayer) -> None:
         self.player = player
@@ -65,8 +68,7 @@ class PNADataSystem:
 
     def x_values(self, channel: int):
         stimulus = self.measurements.selected(channel).stimulus
-        axis = self.application.axis(channel, stimulus) if self.application is not None else stimulus
-        return self.data_format.encode_values(axis)
+        return self.data_format.encode_values(self._application_axis(channel, stimulus))
 
     def receiver_values(self, channel: int, receiver: str):
         self._check_event_error()
@@ -93,11 +95,7 @@ class PNADataSystem:
             or any(not 1 <= port <= self.maximum_ports for port in ports)
         ):
             raise SCPICommandError(-224, "Illegal parameter value; SNP ports")
-        axis = (
-            self.application.axis(channel, measurement.stimulus)
-            if self.application is not None
-            else measurement.stimulus
-        )
+        axis = self._application_axis(channel, measurement.stimulus)
         columns: list[float] = list(axis)
         for source in ports:
             for receiver in ports:
@@ -112,9 +110,17 @@ class PNADataSystem:
         return self.data_format.encode_values(columns)
 
     def _application_samples(self, channel, samples, stimulus):
-        if self.application is None:
-            return samples
-        return self.application.samples(channel, samples, stimulus)
+        axis = stimulus
+        for application in self.applications:
+            samples = application.samples(channel, samples, axis)
+            axis = application.axis(channel, axis)
+        return samples
+
+    def _application_axis(self, channel, stimulus):
+        axis = stimulus
+        for application in self.applications:
+            axis = application.axis(channel, axis)
+        return axis
 
     def _samples(self, measurement: MeasurementState) -> tuple[complex, ...]:
         if self.player is None:
