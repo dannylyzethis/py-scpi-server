@@ -1,19 +1,19 @@
 import socket
-def create_labview_compatible_server(instrument, host='localhost', port=5555):
-    """Create a server specifically designed for LabVIEW VISA"""
+def create_ate_compatible_server(instrument, host='localhost', port=5555):
+    """Create a server specifically designed for graphical ATE client VISA"""
     
-    def handle_labview_client(client_socket, address):
-        """Handle LabVIEW client with proper VISA protocol"""
-        print(f"LabVIEW client connected from {address}")
+    def handle_ate_client(client_socket, address):
+        """Handle graphical ATE client client with proper VISA protocol"""
+        print(f"graphical ATE client client connected from {address}")
         
         try:
-            # Configure socket for LabVIEW
+            # Configure socket for graphical ATE client
             client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             
             while True:
                 try:
-                    # LabVIEW sends commands terminated with \n
+                    # graphical ATE client sends commands terminated with \n
                     data = client_socket.recv(1024).decode('utf-8')
                     if not data:
                         break
@@ -29,7 +29,7 @@ def create_labview_compatible_server(instrument, host='localhost', port=5555):
                     response = instrument.process_command(command)
                     
                     if response:
-                        # Send response exactly as LabVIEW expects
+                        # Send response exactly as graphical ATE client expects
                         response_data = response.encode('utf-8')
                         client_socket.sendall(response_data)
                         print(f"Response: '{response}'")
@@ -50,7 +50,7 @@ def create_labview_compatible_server(instrument, host='localhost', port=5555):
     server_socket.bind((host, port))
     server_socket.listen(5)
     
-    print(f"LabVIEW SCPI Server running on {host}:{port}")
+    print(f"graphical ATE client SCPI Server running on {host}:{port}")
     print(f"VISA Resource: TCPIP0::{host}::{port}::INSTR")
     
     try:
@@ -58,7 +58,7 @@ def create_labview_compatible_server(instrument, host='localhost', port=5555):
             client_socket, address = server_socket.accept()
             # Handle each client in a separate thread
             client_thread = threading.Thread(
-                target=handle_labview_client,
+                target=handle_ate_client,
                 args=(client_socket, address),
                 daemon=True
             )
@@ -88,4 +88,4 @@ class SimpleInstrument:
 # Run the test server
 if __name__ == "__main__":
     instrument = SimpleInstrument("TestDMM")
-    create_labview_compatible_server(instrument, 'localhost', 5555)
+    create_ate_compatible_server(instrument, 'localhost', 5555)

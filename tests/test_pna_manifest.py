@@ -24,7 +24,7 @@ def test_packaged_manifest_has_required_metadata_and_unique_commands() -> None:
 
     assert manifest.schema_version == 1
     assert manifest.snapshot["date"] == "2026-08-20"
-    assert manifest.snapshot["help_revision"] == "A.20.25.xx"
+    assert manifest.snapshot["contract_revision"] == "1.0"
     assert len(manifest.commands) >= 35
     assert {command.models for command in manifest.commands} == {
         frozenset({"N5222B", "N5242B"})
@@ -55,7 +55,7 @@ def test_command_spec_key_is_stable_across_abbreviations() -> None:
 @pytest.mark.parametrize("model", ["N5222B", "N5242B"])
 def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None:
     manifest = load_command_manifest()
-    instrument = SCPIInstrument(f"Keysight {model}", model)
+    instrument = SCPIInstrument(f"Virtual {model}", model)
 
     report = coverage_report(
         manifest,
@@ -73,7 +73,7 @@ def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None
 @pytest.mark.parametrize("model", ["N5222B", "N5242B"])
 def test_checked_in_coverage_report_is_current(model: str) -> None:
     manifest = load_command_manifest()
-    instrument = SCPIInstrument(f"Keysight {model}", model)
+    instrument = SCPIInstrument(f"Virtual {model}", model)
     expected = coverage_report(
         manifest,
         implementation_keys(instrument),
@@ -114,12 +114,12 @@ def test_manifest_rejects_duplicate_implementation_keys(tmp_path: Path) -> None:
         load_command_manifest(path)
 
 
-def test_manifest_rejects_non_keysight_help_source(tmp_path: Path) -> None:
+def test_manifest_rejects_external_source_metadata(tmp_path: Path) -> None:
     raw = {
         "schema_version": 1,
         "snapshot": {
             "date": "2026-08-20",
-            "help_revision": "A.20.25.xx",
+            "contract_revision": "1.0",
             "firmware_pattern": "^A\\.20\\.25\\.[0-9]{2}$",
         },
         "sources": {"bad": {"title": "Unofficial", "url": "https://example.com"}},
@@ -128,5 +128,5 @@ def test_manifest_rejects_non_keysight_help_source(tmp_path: Path) -> None:
     path = tmp_path / "unofficial.json"
     path.write_text(json.dumps(raw), encoding="utf-8")
 
-    with pytest.raises(ManifestError, match="official Keysight help"):
+    with pytest.raises(ManifestError, match="only an internal contract title"):
         load_command_manifest(path)

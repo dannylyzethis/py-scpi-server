@@ -24,7 +24,7 @@ def trace(name, *values, advance=AdvancePolicy.READ):
 
 def advanced_pna(*streams) -> SCPIInstrument:
     instrument = SCPIInstrument(
-        "Keysight N5242B",
+        "Virtual N5242B",
         "advanced",
         pna_capabilities=PNACapabilities.create(
             "N5242B", mode=CompatibilityMode.ALL_APPLICATIONS
@@ -173,7 +173,7 @@ def test_wideband_iq_capture_uses_time_axis() -> None:
 
 def test_advanced_license_address_cls_and_reset_semantics() -> None:
     strict = SCPIInstrument(
-        "Keysight N5222B", "strict", pna_capabilities=PNACapabilities.create("N5222B")
+        "Virtual N5222B", "strict", pna_capabilities=PNACapabilities.create("N5222B")
     )
     assert strict.process_command("SENS:SA:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')

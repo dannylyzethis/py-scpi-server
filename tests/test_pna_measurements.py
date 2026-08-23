@@ -6,7 +6,7 @@ from scpi_emulator.scpi import PNACapabilities, SCPICommandError
 
 def pna() -> SCPIInstrument:
     return SCPIInstrument(
-        "Keysight N5222B",
+        "Virtual N5222B",
         "pna",
         pna_capabilities=PNACapabilities.create("N5222B"),
     )

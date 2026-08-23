@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     manifest = load_command_manifest(args.manifest)
-    instrument = SCPIInstrument(f"Keysight {args.model}", args.model)
+    instrument = SCPIInstrument(f"Virtual {args.model}", args.model)
     report = coverage_report(
         manifest,
         implementation_keys(instrument),

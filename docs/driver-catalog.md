@@ -32,14 +32,13 @@ from scpi_emulator.drivers import InstrumentRequest, build_driver_catalog
 
 catalog = build_driver_catalog(discover_plugins=False)
 instrument = catalog.create(
-    "keysight-pna",
+    "virtual-pna",
     InstrumentRequest(
         instrument_id="vna1",
         model="N5242B",
         configuration={
-            "mode": "model-faithful",
+            "mode": "all-applications",
             "hardware_configuration": "425",
-            "application_options": ["S93080B", "S93029B"],
         },
     ),
 )

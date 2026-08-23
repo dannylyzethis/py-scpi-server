@@ -45,5 +45,5 @@ form `TCPIP0::127.0.0.1,<core-port>::inst0::INSTR`.
 
 The test suite exercises RPC record/XDR encoding, port lookup, real PyVISA-Py INSTR query/write/read,
 Device Clear state preservation, bus trigger, exclusive links, abort, and serial poll. A native
-NI-VISA session also enables the PyVISA service-request event queue and proves that an OPC completion
+VISA session also enables the PyVISA service-request event queue and proves that an OPC completion
 arrives through the VXI-11 interrupt channel as SRQ.

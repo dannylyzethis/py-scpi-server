@@ -54,10 +54,8 @@ captures expose a time axis. Swept IMD uses its configured center and span. Appl
 set/query X, query Y, and find the maximum. Marker reads use scenario `peek`, so inspecting a marker
 does not consume a queued DUT case.
 
-Wideband I/Q is capability-gated by options S93050B/S93051B. `SENS:IQ` is an emulator extension for
-sample-rate and capture-time scenario control; Keysight's PNA command finder did not provide a
-native setup tree that could be verified for this option. It is therefore intentionally excluded
-from the official-command manifest.
+Wideband I/Q availability is controlled by the selected emulator capability profile. `SENS:IQ` is
+a project-defined extension for sample-rate and capture-time scenario control.
 
 ## Instrument semantics
 
@@ -68,12 +66,3 @@ from the official-command manifest.
 - `*RST` disables advanced classes and restores all setup defaults.
 - Calibration/correction status is the static value `0`; calibration behavior and math are outside
   the product scope.
-
-Official hierarchy references:
-
-- [Keysight Spectrum Analyzer commands](https://helpfiles.keysight.com/csg/pxivna/Programming/GP-IB_Command_Finder/Sense/SA.htm)
-- [Keysight Swept IMD commands](https://helpfiles.keysight.com/csg/N52xxB/Programming/GP-IB_Command_Finder/Sense/IMD.htm)
-- [Keysight Modulation Distortion commands](https://helpfiles.keysight.com/csg/NA520xA/Programming/GP-IB_Command_Finder/Sense/Distortion_Measurement.htm)
-- [Keysight Phase Noise setup commands](https://helpfiles.keysight.com/csg/NA520xA/Programming/CF_Setup_Commands_-_PN.htm)
-- [Keysight Differential I/Q commands](https://helpfiles.keysight.com/csg/pxivna/Programming/GP-IB_Command_Finder/Sense/DIQ.htm)
-- [Keysight Differential I/Q creation example](https://helpfiles.keysight.com/csg/e5080b/Programming/GPIB_Example_Programs/Create_and_Cal_a_Diff_IQ_Measurement.htm)

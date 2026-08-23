@@ -1,6 +1,6 @@
 # DMM scenario data
 
-The built-in `keysight-3446x` driver provides a reference Keysight 34461A DMM for scalar DUT
+The built-in `virtual-3446x` driver provides a reference Virtual 34461A DMM for scalar DUT
 scenarios. It uses the same `ScenarioPlayer` as PNA traces; there is no DMM-specific queue or random
 generator.
 

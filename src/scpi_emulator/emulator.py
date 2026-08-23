@@ -298,7 +298,9 @@ class SCPIInstrument:
         self.pna_mixer = None
         self.scalar_data = None
         if self.pna_capabilities is None and model is not None:
-            self.pna_capabilities = PNACapabilities.create(model)
+            self.pna_capabilities = PNACapabilities.create(
+                model,
+            )
         registry_capabilities = (
             self.pna_capabilities.command_capabilities
             if self.pna_capabilities is not None
@@ -1502,7 +1504,7 @@ def create_example_csv():
     """Create example CSV with validation examples"""
     data = [
         ['Equipment', 'Port', 'Command', 'Response', 'Validation'],
-        ['Keysight 34461A DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
+        ['Virtual 34461A DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
         ['', '', 'VOLT (.+)', 'OK', 'range:0,10'],
         ['', '', 'VOLT?', '5.0', ''],
         ['Debug Test Instrument', '5559', 'TEST_RANGE (.+)', 'Range OK: {value}', 'range:1,10'],

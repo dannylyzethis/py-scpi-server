@@ -11,10 +11,10 @@ from scpi_emulator.scpi import PNACapabilities
 
 def licensed_pna() -> SCPIInstrument:
     capabilities = PNACapabilities.create(
-        "N5222B", application_options=("S93010B", "S93007B")
+        "N5222B", application_options=("E93010B", "E93007B")
     )
     instrument = SCPIInstrument(
-        "Keysight N5222B", "time-domain", pna_capabilities=capabilities
+        "Virtual N5222B", "time-domain", pna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     stream = ScenarioStream(
@@ -109,7 +109,7 @@ def test_application_state_survives_cls_and_resets_with_rst() -> None:
 
 
 def test_unlicensed_and_nonexistent_application_commands_are_rejected() -> None:
-    strict = SCPIInstrument("Keysight N5222B", "strict")
+    strict = SCPIInstrument("Virtual N5222B", "strict")
     assert strict.process_command("CALC:TRAN:TIME:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 

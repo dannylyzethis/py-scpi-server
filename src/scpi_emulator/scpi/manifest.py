@@ -114,7 +114,7 @@ def _validate_manifest(raw: Any) -> CommandManifest:
         raise ManifestError("unsupported manifest schema_version")
 
     snapshot = _mapping(raw, "snapshot")
-    for field in ("date", "help_revision", "firmware_pattern"):
+    for field in ("date", "contract_revision", "firmware_pattern"):
         _nonempty_string(snapshot, field, "snapshot")
     try:
         re.compile(snapshot["firmware_pattern"])
@@ -128,9 +128,10 @@ def _validate_manifest(raw: Any) -> CommandManifest:
         if not isinstance(source, dict):
             raise ManifestError(f"source {source_id!r} must be an object")
         _nonempty_string(source, "title", f"source {source_id!r}")
-        url = _nonempty_string(source, "url", f"source {source_id!r}")
-        if not url.startswith("https://helpfiles.keysight.com/"):
-            raise ManifestError(f"source {source_id!r} must use official Keysight help")
+        if set(source) != {"title"}:
+            raise ManifestError(
+                f"source {source_id!r} must contain only an internal contract title"
+            )
 
     entries = raw.get("commands")
     if not isinstance(entries, list) or not entries:

@@ -4,7 +4,7 @@ from scpi_emulator.emulator import SCPIInstrument
 
 
 def pna() -> SCPIInstrument:
-    return SCPIInstrument("Keysight N5222B", "N5222B")
+    return SCPIInstrument("Virtual N5222B", "N5222B")
 
 
 def test_frequency_forms_generate_one_coherent_measurement_axis() -> None:

@@ -69,7 +69,7 @@ jobs:
                   with socket.create_connection(("127.0.0.1", 5555), timeout=1) as client:
                       client.sendall(b"*IDN?\n")
                       response = client.recv(4096).decode().strip()
-                      assert response.startswith("SCPI_Emulator,Keysight 34461A DMM,")
+                      assert response.startswith("SCPI_Emulator,Virtual 34461A DMM,")
                       break
               except OSError:
                   if time.monotonic() >= deadline:

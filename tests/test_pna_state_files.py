@@ -5,7 +5,7 @@ from scpi_emulator.emulator import SCPIInstrument
 
 def pna(tmp_path, instrument_id="N5222B"):
     return SCPIInstrument(
-        "Keysight N5222B", instrument_id, state_directory=tmp_path
+        "Virtual N5222B", instrument_id, state_directory=tmp_path
     )
 
 

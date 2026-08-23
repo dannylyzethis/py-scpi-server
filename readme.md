@@ -47,7 +47,7 @@ HiSLIP sessions and optional LXI discovery are documented in
   filters/gates, and shared deterministic trigger playback.
 - Licensed Spectrum Analyzer, Swept IMD, Modulation Distortion, Phase Noise, Differential I/Q, and
   wideband-I/Q workflows with option gates, scenario results, application axes, and markers.
-- A catalog-visible Keysight 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
+- A catalog-visible Virtual 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
@@ -75,7 +75,7 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 - PNA configuration, sweep/stimulus, base trace-data workflows, and the selected licensed
   application families are stateful, but complete behavioral coverage of every command in those
   large applications remains iterative. The current command manifest is a growing verified
-  snapshot, not the complete Keysight tree.
+  snapshot, not exhaustive command coverage.
 - The dashboard now requires authentication for non-loopback binds, but it remains a development
   control plane rather than an internet-facing service.
 

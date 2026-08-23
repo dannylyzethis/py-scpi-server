@@ -26,7 +26,7 @@ between frequency-domain and application workflows.
 This is behavioral emulation for ATE software development, not calibrated metrology. The transform
 uses a deterministic discrete Fourier model. Fixture filenames produce stable complex correction
 factors so that selecting a different fixture changes results repeatably; the emulator does not yet
-parse Touchstone fixture networks or reproduce Keysight's proprietary fixture algorithms. The
+parse Touchstone fixture networks or reproduce physical-instrument fixture algorithms. The
 filename and enable workflows are realistic enough to exercise configuration, branching, recall,
 error handling, and downstream data processing without claiming measurement accuracy.
 

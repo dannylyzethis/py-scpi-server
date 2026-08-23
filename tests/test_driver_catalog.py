@@ -72,10 +72,10 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
 
     assert [descriptor.id for descriptor in catalog.descriptors] == [
-        "keysight-3446x",
-        "keysight-pna",
+        "virtual-3446x",
+        "virtual-pna",
     ]
-    driver = catalog.get("KEYSIGHT-PNA")
+    driver = catalog.get("VIRTUAL-PNA")
     descriptor = driver.descriptor
     assert descriptor.maturity is DriverMaturity.ALPHA
     assert {model.model for model in descriptor.models} == {"N5222B", "N5242B"}
@@ -138,20 +138,20 @@ def test_pna_coverage_metadata_matches_checked_in_reports() -> None:
 def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
     instrument = catalog.create(
-        "keysight-pna",
+        "virtual-pna",
         InstrumentRequest(
             instrument_id="bench_pna",
             model="N5242B",
             configuration={
                 "mode": "model-faithful",
                 "hardware_configuration": "425",
-                "application_options": ["S93080B", "S93029B"],
+                "application_options": ["E93080B", "E93029B"],
             },
         ),
     )
 
     assert instrument.process_command("*IDN?") == (
-        "Keysight Technologies,N5242B,US12345678,A.20.25.04"
+        "SCPI Emulator,N5242B,US12345678,A.20.25.04"
     )
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"

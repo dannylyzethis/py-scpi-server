@@ -12,7 +12,7 @@ This document outlines the planned development direction for the SCPI Equipment 
 
 ### ✅ Completed Features
 - **Core Emulation**: Full SCPI command processing with validation
-- **LabVIEW Compatibility**: VISA TCP/IP support with device clear simulation
+- **ATE Client Compatibility**: VISA TCP/IP support with device clear simulation
 - **Web Dashboard**: Real-time monitoring and control interface
 - **Multi-Instrument**: Simultaneous emulation of multiple instruments
 - **Configuration**: Excel/CSV-based instrument definitions
@@ -74,7 +74,7 @@ instrument.add_binary_command("CURV?", generate_waveform_data)
 - **Service Request (SRQ) Simulation**
   - IEEE 488.1 SRQ protocol support
   - Event-driven status reporting
-  - Interrupt simulation for LabVIEW
+  - Interrupt simulation for VISA-based ATE clients
 
 - **Advanced Web Dashboard**
   - Instrument simulation and virtual front panels
@@ -197,7 +197,7 @@ emulator.enable_audit_log("/var/log/scpi-audit.log")
 ```
 CSV/Excel Config → Instrument Objects → TCP Servers → Web Dashboard
                                       ↓
-                                  LabVIEW/VISA
+                                  ATE client/VISA
 ```
 
 ### Target Architecture (v3.0)

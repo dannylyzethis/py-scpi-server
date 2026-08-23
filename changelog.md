@@ -18,11 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   axes, source power, receiver attenuation, IF bandwidth, dwell, and acquisition-derived timing.
 - PNA adapters over the shared deterministic scenario engine for SDATA, FDATA, RDATA, receiver,
   SNP, and X-axis queries with ASCII/binary encoding and trigger/operation playback policies.
-- A built-in Keysight 34461A reference DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
+- A built-in Virtual 34461A reference DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
   function/range configuration, queued values, trigger/operation policies, errors, and reset.
 - VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
   lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and
-  OPC-driven asynchronous SRQ callbacks, verified with PyVISA-Py and native NI-VISA clients.
+  OPC-driven asynchronous SRQ callbacks, verified with PyVISA-Py and native VISA clients.
 - A local-only-by-default dashboard control plane with required authentication for remote binds,
   CSRF enforcement, same-origin WebSockets, serialized instrument mutations, input bounds, security
   headers, and text-safe rendering of instrument command data.
@@ -89,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed - Validation Preservation
 - **Critical Fix**: Validation rules now survive VISA device clear operations
-  - Previously validation was lost when LabVIEW/NI-MAX performed device clear
+  - Previously validation was lost when an ATE client or VISA console performed device clear
   - Now stores validation rules separately from command handlers
   - Ensures consistent behavior across reconnections
 - **Enhanced Debugging**: Improved validation tracking and error reporting
@@ -128,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0] - 2025-01-XX
 
 ### Added - VISA Compatibility
-- **MAJOR**: Full LabVIEW/NI-MAX compatibility
+- **MAJOR**: Full ATE client and VISA console compatibility
 - Comprehensive IEEE 488.2 command support
   - `*CLS`, `*ESE`, `*ESR?`, `*IDN?`, `*OPC`, `*OPC?`
   - `*RST`, `*SRE`, `*STB?`, `*TST?`, `*WAI`
@@ -139,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed - BREAKING CHANGE
 - **Welcome message removed** for full VISA compatibility
   - Previous versions sent welcome message on connection
-  - LabVIEW/NI-MAX expects clean communication without welcome
+  - ATE clients and VISA consoles expect clean communication without a welcome message
   - This is a breaking change for clients expecting welcome message
 
 ### Fixed
@@ -198,7 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic SCPI command emulation
 - CSV configuration file support
 - TCP server implementation
-- LabVIEW VISA compatibility
+- VISA-based ATE client compatibility
 - Pure Python implementation (no dependencies)
 
 ### Core Features
@@ -210,13 +210,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Supported Platforms
 - Python 3.6+
 - Windows, macOS, Linux
-- LabVIEW 2018+
+- VISA-capable ATE clients
 
 ---
 
 ## Version Support
 
-| Version | Support Status | Python | LabVIEW | Notes |
+| Version | Support Status | Python | ATE clients | Notes |
 |---------|---------------|--------|---------|-------|
 | 2.3.x   | ✅ Active     | 3.6+   | 2018+   | Current with web dashboard |
 | 2.2.x   | ✅ Active     | 3.6+   | 2018+   | Validation fixes |

@@ -1,4 +1,4 @@
-"""Built-in reference Keysight 34461A DMM driver."""
+"""Built-in reference virtual DMM driver."""
 
 from scpi_emulator import __version__
 
@@ -14,19 +14,19 @@ from .catalog import (
 )
 
 
-DMM_DRIVER_ID = "keysight-3446x"
+DMM_DRIVER_ID = "virtual-3446x"
 
 
 class DMMDriver:
     descriptor = DriverDescriptor(
         id=DMM_DRIVER_ID,
-        display_name="Keysight Truevolt DMM",
+        display_name="Virtual DMM",
         version=__version__,
         maturity=DriverMaturity.ALPHA,
         models=(
             ModelDescriptor(
                 model="34461A",
-                display_name="Keysight 34461A Truevolt DMM",
+                display_name="Virtual 34461A DMM",
                 instrument_class="DMM",
                 firmware_snapshots=("3.0",),
             ),
@@ -63,5 +63,5 @@ class DMMDriver:
             )
         if request.configuration:
             raise CatalogError("the reference DMM driver has no configurable hardware options")
-        name = request.name or f"Keysight {model.model} DMM"
+        name = request.name or f"Virtual {model.model} DMM"
         return SCPIInstrument(name, request.instrument_id)

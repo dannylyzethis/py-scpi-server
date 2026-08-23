@@ -19,7 +19,7 @@ class FakeServer:
 
 
 def controlled_dashboard():
-    instrument = SCPIInstrument("Keysight 34461A", "34461A")
+    instrument = SCPIInstrument("Virtual 34461A", "34461A")
     server = FakeServer(instrument)
     manager = SimpleNamespace(
         instruments={"dmm1": {"instrument": instrument, "port": 5025}},
@@ -142,7 +142,7 @@ def test_invalid_control_requests_do_not_replace_or_mutate_the_scenario() -> Non
 
 
 def test_remote_scenario_api_requires_bearer_and_csrf_tokens() -> None:
-    instrument = SCPIInstrument("Keysight 34461A", "34461A")
+    instrument = SCPIInstrument("Virtual 34461A", "34461A")
     manager = SimpleNamespace(
         instruments={"dmm1": {"instrument": instrument, "port": 5025}},
         servers={"dmm1": FakeServer(instrument)},

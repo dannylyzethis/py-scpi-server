@@ -1,11 +1,10 @@
 # PNA pulse and Integrated Pulse behavior
 
-The pulse layer implements the basic pulsed-RF generator controls and the Integrated Pulse
-measurement setup used by PNA automation. Both applications are option- and hardware-gated from the
-versioned compatibility profile: `S93025A/B` enables basic pulsed RF, `S93026A/B` enables Integrated
-Pulse, and both require pulse hardware option `021`.
+The pulse layer implements project-defined pulsed-RF generator controls and integrated pulse
+measurement setup. Availability comes from the selected emulator capability profile; individual
+application identifiers are intentionally not explained in this documentation.
 
-The command hierarchy follows the Keysight PNA command finder:
+The emulator implements these command groups:
 
 - `SENS:PULS<n>` configures internal generators 0 through 4, including state, delay, width, delay
   increment, polarity inversion, period, trigger type/polarity, subpoint triggering, and pulse-4 ADC
@@ -17,10 +16,9 @@ The command hierarchy follows the Keysight PNA command finder:
   stage-3 pulse-window filter settings.
 - `SENS:PATH:CONF:ELEM` stores pulse modulation and IF-gate routing such as `IFGateA` to `Pulse2`.
 
-The official generator reference notes that delay plus width may exceed the period without an
-instrument error, although the resulting hardware behavior is undefined. The emulator deliberately
-accepts that combination as well. It rejects documented numeric-range violations and internally
-inconsistent Integrated Pulse master/profile timing with normal SCPI `-222` errors.
+The emulator accepts delay-plus-width values that exceed the configured period as part of its own
+compatibility contract. It rejects configured numeric-range violations and internally inconsistent
+master/profile timing with SCPI `-222` errors.
 
 ## Scenario results
 
@@ -41,8 +39,3 @@ run before a detailed DUT trace has been authored.
 `*CLS` clears errors and status but preserves pulse configuration. `*RST` returns generators,
 Integrated Pulse mode, IF configuration, and routing to their disabled/default state. Pulse
 calibration status is a static `0`; calibration behavior and math remain outside product scope.
-
-Official hierarchy references:
-
-- [Keysight Sense:Pulse commands](https://helpfiles.keysight.com/csg/e5080a/programming/gp-ib_command_finder/sense/pulse.htm)
-- [Keysight Sense:Sweep:Pulse commands](https://helpfiles.keysight.com/csg/e5080a/programming/gp-ib_command_finder/sense/sweeppulse.htm)

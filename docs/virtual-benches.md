@@ -29,13 +29,12 @@ Schema version 1 uses one entry per instrument instance:
     {
       "id": "pna1",
       "name": "Input PNA",
-      "driver": "keysight-pna",
+      "driver": "virtual-pna",
       "model": "N5222B",
       "firmware": "A.20.25.04",
       "configuration": {
         "mode": "model-faithful",
-        "hardware_configuration": "200",
-        "application_options": ["S93010B"]
+        "hardware_configuration": "200"
       },
       "resource": {
         "transport": "raw-socket",
@@ -45,11 +44,11 @@ Schema version 1 uses one entry per instrument instance:
     },
     {
       "id": "pnax1",
-      "driver": "keysight-pna",
+      "driver": "virtual-pna",
       "model": "N5242B",
       "configuration": {
         "hardware_configuration": "425",
-        "application_options": ["S93080B", "S93029B"]
+        "mode": "all-applications"
       },
       "resource": {
         "transport": "raw-socket",

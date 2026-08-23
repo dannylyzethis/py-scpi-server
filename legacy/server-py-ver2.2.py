@@ -586,7 +586,7 @@ class SCPIServer:
         self.clients.append(client_socket)
         
         try:
-            # NO WELCOME MESSAGE - NI-MAX expects clean communication!
+            # NO WELCOME MESSAGE - VISA console expects clean communication!
             logger.info(f"[CONN] Client connected from {address} - NO welcome message sent")
             
             # DETAILED INSTRUMENT DEBUGGING
@@ -595,7 +595,7 @@ class SCPIServer:
             logger.info(f"[DEBUG] State ID: {id(self.instrument.state)}")
             logger.info(f"[STATE] STATE BEFORE VISA DEVICE CLEAR: {dict(self.instrument.state)}")
             
-            # SIMULATE VISA DEVICE CLEAR (like NI-MAX does)
+            # SIMULATE VISA DEVICE CLEAR (like VISA console does)
             logger.info(f"[VISA-CLR] AUTO VISA DEVICE CLEAR starting for {address}")
             self.instrument.visa_device_clear()  # This is the key change!
             
@@ -840,7 +840,7 @@ class SCPIEmulatorManager:
             logger.info(f"   ID: {inst_id}")
             logger.info(f"   Port: {port}")
             logger.info(f"   Commands: {custom_cmd_count} custom + {total_cmd_count - custom_cmd_count} IEEE488.2 = {total_cmd_count} total")
-            logger.info(f"   LabVIEW VISA: TCPIP0::localhost::{port}::INSTR")
+            logger.info(f"   graphical ATE client VISA: TCPIP0::localhost::{port}::INSTR")
             logger.info(f"   Test with: telnet localhost {port}")
         
         logger.info("="*60)
@@ -862,8 +862,8 @@ class SCPIEmulatorManager:
         
         if success_count > 0:
             self.running = True
-            logger.info(f"\n Started {success_count} SCPI servers (LabVIEW Compatible)")
-            logger.info("Connect from LabVIEW using VISA resource strings:")
+            logger.info(f"\n Started {success_count} SCPI servers (graphical ATE client Compatible)")
+            logger.info("Connect from graphical ATE client using VISA resource strings:")
             
             for inst_id, server in self.servers.items():
                 instrument = server.instrument
@@ -1034,8 +1034,8 @@ def create_example_csv():
         # Header
         ['Equipment', 'Port', 'Command', 'Response', 'Validation'],
 
-        # Keysight 34461A Digital Multimeter
-        ['Keysight 34461A DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
+        # Virtual 34461A Digital Multimeter
+        ['Virtual 34461A DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
         ['', '', 'MEAS:VOLT:AC?', '0.987654E+00', ''],
         ['', '', 'MEAS:CURR:DC?', '1.234567E-03', ''],
         ['', '', 'MEAS:RES?', '1.000000E+03', ''],
@@ -1044,8 +1044,8 @@ def create_example_csv():
         ['', '', 'NPLC (.+)', 'OK', 'range:0.02,200'],
         ['', '', 'NPLC?', '10', ''],
         
-        # Keysight E36312A Power Supply
-        ['Keysight E36312A PSU', '5556', 'OUTP ON', 'OK', ''],
+        # Virtual E36312A Power Supply
+        ['Virtual E36312A PSU', '5556', 'OUTP ON', 'OK', ''],
         ['', '', 'OUTP OFF', 'OK', ''],
         ['', '', 'OUTP (.+)', 'OK', 'bool'],
         ['', '', 'OUTP?', '1', ''],
@@ -1056,8 +1056,8 @@ def create_example_csv():
         ['', '', 'MEAS:VOLT?', '4.987654E+00', ''],
         ['', '', 'MEAS:CURR?', '9.876543E-01', ''],
         
-        # Tektronix TDS2024B Oscilloscope
-        ['Tektronix TDS2024B Scope', '5557', 'ACQ:MODE?', 'SAMPLE', ''],
+        # Virtual TDS2024B Oscilloscope
+        ['Virtual TDS2024B Scope', '5557', 'ACQ:MODE?', 'SAMPLE', ''],
         ['', '', 'ACQ:MODE (.+)', 'OK', 'enum:SAMPLE,PEAKDETECT,HIRES,AVERAGE'],
         ['', '', 'CH1:SCAL?', '1.0E+0', ''],
         ['', '', 'CH1:SCAL (.+)', 'OK', 'range:0.001,10'],
@@ -1071,8 +1071,8 @@ def create_example_csv():
         ['', '', 'MEAS:AMPL? CH1', '2.500000E+00', ''],
         ['', '', 'CURV?', '#42000-127,-126,-125,-124,-123,-122,-121,-120', ''],
         
-        # Agilent 33220A Function Generator
-        ['Agilent 33220A Generator', '5558', 'FREQ (.+)', 'OK', 'range:0.000001,20000000'],
+        # Virtual 33220A Function Generator
+        ['Virtual 33220A Generator', '5558', 'FREQ (.+)', 'OK', 'range:0.000001,20000000'],
         ['', '', 'FREQ?', '1.000000E+03', ''],
         ['', '', 'VOLT (.+)', 'OK', 'range:0.001,10'],
         ['', '', 'VOLT?', '1.000000E+00', ''],
@@ -1133,7 +1133,7 @@ def main():
     print("=" * 60)
     
     parser = argparse.ArgumentParser(
-        description='SCPI Equipment Emulator v2.2 - LabVIEW Compatible (VALIDATION FIXED)',
+        description='SCPI Equipment Emulator v2.2 - graphical ATE client Compatible (VALIDATION FIXED)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1142,7 +1142,7 @@ Examples:
   %(prog)s --load instruments.xlsx --start    # Load Excel (requires openpyxl)
   %(prog)s --load instruments.csv --port 6000 --interactive
   
-LabVIEW Connection:
+graphical ATE client Connection:
   Use VISA resource string: TCPIP0::localhost::<port>::INSTR
   Example: TCPIP0::localhost::5555::INSTR for first instrument
 

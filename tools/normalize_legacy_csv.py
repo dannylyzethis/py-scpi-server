@@ -34,8 +34,8 @@ def normalize_rows(path: Path) -> list[list[str]]:
         elif tail:
             response = ",".join([response, *tail])
 
-        if equipment == "Keysight PNA-X N5222B":
-            equipment = "Keysight PNA N5222B"
+        if equipment == "Virtual PNA-X N5222B":
+            equipment = "Virtual PNA N5222B"
 
         normalized.append([equipment, port, command, response, validation])
 

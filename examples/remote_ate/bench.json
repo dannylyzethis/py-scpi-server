@@ -6,7 +6,7 @@
     {
       "id": "dmm1",
       "name": "DUT supply monitor",
-      "driver": "keysight-3446x",
+      "driver": "virtual-3446x",
       "model": "34461A",
       "configuration": {},
       "resource": {

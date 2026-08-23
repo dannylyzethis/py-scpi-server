@@ -17,46 +17,46 @@ DEVELOPER_HARDWARE_CONFIGURATION = {"N5222B": "419", "N5242B": "425"}
 DEVELOPER_HARDWARE_ADDONS = {"N5222B": ("021",), "N5242B": ("021",)}
 
 OPTION_QUERY_CODES: dict[str, tuple[str, ...]] = {
-    "S93007A": ("007",),
-    "S93007B": ("007",),
-    "S93010A": ("010",),
-    "S93010B": ("010",),
-    "S93011A": ("011",),
-    "S93011B": ("011",),
-    "S93015A": ("015",),
-    "S93015B": ("015",),
-    "S93025A": ("025",),
-    "S93025B": ("025",),
-    "S93026A": ("008",),
-    "S93026B": ("008",),
-    "S93029A": ("028", "080"),
-    "S93029B": ("028", "080"),
-    "S93080A": ("080",),
-    "S93080B": ("080",),
-    "S93082A": ("082", "080"),
-    "S93082B": ("082", "080"),
-    "S93083A": ("083", "080"),
-    "S93083B": ("083", "080"),
-    "S93084A": ("084", "080"),
-    "S93084B": ("084", "080"),
-    "S93086A": ("086", "080"),
-    "S93086B": ("086", "080"),
-    "S93087A": ("087", "080"),
-    "S93087B": ("087", "080"),
-    "S93088A": ("088",),
-    "S93088B": ("088",),
-    "S93089A": ("089", "080"),
-    "S93089B": ("089", "080"),
-    "S930902A": ("090", "902"),
-    "S930902B": ("090", "902"),
-    "S93118A": ("118",),
-    "S93118B": ("118",),
-    "S93460A": ("460",),
-    "S93460B": ("460",),
-    "S93551A": ("551",),
-    "S93551B": ("551",),
-    "S93898A": ("898",),
-    "S93898B": ("898",),
+    "E93007A": ("007",),
+    "E93007B": ("007",),
+    "E93010A": ("010",),
+    "E93010B": ("010",),
+    "E93011A": ("011",),
+    "E93011B": ("011",),
+    "E93015A": ("015",),
+    "E93015B": ("015",),
+    "E93025A": ("025",),
+    "E93025B": ("025",),
+    "E93026A": ("008",),
+    "E93026B": ("008",),
+    "E93029A": ("028", "080"),
+    "E93029B": ("028", "080"),
+    "E93080A": ("080",),
+    "E93080B": ("080",),
+    "E93082A": ("082", "080"),
+    "E93082B": ("082", "080"),
+    "E93083A": ("083", "080"),
+    "E93083B": ("083", "080"),
+    "E93084A": ("084", "080"),
+    "E93084B": ("084", "080"),
+    "E93086A": ("086", "080"),
+    "E93086B": ("086", "080"),
+    "E93087A": ("087", "080"),
+    "E93087B": ("087", "080"),
+    "E93088A": ("088",),
+    "E93088B": ("088",),
+    "E93089A": ("089", "080"),
+    "E93089B": ("089", "080"),
+    "E930902A": ("090", "902"),
+    "E930902B": ("090", "902"),
+    "E93118A": ("118",),
+    "E93118B": ("118",),
+    "E93460A": ("460",),
+    "E93460B": ("460",),
+    "E93551A": ("551",),
+    "E93551B": ("551",),
+    "E93898A": ("898",),
+    "E93898B": ("898",),
 }
 
 
@@ -181,7 +181,7 @@ class PNACapabilities:
 
     @property
     def identification(self) -> str:
-        return f"Keysight Technologies,{self.model},{self.serial},{self.firmware}"
+        return f"SCPI Emulator,{self.model},{self.serial},{self.firmware}"
 
     @property
     def port_names(self) -> tuple[str, ...]:
@@ -254,7 +254,7 @@ def detect_pna_model(*values: str) -> str | None:
 def register_capability_commands(
     registry: CommandRegistry, capabilities: PNACapabilities
 ) -> None:
-    """Register model identity and the core Keysight capability catalogs."""
+    """Register model identity and the core Virtual capability catalogs."""
     _register_query(registry, (HeaderNode("*IDN"),), lambda: capabilities.identification, common=True)
     _register_query(
         registry,
@@ -465,10 +465,9 @@ def _validate_application_requirements(
             raise CapabilityError(
                 f"application {application_id!r} requires software {requirement}"
             )
-    constraint = application.get("constraint", "").casefold()
-    if "four-port" in constraint and hardware["ports"] != 4:
+    if application.get("requires_ports") not in (None, hardware["ports"]):
         raise CapabilityError(f"application {application_id!r} requires four ports")
-    if "two-source" in constraint and hardware["sources"] != 2:
+    if application.get("requires_sources") not in (None, hardware["sources"]):
         raise CapabilityError(f"application {application_id!r} requires two sources")
 
 
@@ -484,7 +483,7 @@ def _feature_name(application_id: str) -> str:
 
 
 def _fallback_option_code(option: str) -> str:
-    match = re.fullmatch(r"S93(\d+)[AB]", option)
+    match = re.fullmatch(r"E93(\d+)[AB]", option)
     return match.group(1)[-3:] if match else option
 
 

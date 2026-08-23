@@ -243,8 +243,8 @@ error handling they use against physical instruments.
 
 ### 9. Versioned PNA and PNA-X capabilities
 
-The initial compatibility baseline pins Keysight N5222B PNA and N5242B PNA-X behavior to the
-A.20.25 documentation family, with A.20.25.04 as the reference firmware. Machine-readable profiles
+The initial compatibility baseline pins Virtual N5222B PNA and N5242B PNA-X behavior to an
+internal profile with A.20.25.04 as its firmware token. Machine-readable profiles
 describe physical frequency limits, hardware configurations, ports, sources, hardware features,
 add-ons, application options, and prerequisites.
 
@@ -266,9 +266,8 @@ and enables every application compatible with that model and hardware. Both mode
 typed command-availability gates, so an unlicensed application command is unavailable in strict
 mode without making hardware or option queries contradictory in developer mode.
 
-Keysight's traditional `*OPT?` aliases and modern license product numbers are modeled separately.
-For example, an installed S93010B license is represented by option `010` in `*OPT?` while the license
-catalog retains the product-qualified identifier.
+Option queries and internal application identifiers are modeled separately. Individual application
+identifiers are intentionally not explained in this documentation.
 
 Why this is better: model identity is no longer cosmetic. A selected model and option set determine
 what the instrument says it contains and, as application modules are completed, which commands it

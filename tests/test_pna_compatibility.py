@@ -14,14 +14,14 @@ def test_pna_compatibility_snapshot_is_versioned_and_pinned() -> None:
     assert matrix["schema_version"] == 1
     assert matrix["snapshot"] == {
         "date": "2026-08-20",
-        "help_revision": "A.20.25.xx",
+        "profile_revision": "1.0",
         "reference_firmware": "A.20.25.04",
         "firmware_release_date": "2026-07-15",
     }
     policy = matrix["compatibility_policy"]
     assert policy["verified_versions"] == [matrix["snapshot"]["reference_firmware"]]
     assert re.fullmatch(
-        policy["documented_family_pattern"], matrix["snapshot"]["reference_firmware"]
+        policy["firmware_pattern"], matrix["snapshot"]["reference_firmware"]
     )
 
 
@@ -57,24 +57,16 @@ def test_every_application_references_known_models_and_options() -> None:
         assert set(application["models"]) <= known_models
         assert application["models"]
         assert application["options"]
-        assert all(option.startswith("S9") for option in application["options"])
+        assert all(option.startswith("E9") for option in application["options"])
 
     assert matrix["applications"]["noise_figure"]["models"] == ["N5242B"]
     assert matrix["applications"]["active_hot_parameters"]["models"] == ["N5242B"]
 
 
-def test_snapshot_uses_only_official_keysight_sources() -> None:
-    sources = load_matrix()["sources"]
+def test_snapshot_uses_internal_contract_metadata_without_external_sources() -> None:
+    matrix = load_matrix()
 
-    required = {
-        "firmware",
-        "programming_help",
-        "configurations",
-        "n5222b_product",
-        "n5242b_product",
-    }
-    assert required <= set(sources)
-    assert all(
-        url.startswith(("https://www.keysight.com/", "https://helpfiles.keysight.com/"))
-        for url in sources.values()
-    )
+    assert matrix["snapshot"]["profile_revision"] == "1.0"
+    assert "sources" not in matrix
+    assert "http://" not in json.dumps(matrix)
+    assert "https://" not in json.dumps(matrix)

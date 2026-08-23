@@ -59,13 +59,13 @@ def bench_json(first_port: int, second_port: int) -> dict:
             {
                 "id": "pna1",
                 "name": "Input PNA",
-                "driver": "keysight-pna",
+                "driver": "virtual-pna",
                 "model": "N5222B",
                 "firmware": "A.20.25.04",
                 "configuration": {
                     "mode": "model-faithful",
                     "hardware_configuration": "200",
-                    "application_options": ["S93010B"],
+                    "application_options": ["E93010B"],
                 },
                 "resource": {
                     "transport": "raw-socket",
@@ -75,11 +75,11 @@ def bench_json(first_port: int, second_port: int) -> dict:
             },
             {
                 "id": "pnax1",
-                "driver": "keysight-pna",
+                "driver": "virtual-pna",
                 "model": "N5242B",
                 "configuration": {
                     "hardware_configuration": "425",
-                    "application_options": ["S93080B", "S93029B"],
+                    "application_options": ["E93080B", "E93029B"],
                 },
                 "resource": {
                     "transport": "raw-socket",
@@ -96,7 +96,7 @@ def test_versioned_bench_file_round_trips_and_preserves_configuration(tmp_path) 
 
     assert definition.name == "rf-bench"
     assert definition.metadata == {"site": "remote-lab"}
-    assert definition.instrument("PNA1").configuration["application_options"] == ("S93010B",)
+    assert definition.instrument("PNA1").configuration["application_options"] == ("E93010B",)
     assert loads_bench(dumps_bench(definition)) == definition
 
     path = tmp_path / "rf-bench.json"
@@ -177,10 +177,10 @@ def test_same_definition_starts_two_real_socket_instruments_with_bind_override()
     try:
         assert runtime.running is True
         assert receive_line(first_port, "*IDN?").startswith(
-            "Keysight Technologies,N5222B,"
+            "SCPI Emulator,N5222B,"
         )
         assert receive_line(second_port, "*IDN?").startswith(
-            "Keysight Technologies,N5242B,"
+            "SCPI Emulator,N5242B,"
         )
     finally:
         runtime.stop()
@@ -196,13 +196,13 @@ def test_bind_override_conflicts_are_rejected_before_any_server_starts() -> None
         (
             BenchInstrument(
                 "pna1",
-                "keysight-pna",
+                "virtual-pna",
                 "N5222B",
                 ResourceAddress("raw-socket", "127.0.0.1", port),
             ),
             BenchInstrument(
                 "pna2",
-                "keysight-pna",
+                "virtual-pna",
                 "N5222B",
                 ResourceAddress("raw-socket", "localhost", port),
             ),
@@ -240,7 +240,7 @@ def test_composed_vxi11_resource_starts_transactionally() -> None:
         (
             BenchInstrument(
                 "pna1",
-                "keysight-pna",
+                "virtual-pna",
                 "N5222B",
                 ResourceAddress("vxi-11", "127.0.0.1", portmapper_port),
             ),
@@ -266,7 +266,7 @@ def test_composed_hislip_resource_starts_transactionally() -> None:
         (
             BenchInstrument(
                 "pna1",
-                "keysight-pna",
+                "virtual-pna",
                 "N5222B",
                 ResourceAddress("hislip", "127.0.0.1", port),
             ),

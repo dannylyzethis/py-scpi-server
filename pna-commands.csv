@@ -1,5 +1,5 @@
 Equipment,Port,Command,Response,Validation
-Keysight PNA N5222B,5560,*IDN?,"Keysight Technologies,N5222B,US12345678,A.20.25.04",
+Virtual PNA N5222B,5560,*IDN?,"SCPI Emulator,N5222B,US12345678,A.20.25.04",
 ,,*OPC?,1,
 ,,*RST,OK,
 ,,*CLS,OK,

@@ -1,4 +1,4 @@
-"""Built-in Keysight PNA/PNA-X instrument driver."""
+"""Built-in Virtual PNA/PNA-X instrument driver."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from .catalog import (
 )
 
 
-PNA_DRIVER_ID = "keysight-pna"
+PNA_DRIVER_ID = "virtual-pna"
 PNA_MANIFEST_RESOURCE = "profiles/pna_commands.v1.json"
 
 
@@ -61,7 +61,7 @@ class PNADriver:
             firmware=firmware,
             **configuration,
         )
-        name = request.name or f"Keysight {request.model}"
+        name = request.name or f"Virtual {request.model}"
         return SCPIInstrument(name, request.instrument_id, pna_capabilities=capabilities)
 
 
@@ -85,7 +85,7 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
     )
     return DriverDescriptor(
         id=PNA_DRIVER_ID,
-        display_name="Keysight PNA/PNA-X",
+        display_name="Virtual PNA/PNA-X",
         version=__version__,
         maturity=DriverMaturity.ALPHA,
         models=models,
@@ -139,7 +139,7 @@ def _model_descriptor(
     )
     return ModelDescriptor(
         model=model,
-        display_name=f"Keysight {model} {model_data['instrument_class']}",
+        display_name=f"Virtual {model} {model_data['instrument_class']}",
         instrument_class=model_data["instrument_class"],
         firmware_snapshots=(firmware,),
         hardware_configurations=tuple(sorted(model_data["hardware_configurations"])),
