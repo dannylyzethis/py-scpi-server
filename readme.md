@@ -41,6 +41,8 @@ Multi-instrument selection, addressing, and startup are documented in
   embedded-LO behavior with coherent scenario-backed axes and data.
 - Licensed gain-compression and noise-figure configuration, scenario-backed arrays, threshold
   results, and deterministic trigger behavior in the shared PNA data pipeline.
+- Licensed basic and Integrated Pulse generators, point-in-pulse/profile traces, time axes, IF
+  filters/gates, and shared deterministic trigger playback.
 - A catalog-visible Keysight 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
@@ -79,6 +81,8 @@ Frequency-offset and converter behavior is described in
 [PNA frequency-offset and converter behavior](docs/pna-mixer.md).
 Gain-compression and noise-figure behavior is described in
 [PNA active-device behavior](docs/pna-active-device.md).
+Pulse generator and Integrated Pulse behavior is described in
+[PNA pulse behavior](docs/pna-pulse.md).
 The end-to-end bench/scenario workflow is in
 [Remote ATE development workflow](docs/remote-ate-workflow.md).
 

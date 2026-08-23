@@ -76,6 +76,7 @@ from .output import (
     register_format_commands,
 )
 from .pna_data import PNADataSystem, register_pna_data_commands
+from .pulse import PulseChannel, PulseGenerator, PNAPulseSystem, register_pulse_commands
 from .parser import (
     BinaryBlock,
     Command,
@@ -159,6 +160,7 @@ __all__ = [
     "ParameterType",
     "PNACapabilities",
     "PNADataSystem",
+    "PNAPulseSystem",
     "PNAMeasurementSystem",
     "PNAMixerSystem",
     "PNASweepChannel",
@@ -166,6 +168,8 @@ __all__ = [
     "PNAStateFileStore",
     "PNATimeDomainSystem",
     "ProgramMessage",
+    "PulseChannel",
+    "PulseGenerator",
     "FrequencyOffsetRange",
     "QUEUE_OVERFLOW",
     "SCPIParseError",
@@ -200,6 +204,7 @@ __all__ = [
     "register_measurement_commands",
     "register_mixer_commands",
     "register_pna_data_commands",
+    "register_pulse_commands",
     "register_scalar_commands",
     "register_sweep_commands",
     "register_state_file_commands",

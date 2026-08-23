@@ -280,15 +280,15 @@ The versioned PNA command manifest records syntax, model and firmware applicabil
 responses, defaults, supersession metadata, and official documentation provenance. A coverage tool
 compares that snapshot with the active typed registry and produces model-specific reports.
 
-The current reports show 274 of 274 commands implemented for the expanded foundation, PNA
+The current reports show 340 of 340 commands implemented for the expanded foundation, PNA
 measurement-lifecycle, and sweep snapshot. This is not a claim that all PNA commands are complete. The
 snapshot includes common synchronization, acquisition, identity, option and capability commands,
 plus the first stateful channel, measurement, display, format, math, marker, limit, and equation
 workflows, plus linear, logarithmic, CW, power, and segment sweep configuration. Named MMEM state
 files now save and restore composition existence through a path-safe per-instrument JSON store;
 they deliberately do not serialize sweep, hardware, scenario, or calibration state. Licensed
-time-domain, gating, fixture-simulation, gain-compression, and noise-figure commands now process
-the same generic scenario traces.
+time-domain, gating, fixture-simulation, gain-compression, noise-figure, and Integrated Pulse
+commands now process the same generic scenario traces.
 The snapshot will continue expanding with applications.
 
 Why this is better: “supported” becomes measurable against a named model, firmware family, and
@@ -417,9 +417,9 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 280 automated tests pass.
+- 286 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
-- The N5222B and N5242B manifests each report 274/274 documented commands in the current snapshot.
+- The N5222B and N5242B manifests each report 340/340 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned PNA capability milestone is complete.
 - The first PNA measurement lifecycle is stateful: channels own uniquely named measurements,
@@ -438,6 +438,8 @@ As of 2026-08-22:
   estimation compose with that same trace pipeline; calibration/correction status remains static 0.
 - Gain-compression power sweeps and noise-figure arrays and summaries consume shared scenario
   streams with license, address-existence, trigger-policy, and malformed-data enforcement.
+- Basic and Integrated Pulse applications model five generators, point/profile operation, IF
+  filters and gate routing, time axes, timing constraints, and shared scenario trigger policies.
 - The catalog-visible 34461A reference DMM consumes scalar streams through the same player, proving
   nominal, drift, range-failure, recovery, exhaustion, trigger/operation, fetch, and reset behavior
   on a second instrument shape.
