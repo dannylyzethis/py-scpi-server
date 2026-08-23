@@ -27,10 +27,15 @@ class PNADataSystem:
 
     def add_application(self, application) -> None:
         self.applications.append(application)
+        if self.player is not None and hasattr(application, "attach"):
+            application.attach(self.player)
 
     def attach(self, player: ScenarioPlayer) -> None:
         self.player = player
         self._event_error = None
+        for application in self.applications:
+            if hasattr(application, "attach"):
+                application.attach(player)
 
     def bind(self, measurement: str, stream: str) -> None:
         if self.measurements.find(measurement) is None:

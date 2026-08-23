@@ -40,6 +40,7 @@ from .scpi import (
     SCPIParseError,
     StatusSystem,
     PNACapabilities,
+    PNAActiveDeviceSystem,
     PNAMeasurementSystem,
     PNAMixerSystem,
     PNADataSystem,
@@ -50,6 +51,7 @@ from .scpi import (
     detect_pna_model,
     parse_program_message,
     register_operation_commands,
+    register_active_device_commands,
     register_acquisition_commands,
     register_format_commands,
     register_capability_commands,
@@ -281,6 +283,7 @@ class SCPIInstrument:
         self.pna_measurements = None
         self.pna_sweeps = None
         self.pna_data = None
+        self.pna_active_device = None
         self.pna_state_files = None
         self.pna_time_domain = None
         self.pna_mixer = None
@@ -317,6 +320,11 @@ class SCPIInstrument:
             )
             self.pna_data.add_application(self.pna_mixer)
             register_mixer_commands(self.core_registry, self.pna_mixer)
+            self.pna_active_device = PNAActiveDeviceSystem(
+                self.pna_measurements, self.data_format
+            )
+            self.pna_data.add_application(self.pna_active_device)
+            register_active_device_commands(self.core_registry, self.pna_active_device)
             self.pna_time_domain = PNATimeDomainSystem(
                 self.pna_measurements, self.pna_capabilities.ports
             )
@@ -373,6 +381,8 @@ class SCPIInstrument:
             self.pna_sweeps.reset()
         if self.pna_data is not None:
             self.pna_data.reset()
+        if self.pna_active_device is not None:
+            self.pna_active_device.reset()
         if self.pna_time_domain is not None:
             self.pna_time_domain.reset()
         if self.pna_mixer is not None:

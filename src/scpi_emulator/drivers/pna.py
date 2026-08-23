@@ -106,7 +106,7 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
             ),
             ScenarioInputDescriptor(
                 "scalar-result",
-                SupportLevel.PLANNED,
+                SupportLevel.IMPLEMENTED,
                 "Application summaries such as gain-compression results.",
             ),
             ScenarioInputDescriptor(

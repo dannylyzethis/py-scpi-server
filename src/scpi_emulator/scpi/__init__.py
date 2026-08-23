@@ -1,5 +1,12 @@
 """SCPI language primitives."""
 
+from .active_device import (
+    GainCompressionState,
+    NoiseFigureState,
+    PNAActiveDeviceSystem,
+    register_active_device_commands,
+)
+
 from .acquisition import (
     AcquisitionChannel,
     AcquisitionController,
@@ -105,6 +112,10 @@ from .state_files import PNAStateFileStore, register_state_file_commands
 from .time_domain import PNATimeDomainSystem, TimeDomainChannel, register_time_domain_commands
 
 __all__ = [
+    "GainCompressionState",
+    "NoiseFigureState",
+    "PNAActiveDeviceSystem",
+    "register_active_device_commands",
     "BinaryBlock",
     "BinaryResponse",
     "ByteOrder",
