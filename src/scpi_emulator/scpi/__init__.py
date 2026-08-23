@@ -6,6 +6,7 @@ from .active_device import (
     PNAActiveDeviceSystem,
     register_active_device_commands,
 )
+from .advanced import AdvancedChannel, AdvancedMarker, PNAAdvancedSystem, register_advanced_commands
 
 from .acquisition import (
     AcquisitionChannel,
@@ -114,9 +115,13 @@ from .time_domain import PNATimeDomainSystem, TimeDomainChannel, register_time_d
 
 __all__ = [
     "GainCompressionState",
+    "AdvancedChannel",
+    "AdvancedMarker",
     "NoiseFigureState",
     "PNAActiveDeviceSystem",
+    "PNAAdvancedSystem",
     "register_active_device_commands",
+    "register_advanced_commands",
     "BinaryBlock",
     "BinaryResponse",
     "ByteOrder",

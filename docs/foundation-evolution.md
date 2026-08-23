@@ -280,7 +280,7 @@ The versioned PNA command manifest records syntax, model and firmware applicabil
 responses, defaults, supersession metadata, and official documentation provenance. A coverage tool
 compares that snapshot with the active typed registry and produces model-specific reports.
 
-The current reports show 340 of 340 commands implemented for the expanded foundation, PNA
+The current reports show 393 of 393 commands implemented for the expanded foundation, PNA
 measurement-lifecycle, and sweep snapshot. This is not a claim that all PNA commands are complete. The
 snapshot includes common synchronization, acquisition, identity, option and capability commands,
 plus the first stateful channel, measurement, display, format, math, marker, limit, and equation
@@ -417,9 +417,9 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 286 automated tests pass.
+- 295 automated tests pass, with 2 expected failures documenting legacy CSV parser limitations.
 - Two known legacy-parser limitations are retained as explicit expected failures.
-- The N5222B and N5242B manifests each report 340/340 documented commands in the current snapshot.
+- The N5222B and N5242B manifests each report 393/393 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned PNA capability milestone is complete.
 - The first PNA measurement lifecycle is stateful: channels own uniquely named measurements,

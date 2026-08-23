@@ -363,6 +363,1093 @@
     {"id":"sense.sweep.pulse.timing","syntax":"SENSe<ch>:SWEEP:PULSE:TIMING <value>","implementation_key":"SENSE<channel>:SWEEP:PULSE:TIMING","models":["N5222B","N5242B"],"parameters":[{"name":"value","type":"boolean"}],"response":{"type":"none"},"defaults":{"ch":1},"supersedes":[],"source_id":"command_finder"},
     {"id":"sense.sweep.pulse.timingquery","syntax":"SENSe<ch>:SWEEP:PULSE:TIMING?","implementation_key":"SENSE<channel>:SWEEP:PULSE:TIMING?","models":["N5222B","N5242B"],"parameters":[],"response":{"type":"boolean"},"defaults":{"ch":1},"supersedes":[],"source_id":"command_finder"},
     {"id":"sense.sweep.pulse.wideband","syntax":"SENSe<ch>:SWEEP:PULSE:WIDEBAND <value>","implementation_key":"SENSE<channel>:SWEEP:PULSE:WIDEBAND","models":["N5222B","N5242B"],"parameters":[{"name":"value","type":"boolean"}],"response":{"type":"none"},"defaults":{"ch":1},"supersedes":[],"source_id":"command_finder"},
-    {"id":"sense.sweep.pulse.widebandquery","syntax":"SENSe<ch>:SWEEP:PULSE:WIDEBAND?","implementation_key":"SENSE<channel>:SWEEP:PULSE:WIDEBAND?","models":["N5222B","N5242B"],"parameters":[],"response":{"type":"boolean"},"defaults":{"ch":1},"supersedes":[],"source_id":"command_finder"}
+    {"id":"sense.sweep.pulse.widebandquery","syntax":"SENSe<ch>:SWEEP:PULSE:WIDEBAND?","implementation_key":"SENSE<channel>:SWEEP:PULSE:WIDEBAND?","models":["N5222B","N5242B"],"parameters":[],"response":{"type":"boolean"},"defaults":{"ch":1},"supersedes":[],"source_id":"command_finder"},
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.add",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE:ADD",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE:ADD",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.count.query",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE:COUNT?",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE:COUNT?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.delete",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:DELETE",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:DELETE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.ifbw",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:IFBW",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:IFBW",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.ifbw.query",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:IFBW?",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:IFBW?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.start",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:START",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:START",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.start.query",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:START?",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:START?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.stop",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:STOP",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:STOP",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.diq.frequency.range.range.stop.query",
+      "syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:STOP?",
+      "implementation_key": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:STOP?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.measure.filter.srate",
+      "syntax": "SENSE<channel>:DISTORTION:MEASURE:FILTER:SRATE",
+      "implementation_key": "SENSE<channel>:DISTORTION:MEASURE:FILTER:SRATE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.measure.filter.srate.query",
+      "syntax": "SENSE<channel>:DISTORTION:MEASURE:FILTER:SRATE?",
+      "implementation_key": "SENSE<channel>:DISTORTION:MEASURE:FILTER:SRATE?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.sweep.carrier.frequency",
+      "syntax": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:FREQUENCY",
+      "implementation_key": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:FREQUENCY",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.sweep.carrier.frequency.query",
+      "syntax": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:FREQUENCY?",
+      "implementation_key": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:FREQUENCY?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.sweep.carrier.level",
+      "syntax": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:LEVEL",
+      "implementation_key": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:LEVEL",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.sweep.carrier.level.query",
+      "syntax": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:LEVEL?",
+      "implementation_key": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:LEVEL?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.sweep.type",
+      "syntax": "SENSE<channel>:DISTORTION:SWEEP:TYPE",
+      "implementation_key": "SENSE<channel>:DISTORTION:SWEEP:TYPE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.distortion.sweep.type.query",
+      "syntax": "SENSE<channel>:DISTORTION:SWEEP:TYPE?",
+      "implementation_key": "SENSE<channel>:DISTORTION:SWEEP:TYPE?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.frequency.dfrequency",
+      "syntax": "SENSE<channel>:IMD:FREQUENCY:DFREQUENCY",
+      "implementation_key": "SENSE<channel>:IMD:FREQUENCY:DFREQUENCY",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.frequency.dfrequency.query",
+      "syntax": "SENSE<channel>:IMD:FREQUENCY:DFREQUENCY?",
+      "implementation_key": "SENSE<channel>:IMD:FREQUENCY:DFREQUENCY?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.frequency.fcenter.center",
+      "syntax": "SENSE<channel>:IMD:FREQUENCY:FCENTER:CENTER",
+      "implementation_key": "SENSE<channel>:IMD:FREQUENCY:FCENTER:CENTER",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.frequency.fcenter.center.query",
+      "syntax": "SENSE<channel>:IMD:FREQUENCY:FCENTER:CENTER?",
+      "implementation_key": "SENSE<channel>:IMD:FREQUENCY:FCENTER:CENTER?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.frequency.fcenter.span",
+      "syntax": "SENSE<channel>:IMD:FREQUENCY:FCENTER:SPAN",
+      "implementation_key": "SENSE<channel>:IMD:FREQUENCY:FCENTER:SPAN",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.frequency.fcenter.span.query",
+      "syntax": "SENSE<channel>:IMD:FREQUENCY:FCENTER:SPAN?",
+      "implementation_key": "SENSE<channel>:IMD:FREQUENCY:FCENTER:SPAN?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.hoproduct.query",
+      "syntax": "SENSE<channel>:IMD:HOPRODUCT?",
+      "implementation_key": "SENSE<channel>:IMD:HOPRODUCT?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.ifbwidth.imtone",
+      "syntax": "SENSE<channel>:IMD:IFBWIDTH:IMTONE",
+      "implementation_key": "SENSE<channel>:IMD:IFBWIDTH:IMTONE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.ifbwidth.imtone.query",
+      "syntax": "SENSE<channel>:IMD:IFBWIDTH:IMTONE?",
+      "implementation_key": "SENSE<channel>:IMD:IFBWIDTH:IMTONE?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.ifbwidth.main",
+      "syntax": "SENSE<channel>:IMD:IFBWIDTH:MAIN",
+      "implementation_key": "SENSE<channel>:IMD:IFBWIDTH:MAIN",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.ifbwidth.main.query",
+      "syntax": "SENSE<channel>:IMD:IFBWIDTH:MAIN?",
+      "implementation_key": "SENSE<channel>:IMD:IFBWIDTH:MAIN?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.sweep.type",
+      "syntax": "SENSE<channel>:IMD:SWEEP:TYPE",
+      "implementation_key": "SENSE<channel>:IMD:SWEEP:TYPE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.sweep.type.query",
+      "syntax": "SENSE<channel>:IMD:SWEEP:TYPE?",
+      "implementation_key": "SENSE<channel>:IMD:SWEEP:TYPE?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.tpower.f.tone",
+      "syntax": "SENSE<channel>:IMD:TPOWER:F<tone>",
+      "implementation_key": "SENSE<channel>:IMD:TPOWER:F<tone>",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.imd.tpower.f.tone.query",
+      "syntax": "SENSE<channel>:IMD:TPOWER:F<tone>?",
+      "implementation_key": "SENSE<channel>:IMD:TPOWER:F<tone>?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.average.count",
+      "syntax": "SENSE<channel>:PN:AVERAGE:COUNT",
+      "implementation_key": "SENSE<channel>:PN:AVERAGE:COUNT",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.average.count.query",
+      "syntax": "SENSE<channel>:PN:AVERAGE:COUNT?",
+      "implementation_key": "SENSE<channel>:PN:AVERAGE:COUNT?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.ntype",
+      "syntax": "SENSE<channel>:PN:NTYPE",
+      "implementation_key": "SENSE<channel>:PN:NTYPE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.ntype.query",
+      "syntax": "SENSE<channel>:PN:NTYPE?",
+      "implementation_key": "SENSE<channel>:PN:NTYPE?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.offset.start",
+      "syntax": "SENSE<channel>:PN:OFFSET:START",
+      "implementation_key": "SENSE<channel>:PN:OFFSET:START",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.offset.start.query",
+      "syntax": "SENSE<channel>:PN:OFFSET:START?",
+      "implementation_key": "SENSE<channel>:PN:OFFSET:START?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.offset.stop",
+      "syntax": "SENSE<channel>:PN:OFFSET:STOP",
+      "implementation_key": "SENSE<channel>:PN:OFFSET:STOP",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.offset.stop.query",
+      "syntax": "SENSE<channel>:PN:OFFSET:STOP?",
+      "implementation_key": "SENSE<channel>:PN:OFFSET:STOP?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.sweep.carrier.frequency",
+      "syntax": "SENSE<channel>:PN:SWEEP:CARRIER:FREQUENCY",
+      "implementation_key": "SENSE<channel>:PN:SWEEP:CARRIER:FREQUENCY",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.pn.sweep.carrier.frequency.query",
+      "syntax": "SENSE<channel>:PN:SWEEP:CARRIER:FREQUENCY?",
+      "implementation_key": "SENSE<channel>:PN:SWEEP:CARRIER:FREQUENCY?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.average.count",
+      "syntax": "SENSE<channel>:SA:AVERAGE:COUNT",
+      "implementation_key": "SENSE<channel>:SA:AVERAGE:COUNT",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.average.count.query",
+      "syntax": "SENSE<channel>:SA:AVERAGE:COUNT?",
+      "implementation_key": "SENSE<channel>:SA:AVERAGE:COUNT?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.bandwidth.resolution",
+      "syntax": "SENSE<channel>:SA:BANDWIDTH:RESOLUTION",
+      "implementation_key": "SENSE<channel>:SA:BANDWIDTH:RESOLUTION",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.bandwidth.resolution.query",
+      "syntax": "SENSE<channel>:SA:BANDWIDTH:RESOLUTION?",
+      "implementation_key": "SENSE<channel>:SA:BANDWIDTH:RESOLUTION?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.bandwidth.video",
+      "syntax": "SENSE<channel>:SA:BANDWIDTH:VIDEO",
+      "implementation_key": "SENSE<channel>:SA:BANDWIDTH:VIDEO",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.bandwidth.video.query",
+      "syntax": "SENSE<channel>:SA:BANDWIDTH:VIDEO?",
+      "implementation_key": "SENSE<channel>:SA:BANDWIDTH:VIDEO?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.detector.function",
+      "syntax": "SENSE<channel>:SA:DETECTOR:FUNCTION",
+      "implementation_key": "SENSE<channel>:SA:DETECTOR:FUNCTION",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.detector.function.query",
+      "syntax": "SENSE<channel>:SA:DETECTOR:FUNCTION?",
+      "implementation_key": "SENSE<channel>:SA:DETECTOR:FUNCTION?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.reference.level",
+      "syntax": "SENSE<channel>:SA:REFERENCE:LEVEL",
+      "implementation_key": "SENSE<channel>:SA:REFERENCE:LEVEL",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "type": "value"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.sense.channel.sa.reference.level.query",
+      "syntax": "SENSE<channel>:SA:REFERENCE:LEVEL?",
+      "implementation_key": "SENSE<channel>:SA:REFERENCE:LEVEL?",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [],
+      "response": {
+        "type": "value"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    },
+    {
+      "id": "advanced.calculate.channel.custom.define",
+      "syntax": "CALCulate<ch>:CUSTom:DEFine <name>,<class>,<parameter>",
+      "implementation_key": "CALCULATE<channel>:CUSTOM:DEFINE",
+      "models": [
+        "N5222B",
+        "N5242B"
+      ],
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "class",
+          "type": "string"
+        },
+        {
+          "name": "parameter",
+          "type": "string"
+        }
+      ],
+      "response": {
+        "type": "none"
+      },
+      "defaults": {
+        "ch": 1
+      },
+      "supersedes": [],
+      "source_id": "command_finder"
+    }
   ]
 }

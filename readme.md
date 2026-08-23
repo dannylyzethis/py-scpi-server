@@ -43,6 +43,8 @@ Multi-instrument selection, addressing, and startup are documented in
   results, and deterministic trigger behavior in the shared PNA data pipeline.
 - Licensed basic and Integrated Pulse generators, point-in-pulse/profile traces, time axes, IF
   filters/gates, and shared deterministic trigger playback.
+- Licensed Spectrum Analyzer, Swept IMD, Modulation Distortion, Phase Noise, Differential I/Q, and
+  wideband-I/Q workflows with option gates, scenario results, application axes, and markers.
 - A catalog-visible Keysight 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
@@ -65,9 +67,10 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 - HiSLIP and network discovery are not implemented yet.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
-- PNA configuration, sweep/stimulus, base trace-data workflows, and several licensed applications
-  are stateful, but additional behavioral PNA/PNA-X applications remain on the roadmap. The
-  current command manifest is a growing verified snapshot, not the complete Keysight tree.
+- PNA configuration, sweep/stimulus, base trace-data workflows, and the selected licensed
+  application families are stateful, but complete behavioral coverage of every command in those
+  large applications remains iterative. The current command manifest is a growing verified
+  snapshot, not the complete Keysight tree.
 - The dashboard now requires authentication for non-loopback binds, but it remains a development
   control plane rather than an internet-facing service.
 
@@ -83,6 +86,8 @@ Gain-compression and noise-figure behavior is described in
 [PNA active-device behavior](docs/pna-active-device.md).
 Pulse generator and Integrated Pulse behavior is described in
 [PNA pulse behavior](docs/pna-pulse.md).
+Spectrum, IMD, modulation-distortion, phase-noise, and I/Q behavior is described in
+[PNA advanced-application behavior](docs/pna-advanced.md).
 The end-to-end bench/scenario workflow is in
 [Remote ATE development workflow](docs/remote-ate-workflow.md).
 
