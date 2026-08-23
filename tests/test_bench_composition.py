@@ -18,6 +18,7 @@ from scpi_emulator.bench import (
     save_bench,
 )
 from scpi_emulator.drivers import build_driver_catalog
+from scpi_emulator.hislip_transport import HiSLIPServer
 from scpi_emulator.vxi11_transport import VXI11Server
 
 
@@ -154,8 +155,8 @@ def test_unknown_driver_model_transport_and_configuration_fail_transactionally()
             composer.compose(loads_bench(json.dumps(raw)))
 
     unavailable = bench_json(5401, 5402)
-    unavailable["instruments"][1]["resource"]["transport"] = "hislip"
-    with pytest.raises(BenchCompositionError, match="planned, not implemented"):
+    unavailable["instruments"][1]["resource"]["transport"] = "usb"
+    with pytest.raises(BenchCompositionError, match="does not advertise"):
         composer.compose(loads_bench(json.dumps(unavailable)))
 
     invalid_config = bench_json(5401, 5402)
@@ -251,6 +252,34 @@ def test_composed_vxi11_resource_starts_transactionally() -> None:
     runtime = composed.start()
     try:
         assert isinstance(runtime.servers["pna1"], VXI11Server)
+        assert runtime.servers["pna1"].running is True
+    finally:
+        runtime.stop()
+
+    assert runtime.servers == {}
+
+
+def test_composed_hislip_resource_starts_transactionally() -> None:
+    port = free_port()
+    definition = BenchDefinition(
+        "hislip-bench",
+        (
+            BenchInstrument(
+                "pna1",
+                "keysight-pna",
+                "N5222B",
+                ResourceAddress("hislip", "127.0.0.1", port),
+            ),
+        ),
+    )
+    composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
+
+    assert composed.resources() == {
+        "pna1": f"TCPIP::127.0.0.1::hislip0,{port}::INSTR"
+    }
+    runtime = composed.start()
+    try:
+        assert isinstance(runtime.servers["pna1"], HiSLIPServer)
         assert runtime.servers["pna1"].running is True
     finally:
         runtime.stop()

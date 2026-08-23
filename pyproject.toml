@@ -24,10 +24,12 @@ classifiers = [
 [project.optional-dependencies]
 excel = ["openpyxl>=3.1"]
 web = ["flask>=3.0", "flask-socketio>=5.3"]
+discovery = ["zeroconf>=0.150"]
 all = [
   "openpyxl>=3.1",
   "flask>=3.0",
   "flask-socketio>=5.3",
+  "zeroconf>=0.150",
 ]
 dev = [
   "build>=1.2",
@@ -35,6 +37,7 @@ dev = [
   "pytest-cov>=5.0",
   "pyvisa>=1.16",
   "pyvisa-py>=0.8",
+  "zeroconf>=0.150",
   "ruff>=0.6",
 ]
 

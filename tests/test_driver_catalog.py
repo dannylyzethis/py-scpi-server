@@ -83,7 +83,7 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
     assert {item.name: item.support for item in descriptor.transports} == {
         "raw-socket": SupportLevel.IMPLEMENTED,
         "vxi-11": SupportLevel.IMPLEMENTED,
-        "hislip": SupportLevel.PLANNED,
+        "hislip": SupportLevel.IMPLEMENTED,
     }
     assert {item.kind: item.support for item in descriptor.scenario_inputs} == {
         "complex-trace": SupportLevel.IMPLEMENTED,

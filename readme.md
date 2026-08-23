@@ -6,8 +6,8 @@
 [![CI](https://github.com/dannylyzethis/py-scpi-server/actions/workflows/ci.yml/badge.svg)](https://github.com/dannylyzethis/py-scpi-server/actions/workflows/ci.yml)
 
 A stateful SCPI instrument emulator for developing and testing automation software without
-physical instruments. The current alpha provides configurable raw-TCP instruments while a new
-standards-oriented SCPI, IEEE 488.2, and PNA/PNA-X engine is developed.
+physical instruments. The current alpha provides configurable raw-TCP, VXI-11, and HiSLIP
+instruments on a standards-oriented SCPI, IEEE 488.2, and PNA/PNA-X foundation.
 
 For a detailed, plain-language explanation of the architecture changes and completed-system vision,
 see [From command responder to instrument emulator](docs/foundation-evolution.md).
@@ -17,6 +17,8 @@ The shared queued-data format and playback rules are documented in
 [Deterministic scenario and queued-data engine](docs/scenario-engine.md).
 Multi-instrument selection, addressing, and startup are documented in
 [Reusable virtual bench composition](docs/virtual-benches.md).
+HiSLIP sessions and optional LXI discovery are documented in
+[HiSLIP transport and LXI discovery](docs/hislip-discovery.md).
 
 ## Current capabilities
 
@@ -54,7 +56,9 @@ Multi-instrument selection, addressing, and startup are documented in
 - Authenticated remote scenario selection, pause/start/step/reset, playback inspection, and fault
   injection through the same SCPI error/status machinery observed by ATE clients.
 - Versioned virtual bench files with catalog-backed model/configuration validation, unique resources,
-  deployment-host overrides, and rollback-safe multi-instrument socket startup.
+  deployment-host overrides, and rollback-safe raw-TCP, VXI-11, or HiSLIP startup.
+- HiSLIP 1.0 paired sessions with Device Clear, trigger, locking, status polling, OPC-driven SRQ,
+  real PyVISA-Py interoperability, and optional LXI mDNS discovery.
 - Optional Flask/Socket.IO monitoring dashboard.
 - A packaged CLI plus parser, state-machine, status, profile, and socket integration tests.
 
@@ -62,9 +66,10 @@ Multi-instrument selection, addressing, and startup are documented in
 
 This release is an alpha foundation, not a complete instrument simulation. In particular:
 
-- Raw TCP supports VISA `::SOCKET` resources; VXI-11 supports standard `::INSTR` resources,
-  Device Clear, bus trigger, locking, serial poll, abort, and asynchronous SRQ.
-- HiSLIP and network discovery are not implemented yet.
+- Raw TCP supports VISA `::SOCKET`; VXI-11 and HiSLIP support VISA `::INSTR` resources. Both INSTR
+  transports bridge Device Clear, bus trigger, locking, serial poll, and asynchronous SRQ.
+- HiSLIP 2.0 TLS/SASL features and automatic discovery from the packaged CLI are not implemented;
+  library users can enable standards-shaped `_hislip._tcp` and `_vxi-11._tcp` advertisements.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
 - PNA configuration, sweep/stimulus, base trace-data workflows, and the selected licensed
@@ -97,6 +102,7 @@ The end-to-end bench/scenario workflow is in
 - No third-party runtime dependency for CSV profiles and raw TCP operation.
 - `openpyxl` through the `excel` extra for XLSX profiles.
 - Flask and Flask-SocketIO through the `web` extra for the dashboard.
+- `zeroconf` through the `discovery` extra for optional LXI mDNS/DNS-SD advertisement.
 
 The project is tested with Python 3.14 during local development. CI covers the oldest and newest
 declared Python families on both Linux and Windows.
@@ -170,6 +176,7 @@ TCPIP0::localhost::5025::SOCKET
 TCPIP0::localhost::5029::SOCKET
 TCPIP0::localhost::5030::SOCKET
 TCPIP0::localhost::inst0::INSTR
+TCPIP0::localhost::hislip0::INSTR
 ```
 
 Example with a plain TCP client:
@@ -185,6 +192,8 @@ with socket.create_connection(("localhost", 5025), timeout=2) as client:
 VXI-11 uses ONC RPC portmapper port 111 by default. A development server may expose its negotiated
 core RPC port directly to PyVISA-Py with
 `TCPIP0::127.0.0.1,<core-port>::inst0::INSTR`, which is useful in unprivileged CI environments.
+HiSLIP uses TCP port 4880 by default. PyVISA-Py expresses a nonstandard development port as
+`TCPIP0::127.0.0.1::hislip0,<port>::INSTR`.
 
 ## Configuration format
 

@@ -18,7 +18,7 @@ Client program
     -> typed command registry and validation
     -> instrument state, operations, status, and capabilities
     -> output queue and binary encoder
-    -> raw TCP today; VISA/LXI transports later
+    -> raw TCP, VXI-11, or HiSLIP transport
 ```
 
 The important change is not merely that more commands exist. Commands now interact through shared
@@ -319,11 +319,12 @@ The largest unfinished areas are:
    calibration state are deliberately out of scope; correction status remains static.
 2. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
    spectrum analysis, IMD, modulation distortion, phase noise, and differential-IQ applications.
-3. HiSLIP and discovery compatibility after the completed VXI-11 `INSTR` foundation.
+3. Additional HiSLIP 2.0 security features beyond the completed HiSLIP 1.0/discovery foundation.
 4. Virtual front panels, fault injection, packaging, and release hardening.
 
-Raw TCP and VXI-11 work today. VXI-11 bridges Device Clear, trigger, locking, abort, serial poll, and
-the internal request state to asynchronous SRQ callbacks. HiSLIP and discovery remain future work.
+Raw TCP, VXI-11, and HiSLIP work today. The INSTR transports bridge Device Clear, trigger, locking,
+serial poll, and internal request state to asynchronous SRQ delivery. Optional LXI DNS-SD records
+make HiSLIP and VXI-11 endpoints discoverable when the `discovery` extra is installed.
 
 ## What the completed emulator should achieve
 

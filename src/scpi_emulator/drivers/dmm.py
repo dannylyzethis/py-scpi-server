@@ -36,6 +36,11 @@ class DMMDriver:
                 "raw-socket", "TCPIP::{host}::{port}::SOCKET", SupportLevel.IMPLEMENTED
             ),
             TransportDescriptor("vxi-11", "TCPIP::{host}::INSTR", SupportLevel.IMPLEMENTED),
+            TransportDescriptor(
+                "hislip",
+                "TCPIP::{host}::hislip0,{port}::INSTR",
+                SupportLevel.IMPLEMENTED,
+            ),
         ),
         scenario_inputs=(
             ScenarioInputDescriptor(

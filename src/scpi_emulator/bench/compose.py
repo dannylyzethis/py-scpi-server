@@ -122,6 +122,7 @@ class BenchRuntime:
 
     def start(self, *, bind_host: str | None = None) -> None:
         from scpi_emulator.emulator import SCPIServer
+        from scpi_emulator.hislip_transport import HiSLIPServer
         from scpi_emulator.vxi11_transport import VXI11Server
 
         with self._lock:
@@ -130,7 +131,7 @@ class BenchRuntime:
             endpoints: set[tuple[str, int]] = set()
             for composed in self.bench.instruments:
                 resource = composed.definition.resource
-                if resource.transport.casefold() not in {"raw-socket", "vxi-11"}:
+                if resource.transport.casefold() not in {"raw-socket", "vxi-11", "hislip"}:
                     raise BenchStartError(
                         f"runtime cannot start transport {resource.transport!r} yet"
                     )
@@ -156,11 +157,17 @@ class BenchRuntime:
                             host=host,
                             port=resource.port,
                         )
-                    else:
+                    elif resource.transport.casefold() == "vxi-11":
                         server = VXI11Server(
                             composed.instrument,
                             host=host,
                             portmapper_port=resource.port,
+                        )
+                    else:
+                        server = HiSLIPServer(
+                            composed.instrument,
+                            host=host,
+                            port=resource.port,
                         )
                     if not server.start():
                         server.stop()
