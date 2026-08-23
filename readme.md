@@ -39,6 +39,8 @@ Multi-instrument selection, addressing, and startup are documented in
   workflows that process those same scenario traces.
 - Licensed frequency-offset ranges, scalar/vector converters, mixer segments, source roles, and
   embedded-LO behavior with coherent scenario-backed axes and data.
+- Licensed gain-compression and noise-figure configuration, scenario-backed arrays, threshold
+  results, and deterministic trigger behavior in the shared PNA data pipeline.
 - A catalog-visible Keysight 34461A reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
@@ -59,8 +61,8 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 - HiSLIP and network discovery are not implemented yet.
 - Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
   quoted strings; typed core commands use the replacement parser.
-- PNA configuration, sweep/stimulus, base trace-data workflows, and existence-only named state
-  recall are stateful, but behavioral PNA/PNA-X applications remain on the roadmap. The
+- PNA configuration, sweep/stimulus, base trace-data workflows, and several licensed applications
+  are stateful, but additional behavioral PNA/PNA-X applications remain on the roadmap. The
   current command manifest is a growing verified snapshot, not the complete Keysight tree.
 - The dashboard now requires authentication for non-loopback binds, but it remains a development
   control plane rather than an internet-facing service.
@@ -73,6 +75,8 @@ Time-domain and fixture behavior is described in
 [PNA time-domain and fixture behavior](docs/pna-time-domain.md).
 Frequency-offset and converter behavior is described in
 [PNA frequency-offset and converter behavior](docs/pna-mixer.md).
+Gain-compression and noise-figure behavior is described in
+[PNA active-device behavior](docs/pna-active-device.md).
 
 ## Requirements
 
