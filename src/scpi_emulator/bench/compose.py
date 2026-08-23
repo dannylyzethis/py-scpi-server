@@ -117,6 +117,7 @@ class BenchRuntime:
         self.servers: dict[str, object] = {}
         self.running = False
         self.bind_host: str | None = None
+        self._last_bind_host: str | None = None
         self._lock = threading.RLock()
 
     def start(self, *, bind_host: str | None = None) -> None:
@@ -177,6 +178,7 @@ class BenchRuntime:
                 self.running = False
                 raise
             self.bind_host = bind_host
+            self._last_bind_host = bind_host
             self.running = True
 
     def stop(self) -> None:
@@ -189,6 +191,36 @@ class BenchRuntime:
             self.servers.clear()
             self.running = False
             self.bind_host = None
+
+    @property
+    def instruments(self) -> dict[str, dict[str, object]]:
+        return {
+            item.definition.id: {
+                "instrument": item.instrument,
+                "port": item.definition.resource.port,
+            }
+            for item in self.bench.instruments
+        }
+
+    def start_all_servers(self) -> bool:
+        if not self.running:
+            self.start(bind_host=self._last_bind_host)
+        return True
+
+    def stop_all_servers(self) -> None:
+        self.stop()
+
+    def start_web_dashboard(
+        self,
+        host: str = "127.0.0.1",
+        port: int = 8081,
+        *,
+        auth_token: str | None = None,
+    ) -> bool:
+        from scpi_emulator.emulator import WebDashboard
+
+        self.web_dashboard = WebDashboard(self, host, port, auth_token=auth_token)
+        return self.web_dashboard.start()
 
     def __enter__(self) -> "BenchRuntime":
         return self

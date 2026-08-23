@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "remote-ate-development",
+  "description": "A DMM bench controlled independently from its DUT scenario.",
+  "instruments": [
+    {
+      "id": "dmm1",
+      "name": "DUT supply monitor",
+      "driver": "keysight-3446x",
+      "model": "34461A",
+      "configuration": {},
+      "resource": {
+        "transport": "raw-socket",
+        "host": "127.0.0.1",
+        "port": 15025
+      }
+    }
+  ]
+}

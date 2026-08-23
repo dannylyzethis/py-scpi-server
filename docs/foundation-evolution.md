@@ -417,7 +417,7 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-22:
 
-- 275 automated tests pass.
+- 280 automated tests pass.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The N5222B and N5242B manifests each report 274/274 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
@@ -449,6 +449,9 @@ As of 2026-08-22:
   configurable termination, timeouts, and clean shutdown on the standard port 5025.
 - Versioned virtual bench files can select catalog instruments, validate configurations and resource
   conflicts, and start equivalent local, remote-hosted, or CI socket benches transactionally.
+- Authenticated scenario controls can select, start, pause, manually step, reset, and inspect DUT
+  playback per instrument; injected faults flow through the normal SCPI error/status registers. A
+  runnable remote bench/client example reproduces the complete workflow over TCP and HTTP.
 
 See [PNA compatibility baseline](pna-compatibility.md) for model and firmware details, and
 [TODO.md](../TODO.md) or `bd ready` for the live implementation backlog.

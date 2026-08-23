@@ -132,6 +132,36 @@ def test_timed_samples_use_an_injected_clock_and_reset_point() -> None:
         player.read("temperature")
 
 
+def test_pause_freezes_time_and_automatic_advancement_but_manual_step_works() -> None:
+    clock = ManualClock()
+    definition = ScenarioDefinition(
+        "controlled",
+        (
+            ScenarioStream(
+                "voltage",
+                StreamKind.SCALAR,
+                (ScenarioSample(1), ScenarioSample(2, at_seconds=5)),
+                advance=AdvancePolicy.READ,
+                end=EndPolicy.HOLD_LAST,
+            ),
+        ),
+    )
+    player = ScenarioPlayer(definition, clock=clock)
+
+    player.pause()
+    clock.now = 20
+    assert player.elapsed_seconds() == 0
+    assert player.read("voltage") == 1
+    assert player.position("voltage").index == 0
+    assert player.step("voltage").index == 1
+    assert player.position("voltage").ready is False
+
+    player.resume()
+    clock.now = 25
+    assert player.position("voltage").ready is True
+    assert player.read("voltage") == 2
+
+
 def test_seeded_randomness_and_playback_reset_are_repeatable() -> None:
     player = ScenarioPlayer(scenario(stream("reading", (1, 2)), seed=1234))
 

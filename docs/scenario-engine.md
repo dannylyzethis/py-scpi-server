@@ -79,6 +79,10 @@ Playback position exposes the index, sample count, reads, advances, completed lo
 current due time, elapsed time, and readiness. All mutation is protected by a lock, so concurrent
 consumers cannot take the same queued sample twice.
 
+`pause()` freezes elapsed scenario time and prevents read, trigger, and operation policies from
+advancing. Current samples remain readable, and `step()` remains available for deliberate manual
+placement. `resume()` continues from the frozen time and position.
+
 ## Determinism and reset
 
 `ScenarioPlayer` uses a shared scenario seed and offers locked `random_uniform()` draws for

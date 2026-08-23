@@ -12,6 +12,7 @@ New Features:
 """
 
 import csv
+import json
 import socket
 import threading
 import time
@@ -65,6 +66,7 @@ from .scpi import (
     register_time_domain_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
+from .scenario import ScenarioControlError, ScenarioController, ScenarioError, loads_scenario
 
 # Flask imports
 try:
@@ -278,6 +280,7 @@ class SCPIInstrument:
         self.acquisition = AcquisitionController(self.operation_manager, self.status)
         self.data_format = DataFormat()
         self.output_queue = OutputQueue(self.status)
+        self.scenario_control = ScenarioController(self)
         model = detect_pna_model(str(name), str(instrument_id))
         self.pna_capabilities = pna_capabilities
         self.pna_measurements = None
@@ -413,6 +416,7 @@ class SCPIInstrument:
             self.pna_data.attach(player)
         if self.scalar_data is not None:
             self.scalar_data.attach(player)
+        self.scenario_control.attach(player)
         return player
 
     def add_command(self, command, response, validation=None):
@@ -951,7 +955,7 @@ class WebDashboard:
                     'name': instrument.name,
                     'port': port,
                     'running': server is not None and server.running,
-                    'clients': len(server.clients) if server else 0,
+                    'clients': len(getattr(server, 'clients', ())) if server else 0,
                     'commands': instrument.command_count,
                     'errors': len(instrument.error_queue),
                     'state': dict(instrument.state)
@@ -966,11 +970,83 @@ class WebDashboard:
                     'timestamp': time.time()
                 }
             })
+
+        @self.app.route('/api/session')
+        def api_session():
+            """Return the mutation token to an authenticated API client."""
+            return jsonify({'csrf_token': self.csrf_token})
         
         @self.app.route('/api/commands')
         def api_commands():
             """Get recent commands"""
             return jsonify(command_logger.get_recent_entries())
+
+        def scenario_instrument(instrument_id):
+            entry = self.manager.instruments.get(instrument_id)
+            if entry is None:
+                return None
+            if isinstance(entry, dict):
+                return entry.get('instrument')
+            return getattr(entry, 'instrument', None)
+
+        @self.app.route('/api/scenario/<instrument_id>')
+        def api_scenario_status(instrument_id):
+            instrument = scenario_instrument(instrument_id)
+            if instrument is None:
+                return jsonify({'status': 'error', 'message': 'Instrument not found'}), 404
+            return jsonify({'status': 'success', 'scenario': instrument.scenario_control.inspect()})
+
+        @self.app.route('/api/scenario/<instrument_id>', methods=['PUT'])
+        def api_scenario_select(instrument_id):
+            instrument = scenario_instrument(instrument_id)
+            if instrument is None:
+                return jsonify({'status': 'error', 'message': 'Instrument not found'}), 404
+            payload = request.get_json(silent=True)
+            if not request.is_json or not isinstance(payload, dict):
+                return jsonify({'status': 'error', 'message': 'JSON object required'}), 415
+            raw = payload.get('scenario', payload)
+            if not isinstance(raw, dict):
+                return jsonify({'status': 'error', 'message': 'scenario must be an object'}), 400
+            try:
+                definition = loads_scenario(json.dumps(raw))
+                selected = instrument.scenario_control.select(
+                    definition, start=payload.get('start', False) is True
+                )
+            except (ScenarioError, ValueError, TypeError) as exc:
+                return jsonify({'status': 'error', 'message': str(exc)}), 400
+            return jsonify({'status': 'success', 'scenario': selected})
+
+        @self.app.route('/api/scenario/<instrument_id>/<action>', methods=['POST'])
+        def api_scenario_action(instrument_id, action):
+            instrument = scenario_instrument(instrument_id)
+            if instrument is None:
+                return jsonify({'status': 'error', 'message': 'Instrument not found'}), 404
+            payload = request.get_json(silent=True) if request.data else {}
+            if not isinstance(payload, dict):
+                return jsonify({'status': 'error', 'message': 'JSON object required'}), 415
+            control = instrument.scenario_control
+            try:
+                if action == 'start':
+                    result = control.start(
+                        reset=payload.get('reset', False) is True,
+                        seed=payload.get('seed'),
+                    )
+                elif action == 'pause':
+                    result = control.pause()
+                elif action == 'reset':
+                    result = control.reset(seed=payload.get('seed'))
+                elif action == 'step':
+                    stream = payload.get('stream')
+                    if stream is not None and not isinstance(stream, str):
+                        raise ScenarioControlError('stream must be text')
+                    result = {'positions': control.step(stream)}
+                elif action == 'fault':
+                    result = control.inject_fault(payload.get('code'), payload.get('message'))
+                else:
+                    return jsonify({'status': 'error', 'message': 'Unknown action'}), 404
+            except (ScenarioError, ValueError, TypeError) as exc:
+                return jsonify({'status': 'error', 'message': str(exc)}), 400
+            return jsonify({'status': 'success', 'scenario': result})
         
         @self.app.route('/api/restart/<instrument_id>', methods=['POST'])
         def api_restart_instrument(instrument_id):

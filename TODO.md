@@ -16,11 +16,11 @@ These four tasks can proceed independently and establish the baseline for the re
 - [x] `scpi-m0` — Maintainable emulator foundation
 - [x] `scpi-m1` — SCPI and IEEE 488.2 core
 - [x] `scpi-m2` — Versioned PNA/PNA-X capability system
-- [ ] `scpi-m3` — Base PNA measurement engine
+- [x] `scpi-m3` — Base PNA measurement engine
 - [ ] `scpi-m4` — All selected PNA application command families
 - [ ] `scpi-m5` — VISA/LXI-compatible transports
 - [ ] `scpi-m6` — Dashboard, operations, CI, and releases
-- [ ] `scpi-m7` — Virtual bench composition and deterministic DUT scenarios
+- [x] `scpi-m7` — Virtual bench composition and deterministic DUT scenarios
 
 ## Critical path
 

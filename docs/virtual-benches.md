@@ -115,9 +115,10 @@ is the local ONC RPC portmapper port—normally 111—and the rendered VISA reso
 network instruments do. HiSLIP remains a planned catalog capability and is rejected during
 composition until its transport milestone is implemented.
 
-## Current boundary
+## DUT scenario control
 
-The bench layer owns selection, validation, resource assignment, composition, and lifecycle. It does
-not yet select or control a DUT scenario; that control workflow belongs to `scpi-706`. The scenario
-engine and bench definitions are deliberately independent so one scenario can later be reused across
-multiple bench compositions and one bench can be exercised by multiple scenarios.
+The bench and DUT scenario remain independent, so one scenario can be reused across multiple bench
+compositions and one bench can run many scenarios without restarting its sockets. A running
+`BenchRuntime` can start the secure web/control API with `start_web_dashboard()`. The API selects,
+starts, pauses, steps, resets, and inspects scenarios per instrument. See
+[Remote ATE development workflow](remote-ate-workflow.md).

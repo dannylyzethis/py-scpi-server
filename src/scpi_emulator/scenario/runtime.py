@@ -61,6 +61,9 @@ class ScenarioPlayer:
         self._random = random.Random(self._seed)
         self._random_draws = 0
         self._started_at = self._clock()
+        self._paused = False
+        self._paused_at: float | None = None
+        self._paused_total = 0.0
 
     @property
     def stream_names(self) -> tuple[str, ...]:
@@ -73,6 +76,27 @@ class ScenarioPlayer:
     @property
     def random_draws(self) -> int:
         return self._random_draws
+
+    @property
+    def paused(self) -> bool:
+        with self._lock:
+            return self._paused
+
+    def pause(self) -> None:
+        """Freeze timed playback and automatic advancement."""
+        with self._lock:
+            if not self._paused:
+                self._paused = True
+                self._paused_at = self._clock()
+
+    def resume(self) -> None:
+        """Resume playback without changing stream positions."""
+        with self._lock:
+            if self._paused:
+                now = self._clock()
+                self._paused_total += max(0.0, now - self._paused_at)
+                self._paused = False
+                self._paused_at = None
 
     def read(self, stream: str):
         """Return the current value and apply an advance-on-read policy afterward."""
@@ -95,7 +119,7 @@ class ScenarioPlayer:
         """Explicitly advance one stream regardless of its automatic policy."""
         with self._lock:
             state = self._state(stream)
-            self._advance(state)
+            self._advance(state, manual=True)
             return self._position(state)
 
     def notify_trigger(self, stream: str | None = None) -> tuple[str, ...]:
@@ -114,7 +138,7 @@ class ScenarioPlayer:
 
     def elapsed_seconds(self) -> float:
         with self._lock:
-            return max(0.0, self._clock() - self._started_at)
+            return self._elapsed()
 
     def random_uniform(self, minimum: float = 0.0, maximum: float = 1.0) -> float:
         """Provide deterministic randomness to procedural scenario producers."""
@@ -130,6 +154,9 @@ class ScenarioPlayer:
             self._random.seed(self._seed)
             self._random_draws = 0
             self._started_at = self._clock()
+            self._paused_total = 0.0
+            if self._paused:
+                self._paused_at = self._started_at
             for state in self._states.values():
                 state.index = 0
                 state.reads = 0
@@ -142,8 +169,7 @@ class ScenarioPlayer:
             states = (self._state(stream),) if stream is not None else tuple(self._states.values())
             advanced: list[str] = []
             for state in states:
-                if state.definition.advance is policy:
-                    self._advance(state)
+                if state.definition.advance is policy and self._advance(state):
                     advanced.append(state.definition.name)
             return tuple(advanced)
 
@@ -157,7 +183,7 @@ class ScenarioPlayer:
         if state.exhausted:
             raise StreamExhausted(state.definition.name)
         sample = state.definition.samples[state.index]
-        elapsed = max(0.0, self._clock() - self._started_at)
+        elapsed = self._elapsed()
         if elapsed < sample.at_seconds:
             raise StreamNotReady(
                 f"stream {state.definition.name!r} sample {state.index} is due at "
@@ -165,23 +191,26 @@ class ScenarioPlayer:
             )
         return sample
 
-    def _advance(self, state: _StreamState) -> None:
+    def _advance(self, state: _StreamState, *, manual: bool = False) -> bool:
+        if self._paused and not manual:
+            return False
         if state.exhausted:
             raise StreamExhausted(state.definition.name)
         state.advances += 1
         if state.index + 1 < len(state.definition.samples):
             state.index += 1
-            return
+            return True
         if state.definition.end is EndPolicy.HOLD_LAST:
-            return
+            return True
         if state.definition.end is EndPolicy.LOOP:
             state.index = 0
             state.cycles += 1
-            return
+            return True
         state.exhausted = True
+        return True
 
     def _position(self, state: _StreamState) -> PlaybackPosition:
-        elapsed = max(0.0, self._clock() - self._started_at)
+        elapsed = self._elapsed()
         due = state.definition.samples[state.index].at_seconds
         return PlaybackPosition(
             stream=state.definition.name,
@@ -195,3 +224,7 @@ class ScenarioPlayer:
             due_at_seconds=due,
             elapsed_seconds=elapsed,
         )
+
+    def _elapsed(self) -> float:
+        now = self._paused_at if self._paused else self._clock()
+        return max(0.0, now - self._started_at - self._paused_total)

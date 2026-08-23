@@ -8,6 +8,7 @@ from .codec import (
     load_scenario_bytes,
     loads_scenario,
 )
+from .control import ScenarioControlError, ScenarioController
 from .model import (
     AdvancePolicy,
     EndPolicy,
@@ -29,6 +30,8 @@ __all__ = [
     "EndPolicy",
     "PlaybackPosition",
     "ScenarioDefinition",
+    "ScenarioControlError",
+    "ScenarioController",
     "ScenarioError",
     "ScenarioFormatError",
     "ScenarioPlayer",

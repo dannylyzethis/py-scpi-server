@@ -47,6 +47,8 @@ Multi-instrument selection, addressing, and startup are documented in
   transport, command-coverage, maturity, and scenario-input metadata.
 - A thread-safe deterministic scenario engine for scalar, trace, table, event, and error streams,
   with read/trigger/operation policies, timing, resettable seeds, JSON, and binary containers.
+- Authenticated remote scenario selection, pause/start/step/reset, playback inspection, and fault
+  injection through the same SCPI error/status machinery observed by ATE clients.
 - Versioned virtual bench files with catalog-backed model/configuration validation, unique resources,
   deployment-host overrides, and rollback-safe multi-instrument socket startup.
 - Optional Flask/Socket.IO monitoring dashboard.
@@ -77,6 +79,8 @@ Frequency-offset and converter behavior is described in
 [PNA frequency-offset and converter behavior](docs/pna-mixer.md).
 Gain-compression and noise-figure behavior is described in
 [PNA active-device behavior](docs/pna-active-device.md).
+The end-to-end bench/scenario workflow is in
+[Remote ATE development workflow](docs/remote-ate-workflow.md).
 
 ## Requirements
 

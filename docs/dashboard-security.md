@@ -27,6 +27,11 @@ content-security, and no-store API headers.
 
 Dashboard commands acquire the same exclusive session lock as a raw TCP client. When a client owns
 the instrument, a dashboard command receives HTTP 409 instead of mutating its state concurrently.
+
+Authenticated automation clients can obtain the same per-process mutation token from
+`GET /api/session`. Scenario selection and lifecycle endpoints use the identical bearer/CSRF checks;
+fault injection queues an error through the instrument's SCPI status system rather than creating a
+dashboard-only failure flag.
 Start, stop, and restart actions are also serialized with one another.
 
 Instrument names, commands, responses, and errors are escaped before history-card rendering. Live
