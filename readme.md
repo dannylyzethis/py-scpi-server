@@ -140,17 +140,39 @@ Create the small example configuration:
 scpi-emulator --create-example
 ```
 
-Start its instrument servers:
+Choose the startup path that matches the job:
+
+- **Point at a folder of CSVs** for the simplest setup. Every CSV is loaded, ports are assigned
+  sequentially, and every instrument starts:
+
+```bash
+scpi-emulator --load instruments/ --start
+```
+
+- **Define a precise multi-instrument bench** when mixing built-in and CSV drivers, preserving exact
+  addresses, or saving a versioned bench definition:
+
+```bash
+scpi-emulator --bench bench.json --start
+```
+
+The familiar single-file form is unchanged:
 
 ```bash
 scpi-emulator --load scpi_instruments_example.csv --start
 ```
 
-Enable the optional dashboard:
+The same dashboard flags work with either startup path:
 
 ```bash
-scpi-emulator --load scpi_instruments_example.csv --start --web
+scpi-emulator --load instruments/ --start --web
+scpi-emulator --bench bench.json --start --web
 ```
+
+After startup, the CLI prints every instrument ID and its VISA resource string. With `--web`, it
+also prints the dashboard URL. CSV files used by a `--bench` definition are kept beside its JSON
+file; this lets the bench mix `csv-instruments` models with built-in VNA and DMM models without a
+second CSV-directory flag.
 
 Other useful entry forms:
 
@@ -220,8 +242,9 @@ Example DMM,5555,*IDN?,"Example Corp,DMM1000,SN123,1.0",
 ```
 
 The loader rejects malformed headers and rows, unknown columns, field overflow, invalid ports,
-bad validation rules, and duplicate instrument IDs, ports, or commands. A failed reload leaves the
-active configuration unchanged.
+bad validation rules, and duplicate instrument IDs, ports, or commands. Folder loading also rejects
+duplicate equipment names across files and identifies both conflicting files. A failed reload leaves
+the active configuration unchanged.
 
 The repository includes:
 
@@ -232,7 +255,8 @@ The repository includes:
 ## CLI reference
 
 ```text
---load, -l FILE       Load a .csv or .xlsx definition
+--load, -l PATH       Point at one CSV/XLSX file or a folder of CSVs
+--bench FILE          Define a precise multi-instrument bench from JSON
 --start, -s           Start configured raw-TCP servers
 --web, -w             Start the optional dashboard
 --web-port PORT       Dashboard port; default 8081

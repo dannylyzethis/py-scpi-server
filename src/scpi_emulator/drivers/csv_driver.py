@@ -41,13 +41,15 @@ class CSVDriver:
             except ConfigurationError as error:
                 raise CatalogError(f"could not catalog CSV file {source}: {error}") from error
             for equipment_id, item in loaded.items():
+                instrument = item["instrument"]
                 key = equipment_id.casefold()
                 if key in self._sources:
+                    first_source = self._sources[key]
                     raise CatalogError(
-                        f"duplicate CSV equipment identifier {equipment_id!r} in {source}"
+                        f"duplicate equipment name {instrument.name!r} in "
+                        f"{str(first_source)!r} and {str(source)!r}"
                     )
                 self._sources[key] = source
-                instrument = item["instrument"]
                 models.append(
                     ModelDescriptor(
                         model=equipment_id,

@@ -1128,7 +1128,7 @@ def validate_compatibility_rule(rule: str, row_num: int) -> None:
     raise ConfigurationError(f"row {row_num}: unsupported validation rule '{rule}'")
 
 
-def load_compatibility_instruments(file_path, port_start=5025):
+def load_compatibility_instruments(file_path, port_start=5025, *, reserved_ports=()):
     """Parse and construct legacy CSV/XLSX instruments without mutating a manager."""
     file_path_obj = Path(file_path)
     if not file_path_obj.exists():
@@ -1143,7 +1143,7 @@ def load_compatibility_instruments(file_path, port_start=5025):
         raise ConfigurationError(f"no data found in file: {file_path}")
 
     loaded_instruments = {}
-    used_ports = set()
+    used_ports = set(reserved_ports)
     current_instrument = None
     current_commands = set()
     current_port = port_start
@@ -1228,6 +1228,72 @@ def load_compatibility_instruments(file_path, port_start=5025):
     return loaded_instruments, commands_added
 
 
+def load_compatibility_directory(directory_path, port_start=5025):
+    """Load every CSV in a directory with globally unique IDs and sequential ports."""
+    directory = Path(directory_path)
+    if not directory.is_dir():
+        raise ConfigurationError(f"directory does not exist: {directory}")
+    sources = tuple(
+        sorted(
+            (path for path in directory.iterdir() if path.is_file() and path.suffix.lower() == '.csv'),
+            key=lambda path: path.name.casefold(),
+        )
+    )
+    if not sources:
+        raise ConfigurationError(f"directory contains no CSV files: {directory}")
+
+    loaded_instruments = {}
+    equipment_sources: dict[str, Path] = {}
+    port_sources: dict[int, Path] = {}
+    used_ports: set[int] = set()
+    next_port = port_start
+    commands_added = 0
+    for source in sources:
+        rows = ExcelReader.read_csv(source)
+        for row in rows:
+            equipment_name = row.get('Equipment', '').strip()
+            if not equipment_name:
+                continue
+            equipment_id = compatibility_instrument_id(equipment_name)
+            if equipment_id in equipment_sources:
+                first_source = equipment_sources[equipment_id]
+                raise ConfigurationError(
+                    f"duplicate equipment name {equipment_name!r} in "
+                    f"{str(first_source)!r} and {str(source)!r}"
+                )
+        try:
+            loaded, count = load_compatibility_instruments(
+                source,
+                next_port,
+                reserved_ports=used_ports,
+            )
+        except ConfigurationError as error:
+            raise ConfigurationError(f"{source}: {error}") from error
+        for equipment_id, item in loaded.items():
+            port = item['port']
+            if port in used_ports:
+                first_source = port_sources[port]
+                raise ConfigurationError(
+                    f"duplicate port {port} in {str(first_source)!r} and {str(source)!r}"
+                )
+            loaded_instruments[equipment_id] = item
+            equipment_sources[equipment_id] = source
+            port_sources[port] = source
+            used_ports.add(port)
+        commands_added += count
+        while next_port in used_ports:
+            next_port += 1
+    return loaded_instruments, commands_added
+
+
+def load_compatibility_path(path, port_start=5025):
+    """Load one compatibility file or every CSV in a directory."""
+    source = Path(path)
+    if source.is_dir():
+        return load_compatibility_directory(source, port_start)
+    return load_compatibility_instruments(source, port_start)
+
+
 class SCPIEmulatorManager:
     """Manages multiple SCPI instrument emulators with web dashboard"""
 
@@ -1258,9 +1324,7 @@ class SCPIEmulatorManager:
     def load_from_file(self, file_path, port_start=5025):
         """Load instrument definitions from Excel or CSV file"""
         try:
-            loaded_instruments, commands_added = load_compatibility_instruments(
-                file_path, port_start
-            )
+            loaded_instruments, commands_added = load_compatibility_path(file_path, port_start)
             self.instruments = loaded_instruments
             logger.info(
                 f"Successfully loaded {len(loaded_instruments)} instruments with "
@@ -1288,8 +1352,10 @@ class SCPIEmulatorManager:
                 success_count += 1
             else:
                 logger.error(f"Failed to start server for {instrument.name}")
+                self.stop_all_servers()
+                return False
         
-        if success_count > 0:
+        if success_count == len(self.instruments) and success_count > 0:
             self.running = True
             logger.info(f"Started {success_count} SCPI servers")
             return True
@@ -1427,7 +1493,18 @@ def build_parser():
         description='Stateful SCPI instrument emulator for automation development and testing'
     )
 
-    parser.add_argument('--load', '-l', help='Load instrument definitions (.csv, .xlsx)')
+    definitions = parser.add_mutually_exclusive_group()
+    definitions.add_argument(
+        '--load',
+        '-l',
+        metavar='PATH',
+        help='Point at one CSV/XLSX file or a folder of CSVs',
+    )
+    definitions.add_argument(
+        '--bench',
+        metavar='FILE',
+        help='Define a precise multi-instrument bench from JSON',
+    )
     parser.add_argument('--start', '-s', action='store_true', help='Start TCP servers immediately')
     parser.add_argument('--web', '-w', action='store_true', help='Start web dashboard')
     parser.add_argument('--web-port', type=int, default=8081, help='Web dashboard port (default: 8081)')
@@ -1453,44 +1530,92 @@ def main(argv: Sequence[str] | None = None) -> int:
         create_example_csv()
         return 0
 
-    # Create emulator manager
+    # Create the simple compatibility manager. A precise bench replaces the runtime below.
     manager = SCPIEmulatorManager()
-    
-    # Load file if provided
+    runtime = manager
+    resources = {}
+
     if args.load:
-        if not manager.load_from_file(args.load, args.port):
+        try:
+            loaded_instruments, commands_added = load_compatibility_path(args.load, args.port)
+        except ConfigurationError as error:
+            print(f"Error: could not load {args.load!r}: {error}", file=sys.stderr)
             return 1
-        
-        # Start servers if requested
-        if args.start:
-            if not manager.start_all_servers(args.host):
-                return 1
-        
-        # Start web dashboard if requested
-        if args.web:
-            if not manager.start_web_dashboard(
+        manager.instruments = loaded_instruments
+        logger.info(
+            f"Successfully loaded {len(loaded_instruments)} instruments with "
+            f"{commands_added} commands"
+        )
+        resources = {
+            instrument_id: f"TCPIP::{args.host}::{item['port']}::SOCKET"
+            for instrument_id, item in loaded_instruments.items()
+        }
+    elif args.bench:
+        from .bench import BenchComposer, BenchError, BenchRuntime, load_bench
+        from .drivers import CatalogError, build_driver_catalog
+
+        try:
+            definition = load_bench(args.bench)
+            uses_csv = any(
+                item.driver.casefold() == 'csv-instruments'
+                for item in definition.instruments
+            )
+            catalog = build_driver_catalog(
+                csv_directory=Path(args.bench).resolve().parent if uses_csv else None
+            )
+            composed = BenchComposer(catalog).compose(definition)
+            runtime = BenchRuntime(composed)
+            resources = composed.resources()
+        except (BenchError, CatalogError, ConfigurationError) as error:
+            print(f"Error: could not load bench {args.bench!r}: {error}", file=sys.stderr)
+            return 1
+
+    if (args.load or args.bench) and args.start:
+        try:
+            if args.load:
+                started = runtime.start_all_servers(args.host)
+            else:
+                runtime.start()
+                started = True
+        except Exception as error:
+            print(f"Error: could not start instruments: {error}", file=sys.stderr)
+            return 1
+        if not started:
+            print("Error: could not start all configured instruments", file=sys.stderr)
+            return 1
+
+    if (args.load or args.bench) and args.web:
+        try:
+            dashboard_started = runtime.start_web_dashboard(
                 args.web_host,
                 args.web_port,
                 auth_token=os.environ.get('SCPI_EMULATOR_WEB_TOKEN'),
-            ):
-                logger.warning("Failed to start web dashboard")
-    
+            )
+        except Exception as error:
+            print(f"Error: could not start web dashboard: {error}", file=sys.stderr)
+            return 1
+        if not dashboard_started:
+            print("Error: could not start web dashboard", file=sys.stderr)
+            return 1
+
     # Start interactive mode
-    if args.interactive or (not args.load and not args.create_example):
+    if args.interactive or (not args.load and not args.bench and not args.create_example):
         manager.interactive_mode()
-    elif args.load and (args.start or args.web):
+    elif (args.load or args.bench) and (args.start or args.web):
         print("\n🚀 SCPI Emulator running!")
-        if manager.running:
-            print(f"📡 Instruments available on ports {args.port}+")
+        if args.start:
+            print("📡 VISA resources:")
+            for instrument_id, resource in resources.items():
+                print(f"   {instrument_id}: {resource}")
         if args.web:
-            print(f"🌐 Web dashboard: http://localhost:{args.web_port}")
+            print(f"🌐 Web dashboard: http://{args.web_host}:{args.web_port}")
         print("\nPress Ctrl+C to stop...")
         
         try:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            manager.stop_all_servers()
+            runtime.stop_all_servers()
 
     return 0
 

@@ -23,6 +23,19 @@ Bench composition and server startup are separate phases:
 3. Create all instrument objects into private composition state.
 4. Start sockets only after composition succeeds.
 
+From the CLI, use the precise bench path directly:
+
+```bash
+scpi-emulator --bench bench.json --start
+```
+
+If that bench selects models from the `csv-instruments` driver, place their CSV files beside
+`bench.json`; the CLI catalogs that directory before composition. This advanced path can mix those
+CSV models with the built-in VNA and DMM drivers. For a simple folder containing only CSV-defined
+instruments, use the equally supported `scpi-emulator --load instruments/ --start` path instead.
+Both modes reuse `--web`, `--web-host`, and `--web-port` and print their client resource strings at
+startup.
+
 An invalid model, option set, transport, address, or driver configuration therefore cannot partially
 replace a running bench. If a later socket fails to bind during startup, all sockets started for that
 attempt are stopped and the runtime returns to a clean state.
