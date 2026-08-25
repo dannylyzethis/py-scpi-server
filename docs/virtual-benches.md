@@ -26,7 +26,7 @@ Bench composition and server startup are separate phases:
 From the CLI, use the precise bench path directly:
 
 ```bash
-scpi-emulator --bench bench.json --start
+scpi-emulator --bench examples/virtual-bench.json --start
 ```
 
 If that bench selects models from the `csv-instruments` driver, place their CSV files beside

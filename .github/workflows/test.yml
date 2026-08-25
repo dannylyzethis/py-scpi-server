@@ -37,6 +37,7 @@ jobs:
           scpi-emulator --help
           scpi-emulator --version
           scpi-emulator --load scpi_instruments_example.csv
+          scpi-emulator --bench examples/virtual-bench.json
           cd "$RUNNER_TEMP"
           scpi-emulator --create-example
           test -s scpi_instruments_example.csv

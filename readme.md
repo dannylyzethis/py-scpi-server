@@ -153,7 +153,7 @@ scpi-emulator --load instruments/ --start
   addresses, or saving a versioned bench definition:
 
 ```bash
-scpi-emulator --bench bench.json --start
+scpi-emulator --bench examples/virtual-bench.json --start
 ```
 
 The familiar single-file form is unchanged:
@@ -166,7 +166,7 @@ The same dashboard flags work with either startup path:
 
 ```bash
 scpi-emulator --load instruments/ --start --web
-scpi-emulator --bench bench.json --start --web
+scpi-emulator --bench examples/virtual-bench.json --start --web
 ```
 
 After startup, the CLI prints every instrument ID and its VISA resource string. With `--web`, it

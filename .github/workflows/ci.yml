@@ -50,7 +50,11 @@ jobs:
       - run: python tools/pna_manifest.py --model N5242B-EMU --firmware E.1.0
       - run: python -m build
       - run: python -m pip install --force-reinstall --no-deps dist/*.whl
-      - run: scpi-emulator --version
+      - name: Smoke-test installed CLI and bench entry point
+        run: |
+          scpi-emulator --version
+          scpi-emulator --help | grep -F -- "--bench FILE"
+          scpi-emulator --bench examples/virtual-bench.json
 
   container:
     name: Container smoke test
