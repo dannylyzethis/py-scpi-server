@@ -47,6 +47,8 @@ class PNADriver:
             "hardware_configuration",
             "hardware_addons",
             "application_options",
+            "frequency_minimum_hz",
+            "frequency_maximum_hz",
             "serial",
         }
         unknown = set(request.configuration) - allowed

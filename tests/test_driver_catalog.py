@@ -220,6 +220,26 @@ def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
 
 
+def test_pna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None:
+    instrument = PNADriver().create_instrument(
+        InstrumentRequest(
+            instrument_id="limited_vna",
+            model="N5222B-EMU",
+            configuration={"frequency_maximum_hz": 20_000_000_000},
+        )
+    )
+
+    assert instrument.process_command("SYST:CAP:FREQ:MIN?") == "10000000"
+    assert instrument.process_command("SYST:CAP:FREQ:MAX?") == "20000000000"
+    assert instrument.process_command("SENS:FREQ:STAR?") == "10000000"
+    assert instrument.process_command("SENS:FREQ:STOP?") == "20000000000"
+    assert instrument.pna_measurements.selected(1).stimulus[0] == 10_000_000
+    assert instrument.pna_measurements.selected(1).stimulus[-1] == 20_000_000_000
+
+    assert instrument.process_command("SENS:FREQ:STOP 21GHz") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+
+
 def test_catalog_registration_and_entry_points_require_no_core_changes() -> None:
     catalog = DriverCatalog()
 

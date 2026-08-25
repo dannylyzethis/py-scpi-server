@@ -122,6 +122,26 @@ def test_catalog_composition_creates_each_selected_model_and_resource() -> None:
     }
 
 
+def test_bench_vna_frequency_override_defaults_and_failures_are_clear() -> None:
+    raw = bench_json(5203, 5204)
+    raw["instruments"][0]["configuration"]["frequency_maximum_hz"] = 18_000_000_000
+    composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
+        loads_bench(json.dumps(raw))
+    )
+    instrument = composed.instrument("pna1").instrument
+
+    assert instrument.process_command("SYST:CAP:FREQ:MIN?") == "10000000"
+    assert instrument.process_command("SYST:CAP:FREQ:MAX?") == "18000000000"
+
+    raw["instruments"][0]["configuration"]["frequency_maximum_hz"] = 50_000_000_000
+    with pytest.raises(
+        BenchCompositionError, match="frequency_maximum_hz cannot exceed"
+    ):
+        BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
+            loads_bench(json.dumps(raw))
+        )
+
+
 def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> None:
     (tmp_path / "device.csv").write_text(
         "Equipment,Port,Command,Response,Validation\n"

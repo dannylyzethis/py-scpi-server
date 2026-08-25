@@ -28,6 +28,43 @@ def test_default_n5222b_identity_options_and_hardware_are_consistent() -> None:
     assert instrument.process_command("SYST:CAP:LIC:CAT? VALID") == "N5222B-EMU-200"
 
 
+def test_frequency_capability_overrides_inherit_omitted_model_endpoints() -> None:
+    maximum_only = PNACapabilities.create(
+        "N5222B-EMU", frequency_maximum_hz=20_000_000_000
+    )
+    minimum_only = PNACapabilities.create(
+        "N5222B-EMU", frequency_minimum_hz=100_000_000
+    )
+
+    assert maximum_only.frequency_minimum == 10_000_000
+    assert maximum_only.frequency_maximum == 20_000_000_000
+    assert minimum_only.frequency_minimum == 100_000_000
+    assert minimum_only.frequency_maximum == 26_500_000_000
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"frequency_minimum_hz": 1_000_000}, "below"),
+        ({"frequency_maximum_hz": 50_000_000_000}, "exceed"),
+        (
+            {
+                "frequency_minimum_hz": 20_000_000_000,
+                "frequency_maximum_hz": 10_000_000_000,
+            },
+            "cannot exceed",
+        ),
+        ({"frequency_minimum_hz": True}, "positive finite number"),
+        ({"frequency_maximum_hz": "20GHz"}, "positive finite number"),
+    ],
+)
+def test_invalid_frequency_capability_overrides_are_rejected(
+    kwargs: dict, message: str
+) -> None:
+    with pytest.raises(CapabilityError, match=message):
+        PNACapabilities.create("N5222B-EMU", **kwargs)
+
+
 def test_configured_options_licenses_and_feature_queries_share_one_profile() -> None:
     profile = PNACapabilities.create(
         "N5222B-EMU",

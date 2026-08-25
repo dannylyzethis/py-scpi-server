@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from dataclasses import dataclass
 from enum import Enum
@@ -83,8 +84,8 @@ class PNACapabilities:
     ports: int
     sources: int
     features: frozenset[str]
-    frequency_minimum: int
-    frequency_maximum: int
+    frequency_minimum: int | float
+    frequency_maximum: int | float
     serial: str
     firmware: str
 
@@ -97,6 +98,8 @@ class PNACapabilities:
         hardware_configuration: str | None = None,
         hardware_addons: tuple[str, ...] | None = None,
         application_options: tuple[str, ...] | None = None,
+        frequency_minimum_hz: int | float | None = None,
+        frequency_maximum_hz: int | float | None = None,
         serial: str = "US12345678",
         firmware: str = "E.1.0",
     ) -> "PNACapabilities":
@@ -162,6 +165,11 @@ class PNACapabilities:
             application_features.append((application_id, _feature_name(application_id)))
 
         frequency = model_data["frequency_hz"]
+        frequency_minimum, frequency_maximum = _resolve_frequency_range(
+            frequency,
+            frequency_minimum_hz,
+            frequency_maximum_hz,
+        )
         return cls(
             mode=mode,
             model=model,
@@ -173,8 +181,8 @@ class PNACapabilities:
             ports=hardware["ports"],
             sources=hardware["sources"],
             features=frozenset(hardware["features"]),
-            frequency_minimum=frequency["minimum"],
-            frequency_maximum=frequency["maximum"],
+            frequency_minimum=frequency_minimum,
+            frequency_maximum=frequency_maximum,
             serial=serial,
             firmware=firmware,
         )
@@ -243,6 +251,45 @@ class PNACapabilities:
             )
         names.update(option.casefold() for option in self.application_options)
         return frozenset(names)
+
+
+def _resolve_frequency_range(
+    model_frequency: dict[str, int],
+    minimum_override: int | float | None,
+    maximum_override: int | float | None,
+) -> tuple[int | float, int | float]:
+    model_minimum = model_frequency["minimum"]
+    model_maximum = model_frequency["maximum"]
+    minimum = (
+        model_minimum
+        if minimum_override is None
+        else _frequency_value(minimum_override, "frequency_minimum_hz")
+    )
+    maximum = (
+        model_maximum
+        if maximum_override is None
+        else _frequency_value(maximum_override, "frequency_maximum_hz")
+    )
+    if minimum < model_minimum:
+        raise CapabilityError(
+            f"frequency_minimum_hz cannot be below the {model_minimum} Hz model minimum"
+        )
+    if maximum > model_maximum:
+        raise CapabilityError(
+            f"frequency_maximum_hz cannot exceed the {model_maximum} Hz model maximum"
+        )
+    if minimum > maximum:
+        raise CapabilityError("frequency_minimum_hz cannot exceed frequency_maximum_hz")
+    return minimum, maximum
+
+
+def _frequency_value(value: int | float, field_name: str) -> int | float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise CapabilityError(f"{field_name} must be a positive finite number")
+    numeric = float(value)
+    if not math.isfinite(numeric) or numeric <= 0:
+        raise CapabilityError(f"{field_name} must be a positive finite number")
+    return int(numeric) if numeric.is_integer() else numeric
 
 
 def detect_pna_model(*values: str) -> str | None:

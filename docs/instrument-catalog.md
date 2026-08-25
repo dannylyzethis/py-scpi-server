@@ -76,10 +76,29 @@ Accepted `configuration` fields:
 | `hardware_configuration` | string | Model/mode default | One configuration token listed below. |
 | `hardware_addons` | array of strings | Mode default | Zero or more add-on tokens listed below. |
 | `application_options` | array of strings | Empty or automatic | Zero or more application-option tokens listed below. |
+| `frequency_minimum_hz` | number | Model minimum | Optional higher lower-bound for the emulated frequency range. |
+| `frequency_maximum_hz` | number | Model maximum | Optional lower upper-bound for the emulated frequency range. |
 
 Use top-level `serial_number` for new bench files. The older driver-specific
 `configuration.serial` field remains accepted for compatibility, but do not specify both with
 different values.
+
+Both frequency fields are optional and independent. If either is omitted, that endpoint inherits
+the selected model's default: currently 10 MHz minimum and 26.5 GHz maximum. Overrides may narrow
+that model range but cannot extend it. They control the frequency capability queries, initial sweep
+and trace axis, and the same range checks used by sweep and application commands. Invalid or inverted
+ranges stop bench composition before any socket opens.
+
+For example, this keeps the model minimum while emulating a 20 GHz upper limit:
+
+```json
+{
+  "configuration": {
+    "mode": "model-faithful",
+    "frequency_maximum_hz": 20000000000
+  }
+}
+```
 
 ### Compatibility modes
 

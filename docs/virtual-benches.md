@@ -68,7 +68,8 @@ Schema version 1 uses one entry per instrument instance:
       "serial_number": "VNA-001",
       "configuration": {
         "mode": "model-faithful",
-        "hardware_configuration": "200"
+        "hardware_configuration": "200",
+        "frequency_maximum_hz": 20000000000
       },
       "resource": {
         "transport": "raw-socket",
@@ -101,7 +102,8 @@ transport must be advertised as implemented by the selected driver; catalog entr
 or partial cannot accidentally be started.
 
 Configuration contents are driver-specific. For the built-in VNA driver they include compatibility
-mode, hardware configuration, hardware add-ons, and application options. The driver
+mode, hardware configuration, hardware add-ons, application options, and optional minimum/maximum
+frequency capability overrides. Omitted frequency endpoints inherit the model defaults. The driver
 performs the same prerequisite and physical-coherence validation used by direct VNA profiles.
 CSV models do not advertise additional configuration or scenario-input guarantees because their
 available commands depend on their source files.

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fixture controller.
 - A consolidated user-facing instrument catalog with every driver, model, configuration field,
   default, hardware/add-on token, application-option token, serial rule, and copyable bench object.
+- Optional VNA `frequency_minimum_hz` and `frequency_maximum_hz` bench configuration fields that
+  inherit omitted model defaults and consistently narrow capability, sweep, and trace limits.
 
 ### Changed
 
