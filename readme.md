@@ -129,6 +129,20 @@ For development:
 python -m pip install -e ".[all,dev]"
 ```
 
+If this repository was installed before the bench and directory-loading CLI was added, update the
+checkout and refresh that same Python environment before using the new flags:
+
+```bash
+git switch main
+git pull --ff-only origin main
+python -m pip install -e ".[all]"
+python -m scpi_emulator --help
+```
+
+The final command must list both `--load PATH` and `--bench FILE`. Using
+`python -m scpi_emulator` also prevents a different, older `scpi-emulator` executable elsewhere on
+`PATH` from hiding the updated checkout.
+
 For the reproducible CI, Docker, coverage, compatibility-report, and release workflow, see
 [Build, verification, and release guide](docs/release.md).
 
@@ -161,6 +175,12 @@ The familiar single-file form is unchanged:
 ```bash
 scpi-emulator --load scpi_instruments_example.csv --start
 ```
+
+Quotes around the `--load` path are required only when the path contains spaces. For example,
+`--load .\instruments` needs no quotes, while `--load "C:\ATE Projects\instruments"` does. See
+[Loading CSV and XLSX instrument definitions](docs/csv-loading.md) for complete PowerShell and
+POSIX examples, directory ordering and port assignment, the exact CSV layout, and CSV field-quoting
+rules.
 
 The same dashboard flags work with either startup path:
 
@@ -221,6 +241,9 @@ HiSLIP uses TCP port 4880 by default. PyVISA-Py expresses a nonstandard developm
 `TCPIP0::127.0.0.1::hislip0,<port>::INSTR`.
 
 ## Configuration format
+
+The complete beginner-oriented loading guide is
+[Loading CSV and XLSX instrument definitions](docs/csv-loading.md).
 
 CSV and XLSX definitions must contain exactly these columns:
 

@@ -36,6 +36,9 @@ instruments, use the equally supported `scpi-emulator --load instruments/ --star
 Both modes reuse `--web`, `--web-host`, and `--web-port` and print their client resource strings at
 startup.
 
+For file and directory behavior, path quoting, port assignment, and the exact five-column format,
+see [Loading CSV and XLSX instrument definitions](csv-loading.md).
+
 An invalid model, option set, transport, address, or driver configuration therefore cannot partially
 replace a running bench. If a later socket fails to bind during startup, all sockets started for that
 attempt are stopped and the runtime returns to a clean state.
