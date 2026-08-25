@@ -9,7 +9,7 @@ from scpi_emulator.emulator import SCPIEmulatorManager, build_parser, main
 
 
 def test_package_version_is_exposed() -> None:
-    assert __version__ == "0.1.0"
+    assert __version__ == "2.4.0"
 
 
 def test_parser_accepts_create_example() -> None:
