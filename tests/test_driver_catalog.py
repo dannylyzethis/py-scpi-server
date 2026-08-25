@@ -15,6 +15,7 @@ from scpi_emulator.drivers import (
     InstrumentRequest,
     ModelDescriptor,
     PNADriver,
+    POWER_SUPPLY_DRIVER_ID,
     ScenarioInputDescriptor,
     SupportLevel,
     TransportDescriptor,
@@ -75,6 +76,7 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
 
     assert [descriptor.id for descriptor in catalog.descriptors] == [
         "virtual-3446x",
+        "virtual-triple-psu",
         "virtual-vna",
     ]
     driver = catalog.get("VIRTUAL-VNA")
@@ -101,6 +103,10 @@ def test_builtin_dmm_driver_advertises_and_creates_scalar_scenario_instrument() 
 
     instrument = driver.create_instrument(InstrumentRequest("meter", "34461A-EMU"))
     assert instrument.scalar_data is not None
+    serialled = driver.create_instrument(
+        InstrumentRequest("meter2", "34461A-EMU", serial_number="DMM-002")
+    )
+    assert serialled.process_command("*IDN?").split(",")[2] == "DMM-002"
     with pytest.raises(CatalogError, match="no configurable"):
         driver.create_instrument(
             InstrumentRequest("meter", "34461A-EMU", configuration={"option": "imaginary"})
@@ -136,6 +142,29 @@ def test_configured_csv_directory_adds_catalog_models_and_creates_instrument(tmp
     assert instrument.process_command("VALUE?") == "READY"
 
     assert isinstance(catalog.get(CSV_DRIVER_ID), CSVDriver)
+
+
+def test_csv_driver_applies_a_per_instance_serial_number(tmp_path) -> None:
+    (tmp_path / "supply.csv").write_text(
+        "Equipment,Port,Command,Response,Validation\n"
+        'Power Supply,,*IDN?,"SCPI Emulator,Power Supply,CSV-SERIAL,E.1.0",\n'
+        ",,VOLT?,5.0,\n",
+        encoding="utf-8",
+    )
+    catalog = build_driver_catalog(discover_plugins=False, csv_directory=tmp_path)
+
+    first = catalog.create(
+        CSV_DRIVER_ID,
+        InstrumentRequest("supply1", "power_supply", serial_number="PSU-001"),
+    )
+    second = catalog.create(
+        CSV_DRIVER_ID,
+        InstrumentRequest("supply2", "power_supply", serial_number="PSU-002"),
+    )
+
+    assert first.process_command("*IDN?") == "SCPI Emulator,Power Supply,PSU-001,E.1.0"
+    assert second.process_command("*IDN?") == "SCPI Emulator,Power Supply,PSU-002,E.1.0"
+    assert POWER_SUPPLY_DRIVER_ID in {item.id for item in catalog.descriptors}
 
 
 def test_pna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:
@@ -175,6 +204,7 @@ def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
         InstrumentRequest(
             instrument_id="bench_pna",
             model="N5242B-EMU",
+            serial_number="VNA-001",
             configuration={
                 "mode": "model-faithful",
                 "hardware_configuration": "425",
@@ -184,7 +214,7 @@ def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
     )
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,N5242B-EMU,US12345678,E.1.0"
+        "SCPI Emulator,N5242B-EMU,VNA-001,E.1.0"
     )
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"

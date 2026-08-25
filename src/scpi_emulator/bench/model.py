@@ -64,6 +64,7 @@ class BenchInstrument:
     resource: ResourceAddress
     name: str | None = None
     firmware: str | None = None
+    serial_number: str | None = None
     configuration: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -76,6 +77,8 @@ class BenchInstrument:
             _text(self.name, "instrument name")
         if self.firmware is not None:
             _text(self.firmware, "instrument firmware")
+        if self.serial_number is not None:
+            _text(self.serial_number, "instrument serial number")
         if not isinstance(self.configuration, Mapping):
             raise BenchFormatError(f"instrument {self.id!r} configuration must be an object")
         object.__setattr__(self, "configuration", _freeze(self.configuration))

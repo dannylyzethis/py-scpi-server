@@ -62,6 +62,7 @@ def bench_json(first_port: int, second_port: int) -> dict:
                 "driver": "virtual-vna",
                 "model": "N5222B-EMU",
                 "firmware": "E.1.0",
+                "serial_number": "VNA-001",
                 "configuration": {
                     "mode": "model-faithful",
                     "hardware_configuration": "200",
@@ -96,6 +97,7 @@ def test_versioned_bench_file_round_trips_and_preserves_configuration(tmp_path) 
 
     assert definition.name == "rf-bench"
     assert definition.metadata == {"site": "remote-lab"}
+    assert definition.instrument("PNA1").serial_number == "VNA-001"
     assert definition.instrument("PNA1").configuration["application_options"] == ("E93010B",)
     assert loads_bench(dumps_bench(definition)) == definition
 
@@ -123,7 +125,8 @@ def test_catalog_composition_creates_each_selected_model_and_resource() -> None:
 def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> None:
     (tmp_path / "device.csv").write_text(
         "Equipment,Port,Command,Response,Validation\n"
-        "Bench Relay,6101,STATE?,OPEN,\n",
+        'Bench Relay,6101,*IDN?,"SCPI Emulator,Bench Relay,CSV-SERIAL,E.1.0",\n'
+        ",,STATE?,OPEN,\n",
         encoding="utf-8",
     )
     definition = BenchDefinition(
@@ -133,6 +136,7 @@ def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> 
                 id="relay1",
                 driver="csv-instruments",
                 model="bench_relay",
+                serial_number="RELAY-001",
                 resource=ResourceAddress("raw-socket", "127.0.0.1", 6201),
             ),
         ),
@@ -143,6 +147,9 @@ def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> 
     ).compose(definition)
 
     assert composed.instrument("relay1").instrument.process_command("STATE?") == "OPEN"
+    assert composed.instrument("relay1").instrument.process_command("*IDN?") == (
+        "SCPI Emulator,Bench Relay,RELAY-001,E.1.0"
+    )
     assert composed.resources() == {"relay1": "TCPIP::127.0.0.1::6201::SOCKET"}
 
 

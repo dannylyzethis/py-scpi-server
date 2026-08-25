@@ -80,6 +80,7 @@ def _parse_instrument(raw: Any, index: int) -> BenchInstrument:
         model=_required_text(raw, "model", context),
         name=raw.get("name"),
         firmware=raw.get("firmware"),
+        serial_number=raw.get("serial_number"),
         configuration=configuration,
         resource=ResourceAddress(
             transport=_required_text(resource, "transport", f"{context} resource"),
@@ -102,6 +103,7 @@ def _encode_bench(definition: BenchDefinition) -> dict[str, Any]:
                 "driver": instrument.driver,
                 "model": instrument.model,
                 "firmware": instrument.firmware,
+                "serial_number": instrument.serial_number,
                 "configuration": thaw(instrument.configuration),
                 "resource": {
                     "transport": instrument.resource.transport,

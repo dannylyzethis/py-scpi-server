@@ -25,7 +25,7 @@ Virtual 34461A-EMU DMM,5555,MEAS:VOLT:DC?,1.234567E+00,
 ,,ABOR,OK,
 ,,CAL:SEC:STAT?,ON,
 ,,SYST:BEEP,OK,
-Virtual E36312A-EMU PSU,5556,OUTP (.+),OK,bool
+Virtual Generic Single-Output PSU-EMU,5556,OUTP (.+),OK,bool
 ,,OUTP?,1,
 ,,VOLT (.+),OK,"range:0,30"
 ,,VOLT?,5.000000E+00,

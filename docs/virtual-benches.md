@@ -4,8 +4,13 @@ A virtual bench file selects instrument drivers and models from the catalog, sup
 and application configuration, and assigns client resource addresses. The same versioned file can be
 loaded on a developer computer, a remote machine, or a CI worker.
 
-The catalog always includes the built-in VNA and DMM drivers. Legacy five-column CSV instruments can
-be added as a third driver family by passing their directory when building the catalog:
+For the complete list of driver IDs, model IDs, configuration fields, defaults, hardware/add-on
+tokens, application-option tokens, and copyable instrument objects, start with the
+[Instrument catalog and bench configuration reference](instrument-catalog.md).
+
+The catalog always includes the built-in VNA, DMM, and triple-output PSU drivers. Legacy five-column
+CSV instruments can be added as another driver family by passing their directory when building the
+catalog:
 
 ```python
 catalog = build_driver_catalog(csv_directory="instrument-definitions")
@@ -31,7 +36,7 @@ scpi-emulator --bench examples/virtual-bench.json --start
 
 If that bench selects models from the `csv-instruments` driver, place their CSV files beside
 `bench.json`; the CLI catalogs that directory before composition. This advanced path can mix those
-CSV models with the built-in VNA and DMM drivers. For a simple folder containing only CSV-defined
+CSV models with the built-in VNA, DMM, and PSU drivers. For a simple folder containing only CSV-defined
 instruments, use the equally supported `scpi-emulator --load instruments/ --start` path instead.
 Both modes reuse `--web`, `--web-host`, and `--web-port` and print their client resource strings at
 startup.
@@ -60,6 +65,7 @@ Schema version 1 uses one entry per instrument instance:
       "driver": "virtual-vna",
       "model": "N5222B-EMU",
       "firmware": "E.1.0",
+      "serial_number": "VNA-001",
       "configuration": {
         "mode": "model-faithful",
         "hardware_configuration": "200"
@@ -88,12 +94,14 @@ Schema version 1 uses one entry per instrument instance:
 }
 ```
 
-Instrument IDs and resource endpoints must be unique. Ports must be in the range 1–65535. A selected
+Instrument IDs and resource endpoints must be unique. The optional `serial_number` is the per-instance
+serial returned in the third field of `*IDN?`; use it when a bench contains two instances of one
+model. Ports must be in the range 1–65535. A selected
 transport must be advertised as implemented by the selected driver; catalog entries marked planned
 or partial cannot accidentally be started.
 
 Configuration contents are driver-specific. For the built-in VNA driver they include compatibility
-mode, hardware configuration, hardware add-ons, application options, and serial number. The driver
+mode, hardware configuration, hardware add-ons, and application options. The driver
 performs the same prerequisite and physical-coherence validation used by direct VNA profiles.
 CSV models do not advertise additional configuration or scenario-input guarantees because their
 available commands depend on their source files.
@@ -113,6 +121,23 @@ After `attach_scenario()` supplies a shared player, every `VALUE?` query calls
 an attached scenario the marker returns `0`; ordinary canned responses remain unchanged. This keeps
 existing CSV instruments operational while allowing selected responses to use the same deterministic
 engine as the VNA and DMM drivers.
+
+## Mixed built-in and CSV example
+
+`examples/mixed-bench.json` composes two instances of the built-in `virtual-triple-psu` driver and
+one `csv-instruments` model declared by `examples/mixed-bench.csv`. The two supplies share the same
+model but have unique `id`, `serial_number`, and `resource.port` values. Because the CSV is beside
+the JSON, the CLI catalogs its `Fixture Controller` equipment block as model `fixture_controller`.
+
+Validate the composition without opening ports, or start all three instruments:
+
+```powershell
+scpi-emulator --bench .\examples\mixed-bench.json
+scpi-emulator --bench .\examples\mixed-bench.json --start
+```
+
+See [Triple-output power-supply emulator](power-supply.md) for its independent-output state and
+selected-channel commands.
 
 ## Loading, composing, and starting
 

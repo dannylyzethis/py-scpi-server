@@ -23,9 +23,9 @@ that every instrument-specific command family or adapter is complete.
 
 ## Creating an instrument
 
-`InstrumentRequest` carries the bench instance ID, model, optional name, pinned firmware, and
-driver-specific configuration. The catalog validates that the selected driver advertises the model
-before invoking the driver's `create_instrument()` factory.
+`InstrumentRequest` carries the bench instance ID, model, optional name, optional per-instance serial
+number, pinned firmware, and driver-specific configuration. The catalog validates that the selected
+driver advertises the model before invoking the driver's `create_instrument()` factory.
 
 ```python
 from scpi_emulator.drivers import InstrumentRequest, build_driver_catalog
@@ -36,6 +36,7 @@ instrument = catalog.create(
     InstrumentRequest(
         instrument_id="vna1",
         model="N5242B-EMU",
+        serial_number="VNA-001",
         configuration={
             "mode": "all-applications",
             "hardware_configuration": "425",

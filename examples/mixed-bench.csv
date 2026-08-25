@@ -1,0 +1,4 @@
+Equipment,Port,Command,Response,Validation
+Fixture Controller,,*IDN?,"SCPI Emulator,Fixture Controller,FIXTURE-DEFAULT,E.1.0",
+,,STATE?,READY,
+,,INTERLOCK?,1,

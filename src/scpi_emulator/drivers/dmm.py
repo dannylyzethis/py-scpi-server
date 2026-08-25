@@ -64,4 +64,8 @@ class DMMDriver:
         if request.configuration:
             raise CatalogError("the reference DMM driver has no configurable hardware options")
         name = request.name or f"Virtual {model.model} DMM"
-        return SCPIInstrument(name, request.instrument_id)
+        return SCPIInstrument(
+            name,
+            request.instrument_id,
+            serial_number=request.serial_number,
+        )

@@ -55,6 +55,7 @@ jobs:
           scpi-emulator --version
           scpi-emulator --help | grep -F -- "--bench FILE"
           scpi-emulator --bench examples/virtual-bench.json
+          scpi-emulator --bench examples/mixed-bench.json
 
   container:
     name: Container smoke test

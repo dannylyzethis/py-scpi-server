@@ -53,6 +53,17 @@ class PNADriver:
         if unknown:
             raise CatalogError(f"unsupported VNA configuration fields: {sorted(unknown)}")
         configuration: dict[str, Any] = dict(request.configuration)
+        configured_serial = configuration.get("serial")
+        if (
+            request.serial_number is not None
+            and configured_serial is not None
+            and request.serial_number != configured_serial
+        ):
+            raise CatalogError(
+                "bench serial_number conflicts with legacy VNA configuration.serial"
+            )
+        if request.serial_number is not None:
+            configuration["serial"] = request.serial_number
         for sequence_name in ("hardware_addons", "application_options"):
             if sequence_name in configuration:
                 configuration[sequence_name] = tuple(configuration[sequence_name])

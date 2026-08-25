@@ -3,6 +3,10 @@
 Use `--load` when the instruments you want to emulate are described by the project's five-column
 CSV format. It accepts either one definition file or a directory containing CSV files.
 
+The commands below assume the environment used to install the downloaded ZIP or checkout is active.
+On Windows, `Get-Command scpi-emulator` should point into that environment's `Scripts` directory;
+otherwise a bare command may run an older installation from another location.
+
 ## Do I need quotes around the path?
 
 Only when the path contains spaces. The quotes are interpreted by your command shell; they are not

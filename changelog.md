@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A common per-instance `serial_number` bench field applied consistently to built-in and CSV
+  instrument identity responses.
+- A catalog-visible `virtual-triple-psu` driver with three independent selected-output state
+  objects, protection/range settings, measurements, and correct `*CLS`/`*RST` separation.
+- A mixed bench example containing two same-model supplies with unique serials and one CSV-defined
+  fixture controller.
+- A consolidated user-facing instrument catalog with every driver, model, configuration field,
+  default, hardware/add-on token, application-option token, serial rule, and copyable bench object.
+
+### Changed
+
+- The legacy single-context PSU block in `detailed_instruments.csv` is now labeled generically
+  instead of claiming to be the stateful triple-output model.
+- ZIP installation documentation now explains environment activation and stale executable detection.
+
 ## [2.4.0] - 2026-08-25
 
 ### Added

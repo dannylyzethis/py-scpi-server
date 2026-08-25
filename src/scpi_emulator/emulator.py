@@ -265,7 +265,15 @@ def _is_dmm(name, instrument_id) -> bool:
 class SCPIInstrument:
     """Represents a single SCPI instrument with its command set"""
 
-    def __init__(self, name, instrument_id, *, pna_capabilities=None, state_directory=None):
+    def __init__(
+        self,
+        name,
+        instrument_id,
+        *,
+        pna_capabilities=None,
+        state_directory=None,
+        serial_number=None,
+    ):
         self.name = name
         self.id = instrument_id
         self.status = StatusSystem()
@@ -288,6 +296,7 @@ class SCPIInstrument:
         self.pna_time_domain = None
         self.pna_mixer = None
         self.scalar_data = None
+        self.power_supply = None
         if self.pna_capabilities is None and model is not None:
             self.pna_capabilities = PNACapabilities.create(
                 model,
@@ -301,7 +310,7 @@ class SCPIInstrument:
         self.identification = (
             self.pna_capabilities.identification
             if self.pna_capabilities is not None
-            else f"SCPI_Emulator,{self.name},{self.id},{EMULATOR_FIRMWARE}"
+            else f"SCPI_Emulator,{self.name},{serial_number or self.id},{EMULATOR_FIRMWARE}"
         )
         register_common_commands(self.core_registry, lambda: self.identification, self._reset)
         register_status_commands(self.core_registry, self.status)
@@ -355,6 +364,16 @@ class SCPIInstrument:
             register_scalar_commands(self.core_registry, self.scalar_data)
         self.last_command = ""
         self.command_count = 0
+
+    def set_serial_number(self, serial_number):
+        """Override the third field of the instrument's four-field identity response."""
+        if not isinstance(serial_number, str) or not serial_number.strip():
+            raise ValueError("serial number must be a non-empty string")
+        fields = self.identification.split(",", 3)
+        if len(fields) != 4:
+            raise ValueError("instrument identification must contain four comma-separated fields")
+        fields[2] = serial_number.strip()
+        self.identification = ",".join(fields)
         
 
     def visa_device_clear(self):
@@ -391,6 +410,8 @@ class SCPIInstrument:
             self.pna_mixer.reset()
         if self.scalar_data is not None:
             self.scalar_data.reset()
+        if self.power_supply is not None:
+            self.power_supply.reset()
         self.status.clear_status()
         self.output_queue.clear()
         return ''
@@ -445,6 +466,9 @@ class SCPIInstrument:
                 self.pna_measurements.inspect() if self.pna_measurements is not None else None
             ),
             'scalar': self.scalar_data.inspect() if self.scalar_data is not None else None,
+            'power_supply': (
+                self.power_supply.inspect() if self.power_supply is not None else None
+            ),
             'capabilities': capabilities,
         }
 

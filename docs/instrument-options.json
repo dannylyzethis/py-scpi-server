@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "description": "Emulator-owned opaque configuration tokens. No commercial-product mapping or manufacturer option descriptions are included.",
+  "drivers": {
+    "virtual-vna": {
+      "modes": [
+        "model-faithful",
+        "all-applications"
+      ],
+      "models": {
+        "N5222B-EMU": {
+          "model_faithful_default_hardware_configuration": "200",
+          "all_applications_default_hardware_configuration": "419",
+          "all_applications_default_hardware_addons": ["021"],
+          "hardware_configurations": [
+            "200", "201", "205", "217", "219", "220",
+            "400", "401", "405", "417", "419", "420"
+          ],
+          "hardware_addons": ["020", "021", "022", "UNY"],
+          "application_options": [
+            "E93007A", "E93007B", "E93010A", "E93010B", "E93011A", "E93011B",
+            "E93015A", "E93015B", "E93025A", "E93025B", "E93026A", "E93026B",
+            "E930317B", "E930321B", "E93050B", "E93051B", "E930702B", "E93072B",
+            "E93080A", "E93080B", "E93082A", "E93082B", "E93083A", "E93083B",
+            "E93084A", "E93084B", "E93086A", "E93086B", "E93087A", "E93087B",
+            "E93088A", "E93088B", "E93089A", "E93089B", "E930902A", "E930902B",
+            "E93118A", "E93118B", "E93460A", "E93460B", "E93551A", "E93551B",
+            "E93898A", "E93898B"
+          ]
+        },
+        "N5242B-EMU": {
+          "model_faithful_default_hardware_configuration": "201",
+          "all_applications_default_hardware_configuration": "425",
+          "all_applications_default_hardware_addons": ["021"],
+          "hardware_configurations": [
+            "201", "205", "217", "219", "222", "224",
+            "401", "417", "419", "422", "423", "425"
+          ],
+          "hardware_addons": ["020", "021", "022", "UNY", "XSB"],
+          "application_options": [
+            "E93007A", "E93007B", "E93010A", "E93010B", "E93011A", "E93011B",
+            "E93015A", "E93015B", "E93025A", "E93025B", "E93026A", "E93026B",
+            "E93029A", "E93029B", "E930317B", "E930321B", "E93050B", "E93051B",
+            "E930702B", "E93072B", "E93080A", "E93080B", "E93082A", "E93082B",
+            "E93083A", "E93083B", "E93084A", "E93084B", "E93086A", "E93086B",
+            "E93087A", "E93087B", "E93088A", "E93088B", "E93089A", "E93089B",
+            "E930902A", "E930902B", "E93110A", "E93110B", "E93111A", "E93111B",
+            "E93118A", "E93118B", "E93460A", "E93460B", "E93551A", "E93551B",
+            "E93898A", "E93898B"
+          ]
+        }
+      }
+    }
+  }
+}

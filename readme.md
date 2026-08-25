@@ -112,6 +112,32 @@ declared Python families on both Linux and Windows.
 
 ## Installation
 
+### Downloaded ZIP on Windows
+
+Extract the ZIP completely, open PowerShell in the extracted directory, and create an isolated
+environment for that copy:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install ".[all]"
+Get-Command scpi-emulator | Select-Object Source
+scpi-emulator --version
+```
+
+`Get-Command` must point inside the extracted directory's `.venv\Scripts` folder. The bare
+`scpi-emulator` examples below assume this environment remains activated. Extracting a newer ZIP
+does not update an older executable already installed elsewhere on `PATH`.
+
+If PowerShell policy prevents activation, use the environment's executable explicitly:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install ".[all]"
+.\.venv\Scripts\scpi-emulator.exe --version
+```
+
+### Git checkout
+
 ```bash
 git clone https://github.com/dannylyzethis/py-scpi-server.git
 cd py-scpi-server
@@ -139,7 +165,7 @@ python -m pip install -e ".[all]"
 python -m scpi_emulator --help
 ```
 
-The final command must list both `--load PATH` and `--bench FILE`. Using
+The final command must list `--load PATH`, `--bench FILE`, and `--version`. Using
 `python -m scpi_emulator` also prevents a different, older `scpi-emulator` executable elsewhere on
 `PATH` from hiding the updated checkout.
 
@@ -147,6 +173,11 @@ For the reproducible CI, Docker, coverage, compatibility-report, and release wor
 [Build, verification, and release guide](docs/release.md).
 
 ## Quick start
+
+Before creating a bench, see the
+[Instrument catalog and bench configuration reference](docs/instrument-catalog.md). It lists every
+driver, model, accepted configuration field, hardware token, application-option token, default,
+transport, serial rule, and copyable JSON block in one place.
 
 Create the small example configuration:
 
@@ -191,7 +222,8 @@ scpi-emulator --bench examples/virtual-bench.json --start --web
 
 After startup, the CLI prints every instrument ID and its VISA resource string. With `--web`, it
 also prints the dashboard URL. CSV files used by a `--bench` definition are kept beside its JSON
-file; this lets the bench mix `csv-instruments` models with built-in VNA and DMM models without a
+file; this lets the bench mix `csv-instruments` models with built-in VNA, DMM, and triple-output PSU
+models without a
 second CSV-directory flag.
 
 Other useful entry forms:
@@ -272,7 +304,8 @@ the active configuration unchanged.
 The repository includes:
 
 - `scpi_instruments_example.csv` — two small development instruments.
-- `detailed_instruments.csv` — eight legacy instrument command catalogs.
+- `detailed_instruments.csv` — eight legacy instrument command catalogs, including a generic
+  single-output PSU compatibility block rather than the stateful triple-output model.
 - `pna-commands.csv` — the current static N5222B-EMU VNA catalog.
 
 ## CLI reference

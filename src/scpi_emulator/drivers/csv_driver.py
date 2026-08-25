@@ -102,4 +102,11 @@ class CSVDriver:
         instrument.id = request.instrument_id
         if request.name is not None:
             instrument.name = request.name
+        if request.serial_number is not None:
+            try:
+                instrument.set_serial_number(request.serial_number)
+            except ValueError as error:
+                raise CatalogError(
+                    f"CSV instrument {request.model!r} cannot override its serial number: {error}"
+                ) from error
         return instrument

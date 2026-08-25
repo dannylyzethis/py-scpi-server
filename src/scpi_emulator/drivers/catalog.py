@@ -172,6 +172,7 @@ class InstrumentRequest:
     model: str
     name: str | None = None
     firmware: str | None = None
+    serial_number: str | None = None
     configuration: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -181,6 +182,8 @@ class InstrumentRequest:
             _require_text(self.name, "instrument name")
         if self.firmware is not None:
             _require_text(self.firmware, "instrument firmware")
+        if self.serial_number is not None:
+            _require_text(self.serial_number, "instrument serial number")
         if not isinstance(self.configuration, Mapping):
             raise CatalogError("instrument configuration must be a mapping")
 
