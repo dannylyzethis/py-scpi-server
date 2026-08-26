@@ -67,6 +67,15 @@ def _detected_license(distribution: metadata.Distribution) -> str | None:
     return None
 
 
+def _reviewed_versions(entry: dict[str, object]) -> set[str]:
+    """Return the explicitly reviewed package versions for an inventory entry."""
+    versions = entry.get("reviewed_versions")
+    if versions is not None:
+        return {str(version) for version in versions}
+    version = entry.get("reviewed_version")
+    return {str(version)} if version is not None else set()
+
+
 def main() -> int:
     inventory = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
     requirements = inventory["policy"].get("requirements", {})
@@ -100,9 +109,11 @@ def main() -> int:
         if entry is None:
             continue
         installed_version = distribution.version
-        if installed_version != entry["reviewed_version"]:
+        reviewed_versions = _reviewed_versions(entry)
+        if installed_version not in reviewed_versions:
             errors.append(
-                f"{name}: installed {installed_version}, reviewed {entry['reviewed_version']}"
+                f"{name}: installed {installed_version}, reviewed "
+                f"{', '.join(sorted(reviewed_versions)) or 'no versions'}"
             )
         detected = _detected_license(distribution)
         expected = entry["license"]

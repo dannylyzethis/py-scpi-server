@@ -22,9 +22,15 @@ def test_license_inventory_is_complete_and_explicit() -> None:
     }
     assert set(inventory["roots"]) <= set(packages)
     assert all(entry["license"] for entry in packages.values())
-    assert all(entry["reviewed_version"] for entry in packages.values())
+    assert all(
+        entry.get("reviewed_version") or entry.get("reviewed_versions")
+        for entry in packages.values()
+    )
     assert all(entry["scope"] for entry in packages.values())
     assert packages["bidict"]["license"] == "MPL-2.0"
+    assert packages["bidict"]["reviewed_versions"] == ["0.23.1", "0.24.1"]
+    assert packages["exceptiongroup"]["license"] == "MIT"
+    assert packages["tomli"]["license"] == "MIT"
     assert packages["zeroconf"]["license"] == "LGPL-2.1-or-later"
     assert set(inventory["policy"]["reviewed_copyleft_packages"]) == {
         "bidict",
