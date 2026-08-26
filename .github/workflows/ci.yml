@@ -77,7 +77,9 @@ jobs:
                   with socket.create_connection(("127.0.0.1", 5555), timeout=1) as client:
                       client.sendall(b"*IDN?\n")
                       response = client.recv(4096).decode().strip()
-                      assert response.startswith("SCPI_Emulator,Virtual DMM,")
+                      assert response.startswith(
+                          "SCPI_Emulator,Virtual DMM CSV Example,"
+                      )
                       break
               except OSError:
                   if time.monotonic() >= deadline:

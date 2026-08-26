@@ -14,7 +14,7 @@
     "bidict": {"license": "MPL-2.0", "reviewed_versions": ["0.23.1", "0.24.1"], "scope": ["web-transitive"], "python_version_conditional": true},
     "blinker": {"license": "MIT", "reviewed_version": "1.9.0", "scope": ["web-transitive"]},
     "build": {"license": "MIT", "reviewed_version": "1.5.0", "scope": ["development-direct"]},
-    "click": {"license": "BSD-3-Clause", "reviewed_version": "8.4.2", "scope": ["web-transitive"]},
+    "click": {"license": "BSD-3-Clause", "reviewed_versions": ["8.4.2", "8.5.0"], "scope": ["web-transitive"]},
     "colorama": {"license": "BSD-3-Clause", "reviewed_version": "0.4.6", "scope": ["development-transitive"], "platform_optional": true},
     "coverage": {"license": "Apache-2.0", "reviewed_version": "7.15.4", "scope": ["development-transitive"]},
     "et-xmlfile": {"license": "MIT", "reviewed_version": "2.0.0", "scope": ["excel-transitive"]},
