@@ -1,146 +1,119 @@
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument
-from scpi_emulator.scpi import (
-    CapabilityError,
-    CommandSpec,
-    CompatibilityMode,
-    HeaderNode,
-    PNACapabilities,
-)
+from scpi_emulator.scpi import CapabilityError, CommandSpec, HeaderNode, VNACapabilities
 
 
-def test_default_n5222b_identity_options_and_hardware_are_consistent() -> None:
-    instrument = SCPIInstrument("Virtual VNA N5222B-EMU", "pna")
+def test_default_generic_identity_topology_and_frequency_are_consistent() -> None:
+    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "vna")
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,N5222B-EMU,US12345678,E.1.0"
+        "SCPI Emulator,VNA-2PORT-EMU,EMU00000001,E.1.0"
     )
-    assert instrument.process_command("*OPT?") == "200"
+    options = instrument.process_command("*OPT?").split(",")
+    assert options[:2] == ["PORTS-2", "SOURCES-1"]
+    assert "HW-NOISE-RECEIVER" in options
+    assert "APP-TIME-DOMAIN" in options
+    assert "APP-SOURCE-PHASE-CONTROL" not in options
     assert instrument.process_command("SYST:CAP:FREQ:MIN?") == "10000000"
-    assert instrument.process_command("SYST:CAP:FREQ:MAX?") == "26500000000"
+    assert instrument.process_command("SYST:CAP:FREQ:MAX?") == "50000000000"
     assert instrument.process_command("SYST:CAP:HARD:PORT:CAT?") == "Port 1,Port 2"
-    assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "2"
     assert instrument.process_command("SYST:CAP:HARD:SOUR:COUN?") == "1"
     assert instrument.process_command("SYST:CAP:HARD:REC:INT:COUN?") == "3"
-    assert instrument.process_command("SYST:CAP:HARD:REC:DACC?") == "0"
-    assert instrument.process_command("SYST:CAP:HARD:LFEX:EXIS?") == "0"
-    assert instrument.process_command("SYST:CAP:LIC:CAT? VALID") == "N5222B-EMU-200"
+    assert instrument.process_command("SYST:CAP:HARD:REC:DACC?") == "1"
 
 
-def test_frequency_capability_overrides_inherit_omitted_model_endpoints() -> None:
-    maximum_only = PNACapabilities.create(
-        "N5222B-EMU", frequency_maximum_hz=20_000_000_000
-    )
-    minimum_only = PNACapabilities.create(
-        "N5222B-EMU", frequency_minimum_hz=100_000_000
+def test_frequency_limits_can_widen_or_narrow_without_model_ceiling() -> None:
+    profile = VNACapabilities.create(
+        "VNA-4PORT-EMU",
+        frequency_minimum_hz=100_000,
+        frequency_maximum_hz=110_000_000_000,
     )
 
-    assert maximum_only.frequency_minimum == 10_000_000
-    assert maximum_only.frequency_maximum == 20_000_000_000
-    assert minimum_only.frequency_minimum == 100_000_000
-    assert minimum_only.frequency_maximum == 26_500_000_000
+    assert profile.frequency_minimum == 100_000
+    assert profile.frequency_maximum == 110_000_000_000
+    assert profile.has_low_frequency_extension is True
 
 
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [
-        ({"frequency_minimum_hz": 1_000_000}, "below"),
-        ({"frequency_maximum_hz": 50_000_000_000}, "exceed"),
+        ({"frequency_minimum_hz": 0}, "positive finite number"),
+        ({"frequency_maximum_hz": float("inf")}, "positive finite number"),
         (
-            {
-                "frequency_minimum_hz": 20_000_000_000,
-                "frequency_maximum_hz": 10_000_000_000,
-            },
+            {"frequency_minimum_hz": 20_000_000_000, "frequency_maximum_hz": 10_000_000_000},
             "cannot exceed",
         ),
         ({"frequency_minimum_hz": True}, "positive finite number"),
         ({"frequency_maximum_hz": "20GHz"}, "positive finite number"),
     ],
 )
-def test_invalid_frequency_capability_overrides_are_rejected(
-    kwargs: dict, message: str
-) -> None:
+def test_invalid_frequency_limits_are_rejected(kwargs: dict, message: str) -> None:
     with pytest.raises(CapabilityError, match=message):
-        PNACapabilities.create("N5222B-EMU", **kwargs)
+        VNACapabilities.create("VNA-2PORT-EMU", **kwargs)
 
 
-def test_configured_options_licenses_and_feature_queries_share_one_profile() -> None:
-    profile = PNACapabilities.create(
-        "N5222B-EMU",
-        hardware_configuration="419",
-        hardware_addons=("021",),
-        application_options=("E93010B", "E930902B"),
+def test_semantic_hardware_application_option_and_license_reporting() -> None:
+    profile = VNACapabilities.create(
+        "VNA-4PORT-EMU",
+        source_count=2,
+        hardware_features=(
+            "direct_receiver_access",
+            "receiver_attenuators",
+            "source_attenuators",
+        ),
+        applications=("enhanced_time_domain", "spectrum_analysis"),
     )
-    instrument = SCPIInstrument("Configured VNA", "configured", pna_capabilities=profile)
+    instrument = SCPIInstrument("Configured VNA", "configured", vna_capabilities=profile)
 
-    assert instrument.process_command("*OPT?") == "419,021,010,090,902"
-    assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
-    assert instrument.process_command("SYST:CAP:HARD:SOUR:COUN?") == "2"
-    assert instrument.process_command("SYST:CAP:HARD:REC:INT:COUN?") == "6"
-    assert instrument.process_command("SYST:CAP:HARD:REC:DACC?") == "1"
-    assert instrument.process_command("SYST:CAP:HARD:ATT:REC:EXIS? 4") == "1"
-    assert instrument.process_command("SYST:CAP:HARD:ATT:REC:MAX? 4") == "35"
-    assert instrument.process_command("SYST:CAP:HARD:ATT:SOUR:MAX? 1") == "65"
-    assert instrument.process_command("SYST:CAP:HARD:ATT:SOUR:STEP? 1") == "5"
+    assert profile.applications == (
+        "enhanced_time_domain",
+        "spectrum_analysis",
+        "time_domain",
+    )
+    assert instrument.process_command("*OPT?") == (
+        "PORTS-4,SOURCES-2,HW-DIRECT-RECEIVER-ACCESS,HW-RECEIVER-ATTENUATORS,"
+        "HW-SOURCE-ATTENUATORS,APP-ENHANCED-TIME-DOMAIN,APP-SPECTRUM-ANALYSIS,"
+        "APP-TIME-DOMAIN"
+    )
     assert instrument.process_command("SYST:CAP:LIC:CAT? ALL") == (
-        "N5222B-EMU-419,N5222B-EMU-021,E93010B-1FP,E930902B-1FP"
+        "APP-ENHANCED-TIME-DOMAIN,APP-SPECTRUM-ANALYSIS,APP-TIME-DOMAIN"
     )
-    assert instrument.process_command("SYST:CAP:LIC:FEAT:CAT?") == (
-        "Time Domain,Spectrum Analysis 26 5 Ghz"
-    )
-    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Time Domain"') == "1"
-    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "0"
-
-
-def test_n5242b_pna_x_configuration_exposes_lfe_and_pna_x_applications() -> None:
-    profile = PNACapabilities.create(
-        "N5242B-EMU",
-        hardware_configuration="425",
-        application_options=("E93080B", "E93029B"),
-    )
-    instrument = SCPIInstrument("VNA-EXTENDED", "pnax", pna_capabilities=profile)
-
-    assert instrument.process_command("*OPT?") == "425,080,028"
-    assert instrument.process_command("SYST:CAP:HARD:PORT:INT:COUN?") == "4"
-    assert instrument.process_command("SYST:CAP:HARD:PORT:SOUR:INT:CAT?") == (
-        "Port 1,Port 2,Port 3,Port 4"
-    )
-    assert instrument.process_command("SYST:CAP:HARD:LFEX:EXIS?") == "1"
-    assert instrument.process_command("SYST:CAP:LIC:CAT? IGNORED") == ""
-    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
+    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "APP-TIME-DOMAIN"') == "1"
+    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "APP-NOISE-FIGURE"') == "0"
 
 
 @pytest.mark.parametrize(
-    ("kwargs", "message"),
+    ("model", "kwargs", "message"),
     [
-        ({"hardware_configuration": "999"}, "not available"),
-        ({"hardware_addons": ("XSB",)}, "not available"),
-        ({"application_options": ("E93029B",)}, "requires one"),
+        ("VNA-2PORT-EMU", {"source_count": 3}, "must be 1 or 2"),
+        ("VNA-2PORT-EMU", {"hardware_features": ("unknown",)}, "unknown"),
+        ("VNA-2PORT-EMU", {"hardware_features": ("all", "bias_tees")}, "cannot be combined"),
+        ("VNA-2PORT-EMU", {"applications": ("source_phase_control",)}, "requires 4 ports"),
         (
-            {
-                "hardware_configuration": "219",
-                "application_options": ("E93029B",),
-            },
-            "requires software",
-        ),
-        (
-            {
-                "hardware_configuration": "201",
-                "application_options": ("E93088B",),
-            },
-            "requires four ports",
+            "VNA-4PORT-EMU",
+            {"hardware_features": (), "applications": ("noise_figure",)},
+            "requires hardware features",
         ),
     ],
 )
-def test_impossible_capability_profiles_are_rejected(kwargs: dict, message: str) -> None:
-    model = "N5222B-EMU" if kwargs.get("hardware_addons") == ("XSB",) else "N5242B-EMU"
+def test_impossible_generic_profiles_are_rejected(model: str, kwargs: dict, message: str) -> None:
     with pytest.raises(CapabilityError, match=message):
-        PNACapabilities.create(model, **kwargs)
+        VNACapabilities.create(model, **kwargs)
+
+
+def test_omitted_applications_enable_every_compatible_application() -> None:
+    two_port = VNACapabilities.create("VNA-2PORT-EMU")
+    four_port = VNACapabilities.create("VNA-4PORT-EMU")
+
+    assert two_port.feature_enabled("APP-NOISE-FIGURE") is True
+    assert two_port.feature_enabled("source-phase-control") is False
+    assert four_port.feature_enabled("source-phase-control") is True
+    assert four_port.feature_enabled("active hot parameters") is True
 
 
 def test_capability_query_validates_port_and_license_selection() -> None:
-    instrument = SCPIInstrument("Virtual N5222B-EMU", "pna")
+    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "vna")
 
     assert instrument.process_command("SYST:CAP:HARD:ATT:REC:EXIS? 3") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
@@ -148,79 +121,27 @@ def test_capability_query_validates_port_and_license_selection() -> None:
     assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
 
 
-def test_unaliased_software_product_uses_stable_three_digit_opt_code() -> None:
-    profile = PNACapabilities.create(
-        "N5222B-EMU",
-        hardware_configuration="400",
-        application_options=("E93072B",),
+def test_vna_application_capabilities_gate_typed_commands() -> None:
+    base = SCPIInstrument(
+        "Base VNA",
+        "base",
+        vna_capabilities=VNACapabilities.create("VNA-4PORT-EMU", applications=()),
     )
-
-    assert profile.option_query_codes == ("400", "072")
-
-
-def test_vendor_s9_application_identifiers_are_not_accepted() -> None:
-    with pytest.raises(CapabilityError, match="not available"):
-        PNACapabilities.create("N5242B-EMU", application_options=("S" + "93080B",))
-
-
-def test_model_faithful_mode_is_the_default_and_keeps_only_installed_apps() -> None:
-    profile = PNACapabilities.create("N5242B-EMU", application_options=("E93080B",))
-
-    assert profile.mode is CompatibilityMode.MODEL_FAITHFUL
-    assert profile.application_options == ("E93080B",)
-    assert profile.feature_enabled("Frequency Offset") is True
-    assert profile.feature_enabled("Noise Figure") is False
-
-
-def test_all_applications_mode_builds_a_coherent_developer_profile() -> None:
-    profile = PNACapabilities.create("N5242B-EMU", mode="all-applications")
-
-    assert profile.mode is CompatibilityMode.ALL_APPLICATIONS
-    assert profile.hardware_configuration == "425"
-    assert profile.hardware_addons == ("021",)
-    assert profile.ports == 4
-    assert profile.sources == 2
-    assert profile.feature_enabled("Noise Figure") is True
-    assert profile.feature_enabled("Integrated Pulsed Rf") is True
-    assert "E93080B" in profile.application_options
-    assert "E93029B" in profile.application_options
-
-
-def test_all_applications_mode_respects_an_explicit_physical_configuration() -> None:
-    profile = PNACapabilities.create(
-        "N5222B-EMU",
-        mode=CompatibilityMode.ALL_APPLICATIONS,
-        hardware_configuration="200",
-        hardware_addons=(),
-    )
-
-    assert profile.hardware_configuration == "200"
-    assert profile.feature_enabled("Basic Pulsed Rf") is False
-    assert profile.feature_enabled("Source Phase Control") is False
-    assert profile.feature_enabled("Gain Compression") is True
-
-
-def test_pna_application_capabilities_gate_typed_commands() -> None:
-    strict = SCPIInstrument("Strict VNA-EXTENDED", "strict", pna_capabilities=PNACapabilities.create("N5242B-EMU"))
-    developer = SCPIInstrument(
-        "Developer VNA-EXTENDED",
-        "developer",
-        pna_capabilities=PNACapabilities.create("N5242B-EMU", mode="all-applications"),
-    )
+    full = SCPIInstrument("Full VNA-4PORT-EMU", "full")
     specification = CommandSpec(
         path=(HeaderNode("CALCulate"), HeaderNode("NOISe")),
         handler=lambda invocation: "1",
         query=True,
         required_capabilities=frozenset({"noise-figure"}),
     )
-    strict.core_registry.register(specification)
-    developer.core_registry.register(specification)
+    base.core_registry.register(specification)
+    full.core_registry.register(specification)
 
-    assert strict.process_command("CALC:NOIS?") == ""
-    assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
-    assert developer.process_command("CALC:NOIS?") == "1"
+    assert base.process_command("CALC:NOIS?") == ""
+    assert base.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
+    assert full.process_command("CALC:NOIS?") == "1"
 
 
-def test_unknown_compatibility_mode_is_rejected() -> None:
-    with pytest.raises(CapabilityError, match="unsupported compatibility mode"):
-        PNACapabilities.create("N5222B-EMU", mode="everything")
+def test_unknown_model_lists_the_generic_choices() -> None:
+    with pytest.raises(CapabilityError, match="VNA-2PORT-EMU, VNA-4PORT-EMU"):
+        VNACapabilities.create("unknown-vna")

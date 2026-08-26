@@ -9,7 +9,7 @@ from scpi_emulator.scenario import (
     ScenarioStream,
     StreamKind,
 )
-from scpi_emulator.scpi import CompatibilityMode, PNACapabilities
+from scpi_emulator.scpi import VNACapabilities
 
 
 def trace(name, *values, advance=AdvancePolicy.READ):
@@ -22,12 +22,12 @@ def trace(name, *values, advance=AdvancePolicy.READ):
     )
 
 
-def advanced_pna(*streams) -> SCPIInstrument:
+def advanced_vna(*streams) -> SCPIInstrument:
     instrument = SCPIInstrument(
-        "Virtual N5242B-EMU",
+        "Virtual VNA-4PORT-EMU",
         "advanced",
-        pna_capabilities=PNACapabilities.create(
-            "N5242B-EMU", mode=CompatibilityMode.ALL_APPLICATIONS
+        vna_capabilities=VNACapabilities.create(
+            "VNA-4PORT-EMU"
         ),
     )
     instrument.process_command("SENS:SWE:POIN 4")
@@ -42,7 +42,7 @@ def values(response: str) -> tuple[float, ...]:
 
 
 def test_spectrum_setup_data_and_marker_workflow() -> None:
-    instrument = advanced_pna(
+    instrument = advanced_vna(
         trace("spectrum.trace", (-80, -20, -50, -60), (-70, -10, -40, -50))
     )
     for command in (
@@ -67,8 +67,8 @@ def test_spectrum_setup_data_and_marker_workflow() -> None:
     assert float(instrument.process_command("CALC:SA:MARK1:Y?")) == -10
 
 
-def test_custom_measurement_definition_selects_and_activates_real_pna_class() -> None:
-    instrument = advanced_pna(trace("spectrum.trace", (-80, -20, -50, -60)))
+def test_custom_measurement_definition_selects_and_activates_real_vna_class() -> None:
+    instrument = advanced_vna(trace("spectrum.trace", (-80, -20, -50, -60)))
     assert instrument.process_command(
         "CALC:CUST:DEF 'sa_meas','Spectrum Analyzer','B'"
     ) == ""
@@ -79,7 +79,7 @@ def test_custom_measurement_definition_selects_and_activates_real_pna_class() ->
 
 
 def test_imd_setup_and_deterministic_results() -> None:
-    instrument = advanced_pna(trace("imd.im3", (-61, -60, -58, -55)))
+    instrument = advanced_vna(trace("imd.im3", (-61, -60, -58, -55)))
     commands = (
         "SENS:IMD:SWE:TYPE FCEN",
         "SENS:IMD:FREQ:FCEN:CENT 2GHz",
@@ -103,7 +103,7 @@ def test_imd_setup_and_deterministic_results() -> None:
 
 
 def test_modulation_distortion_setup_and_evm_result() -> None:
-    instrument = advanced_pna(trace("modulation_distortion.evm", (1.2, 1.4, 1.1, 1.3)))
+    instrument = advanced_vna(trace("modulation_distortion.evm", (1.2, 1.4, 1.1, 1.3)))
     instrument.process_command("SENS:DIST:SWE:TYPE POW")
     instrument.process_command("SENS:DIST:SWE:CARR:FREQ 3GHz")
     instrument.process_command("SENS:DIST:SWE:CARR:LEV -12")
@@ -117,7 +117,7 @@ def test_modulation_distortion_setup_and_evm_result() -> None:
 
 
 def test_phase_noise_log_axis_and_trigger_advancement() -> None:
-    instrument = advanced_pna(
+    instrument = advanced_vna(
         trace(
             "phase_noise.trace",
             (-90, -100, -110, -120),
@@ -140,7 +140,7 @@ def test_phase_noise_log_axis_and_trigger_advancement() -> None:
 
 
 def test_diq_ranges_and_scenario_results() -> None:
-    instrument = advanced_pna(trace("differential_iq.trace", (1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j)))
+    instrument = advanced_vna(trace("differential_iq.trace", (1 + 1j, 2 + 2j, 3 + 3j, 4 + 4j)))
     instrument.process_command("SENS:DIQ:FREQ:RANG:ADD")
     instrument.process_command("SENS:DIQ:FREQ:RANG2:STAR 1GHz")
     instrument.process_command("SENS:DIQ:FREQ:RANG2:STOP 2GHz")
@@ -157,7 +157,7 @@ def test_diq_ranges_and_scenario_results() -> None:
 
 
 def test_wideband_iq_capture_uses_time_axis() -> None:
-    instrument = advanced_pna(trace("wideband_iq.trace", (1j, -1j, 0.5j, -0.5j)))
+    instrument = advanced_vna(trace("wideband_iq.trace", (1j, -1j, 0.5j, -0.5j)))
     instrument.process_command("SENS:IQ:SRAT 200MHz")
     instrument.process_command("SENS:IQ:CAPT:TIME 30us")
     instrument.process_command("SENS:IQ:STAT ON")
@@ -173,12 +173,14 @@ def test_wideband_iq_capture_uses_time_axis() -> None:
 
 def test_advanced_license_address_cls_and_reset_semantics() -> None:
     strict = SCPIInstrument(
-        "Virtual N5222B-EMU", "strict", pna_capabilities=PNACapabilities.create("N5222B-EMU")
+        "Virtual VNA-2PORT-EMU",
+        "strict",
+        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
     )
     assert strict.process_command("SENS:SA:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    instrument = advanced_pna()
+    instrument = advanced_vna()
     instrument.process_command("SENS:SA:STAT ON")
     instrument.process_command("SENS:PN:STAT ON")
     assert instrument.process_command("SENS:SA:STAT?") == "0"
@@ -193,7 +195,7 @@ def test_advanced_license_address_cls_and_reset_semantics() -> None:
 
 
 def test_bad_advanced_trace_shape_reports_scpi_data_error() -> None:
-    instrument = advanced_pna(trace("spectrum.trace", (-20, -30)))
+    instrument = advanced_vna(trace("spectrum.trace", (-20, -30)))
     instrument.process_command("SENS:SA:STAT ON")
     assert instrument.process_command("CALC:DATA? SDAT") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-230,"Data corrupt or stale')

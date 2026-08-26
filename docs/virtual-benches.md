@@ -34,6 +34,38 @@ From the CLI, use the precise bench path directly:
 scpi-emulator --bench examples/virtual-bench.json --start
 ```
 
+The no-flag interactive manager can load the same file, inspect its instruments while stopped, and
+then start the selected transports:
+
+```text
+SCPI-MGR> load bench examples/virtual-bench.json
+SCPI-MGR> instruments
+SCPI-MGR> start
+SCPI-MGR> status
+```
+
+Use quotes around a path only when it contains spaces. `bench <file>` is an alias for
+`load bench <file>`. A failed bench load leaves the current interactive configuration untouched.
+
+### Guided bench creation
+
+To create a bench without writing JSON, start the no-flag interactive manager and choose a target:
+
+```text
+SCPI-MGR> create bench "C:\ATE Projects\benches\new bench.json"
+```
+
+The builder lists numbered drivers and models, then asks for an instance ID, display name, serial,
+implemented transport, host, and port. Press Enter to accept the displayed defaults. VNA models ask
+one simple question to enable every compatible modeled application; advanced configuration remains
+optional. Enter `cancel` at any prompt to stop without creating or replacing a file.
+
+Add as many instruments as needed. The builder rejects duplicate IDs/resources, validates the whole
+bench through the normal composer, previews every VISA resource, saves schema-version-1 JSON
+atomically, and loads the result into the current session. To include CSV-defined instruments, put
+their CSV files beside the target JSON before starting the builder; they appear automatically under
+the `csv-instruments` driver.
+
 If that bench selects models from the `csv-instruments` driver, place their CSV files beside
 `bench.json`; the CLI catalogs that directory before composition. This advanced path can mix those
 CSV models with the built-in VNA, DMM, and PSU drivers. For a simple folder containing only CSV-defined
@@ -56,20 +88,19 @@ Schema version 1 uses one entry per instrument instance:
 {
   "schema_version": 1,
   "name": "two-vna-development-bench",
-  "description": "Model-faithful VNA plus fully configured VNA-EXTENDED.",
+  "description": "Generic two-port and four-port vector network analyzers.",
   "metadata": {"team": "ATE"},
   "instruments": [
     {
-      "id": "pna1",
+      "id": "vna1",
       "name": "Input VNA",
       "driver": "virtual-vna",
-      "model": "N5222B-EMU",
+      "model": "VNA-2PORT-EMU",
       "firmware": "E.1.0",
       "serial_number": "VNA-001",
       "configuration": {
-        "mode": "model-faithful",
-        "hardware_configuration": "200",
-        "frequency_maximum_hz": 20000000000
+        "frequency_maximum_hz": 67000000000,
+        "applications": ["time_domain"]
       },
       "resource": {
         "transport": "raw-socket",
@@ -78,12 +109,13 @@ Schema version 1 uses one entry per instrument instance:
       }
     },
     {
-      "id": "pnax1",
+      "id": "vnax1",
       "driver": "virtual-vna",
-      "model": "N5242B-EMU",
+      "model": "VNA-4PORT-EMU",
       "configuration": {
-        "hardware_configuration": "425",
-        "mode": "all-applications"
+        "source_count": 2,
+        "hardware_features": ["all"],
+        "applications": ["all"]
       },
       "resource": {
         "transport": "raw-socket",
@@ -101,10 +133,10 @@ model. Ports must be in the range 1–65535. A selected
 transport must be advertised as implemented by the selected driver; catalog entries marked planned
 or partial cannot accidentally be started.
 
-Configuration contents are driver-specific. For the built-in VNA driver they include compatibility
-mode, hardware configuration, hardware add-ons, application options, and optional minimum/maximum
-frequency capability overrides. Omitted frequency endpoints inherit the model defaults. The driver
-performs the same prerequisite and physical-coherence validation used by direct VNA profiles.
+Configuration contents are driver-specific. For the built-in VNA driver they include `source_count`,
+semantic `hardware_features`, semantic `applications`, and minimum/maximum frequency limits.
+Omitted fields inherit all-capability defaults. The driver validates application dependencies and
+port, source, hardware, and frequency coherence before creating an instrument.
 CSV models do not advertise additional configuration or scenario-input guarantees because their
 available commands depend on their source files.
 

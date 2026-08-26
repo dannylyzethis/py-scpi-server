@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "snapshot": {
+    "date": "2026-08-25",
+    "profile_revision": "2.0",
+    "reference_firmware": "E.1.0"
+  },
+  "hardware_features": [
+    "bias_tees",
+    "direct_receiver_access",
+    "internal_combiner",
+    "internal_rf_switches",
+    "noise_receiver",
+    "pulse_control",
+    "receiver_attenuators",
+    "source_attenuators"
+  ],
+  "applications": {
+    "active_hot_parameters": {
+      "requires_ports": 4,
+      "requires_sources": 2,
+      "requires_hardware": ["internal_combiner"]
+    },
+    "arbitrary_waveform_generation": {},
+    "basic_pulsed_rf": {"requires_hardware": ["pulse_control"]},
+    "differential_iq": {"requires_ports": 4},
+    "embedded_lo": {},
+    "enhanced_time_domain": {"requires_applications": ["time_domain"]},
+    "fast_cw": {},
+    "fixture_removal": {},
+    "frequency_converter": {"requires_applications": ["frequency_offset"]},
+    "frequency_offset": {},
+    "gain_compression": {},
+    "integrated_pulsed_rf": {"requires_hardware": ["pulse_control"]},
+    "intermodulation_distortion": {"requires_applications": ["frequency_offset"]},
+    "measurement_uncertainty": {},
+    "modulation_distortion": {},
+    "noise_figure": {"requires_hardware": ["noise_receiver"]},
+    "n_port": {},
+    "performance_test": {},
+    "phase_noise": {},
+    "scalar_mixer": {"requires_applications": ["frequency_offset"]},
+    "source_phase_control": {"requires_ports": 4},
+    "spectrum_analysis": {},
+    "time_domain": {},
+    "true_mode_stimulus": {"requires_ports": 4},
+    "wideband_iq": {}
+  },
+  "models": {
+    "VNA-2PORT-EMU": {
+      "ports": 2,
+      "default_source_count": 1
+    },
+    "VNA-4PORT-EMU": {
+      "ports": 4,
+      "default_source_count": 2
+    }
+  }
+}

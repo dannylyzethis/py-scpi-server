@@ -6,15 +6,15 @@ from scpi_emulator.scenario import (
     ScenarioStream,
     StreamKind,
 )
-from scpi_emulator.scpi import PNACapabilities
+from scpi_emulator.scpi import VNACapabilities
 
 
-def mixer_pna(*, scalar_only=False) -> SCPIInstrument:
-    options = ("E93010B", "E93080B", "E93082B") if scalar_only else (
-        "E93010B", "E93080B", "E93082B", "E93083B", "E93084B"
+def mixer_vna(*, scalar_only=False) -> SCPIInstrument:
+    options = ("time_domain", "frequency_offset", "scalar_mixer") if scalar_only else (
+        "time_domain", "frequency_offset", "scalar_mixer", "frequency_converter", "embedded_lo"
     )
-    capabilities = PNACapabilities.create("N5222B-EMU", application_options=options)
-    instrument = SCPIInstrument("Virtual N5222B-EMU", "mixer", pna_capabilities=capabilities)
+    capabilities = VNACapabilities.create("VNA-2PORT-EMU", applications=options)
+    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "mixer", vna_capabilities=capabilities)
     instrument.process_command("SENS:SWE:POIN 4")
     stream = ScenarioStream(
         "S11",
@@ -28,7 +28,7 @@ def mixer_pna(*, scalar_only=False) -> SCPIInstrument:
 
 
 def test_frequency_offset_ranges_produce_coherent_axis() -> None:
-    instrument = mixer_pna()
+    instrument = mixer_vna()
     instrument.process_command("SENS:FOM:RANG1:FREQ:STAR 1GHz")
     instrument.process_command("SENS:FOM:RANG1:FREQ:STOP 2GHz")
     instrument.process_command("SENS:FOM:RANG1:ROLE OUTP")
@@ -48,7 +48,7 @@ def test_frequency_offset_ranges_produce_coherent_axis() -> None:
 
 
 def test_vector_converter_translates_axis_and_complex_data() -> None:
-    instrument = mixer_pna()
+    instrument = mixer_vna()
     baseline = instrument.process_command("CALC:DATA? SDAT")
     instrument.process_command("SENS:MIX:FREQ:FIX 2GHz")
     instrument.process_command("SENS:MIX:FREQ:LO 1.5GHz")
@@ -67,7 +67,7 @@ def test_vector_converter_translates_axis_and_complex_data() -> None:
 
 
 def test_mixer_segments_resample_data_to_segment_axis() -> None:
-    instrument = mixer_pna()
+    instrument = mixer_vna()
     instrument.process_command("SENS:MIX:SEGM1:ADD")
     instrument.process_command("SENS:MIX:SEGM1:FREQ:STAR 1GHz")
     instrument.process_command("SENS:MIX:SEGM1:FREQ:STOP 2GHz")
@@ -83,7 +83,7 @@ def test_mixer_segments_resample_data_to_segment_axis() -> None:
 
 
 def test_source_roles_embedded_lo_and_application_composition() -> None:
-    instrument = mixer_pna()
+    instrument = mixer_vna()
     instrument.process_command("SENS:MIX:SOUR1:ROLE LO")
     instrument.process_command("SENS:MIX:ELO:CENT 1GHz")
     instrument.process_command("SENS:MIX:ELO:SPAN 100MHz")
@@ -103,7 +103,7 @@ def test_source_roles_embedded_lo_and_application_composition() -> None:
 
 
 def test_correction_status_is_static_zero_and_reset_semantics_are_preserved() -> None:
-    instrument = mixer_pna()
+    instrument = mixer_vna()
     assert instrument.process_command("SENS:MIX:CAL:STAT?") == "0"
     assert instrument.process_command("SENS:FOM:CORR:STAT?") == "0"
     instrument.process_command("SENS:MIX:STAT ON")
@@ -117,11 +117,15 @@ def test_correction_status_is_static_zero_and_reset_semantics_are_preserved() ->
 
 
 def test_licenses_ranges_and_sources_report_correct_errors() -> None:
-    strict = SCPIInstrument("Virtual N5222B-EMU", "strict")
+    strict = SCPIInstrument(
+        "Virtual VNA-2PORT-EMU",
+        "strict",
+        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
+    )
     assert strict.process_command("SENS:MIX:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    scalar = mixer_pna(scalar_only=True)
+    scalar = mixer_vna(scalar_only=True)
     assert scalar.process_command("SENS:MIX:CONV:TYPE VECT") == ""
     assert scalar.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
     assert scalar.process_command("SENS:MIX:SOUR2:ROLE LO") == ""

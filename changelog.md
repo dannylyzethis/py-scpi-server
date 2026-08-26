@@ -5,10 +5,19 @@ All notable changes to the SCPI Equipment Emulator project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-08-25
 
 ### Added
 
+- Interactive `load bench`, `bench`, and `instruments` commands with transactional composition,
+  stopped/running inspection, serials, and VISA resource strings through one active runtime.
+- Event-driven dashboard updates for commands on every transport, instrument state, scenarios,
+  clients, and server lifecycle, with coalescing, UI-state preservation, and fallback polling.
+- Interactive catalog browsing for drivers and models, including driver-owned configuration-field
+  metadata and optional CSV-directory discovery.
+- A guided interactive bench builder with catalog choices, safe instance/serial/port defaults,
+  mixed built-in/CSV composition, all-capability defaults, validation, preview, and atomic
+  schema-version-1 JSON saving.
 - A common per-instance `serial_number` bench field applied consistently to built-in and CSV
   instrument identity responses.
 - A catalog-visible `virtual-triple-psu` driver with three independent selected-output state
@@ -16,12 +25,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A mixed bench example containing two same-model supplies with unique serials and one CSV-defined
   fixture controller.
 - A consolidated user-facing instrument catalog with every driver, model, configuration field,
-  default, hardware/add-on token, application-option token, serial rule, and copyable bench object.
-- Optional VNA `frequency_minimum_hz` and `frequency_maximum_hz` bench configuration fields that
-  inherit omitted model defaults and consistently narrow capability, sweep, and trace limits.
+  default, semantic hardware feature, application ID, serial rule, and copyable bench object.
+- VNA `frequency_minimum_hz` and `frequency_maximum_hz` bench configuration fields that define
+  emulated instrument, sweep, and trace limits without a product-model ceiling.
 
 ### Changed
 
+- Replaced vendor-derived VNA family identities with `VNA-2PORT-EMU` and `VNA-4PORT-EMU`.
+- Replaced numbered hardware configurations and coded options with `source_count`, semantic
+  `hardware_features`, and semantic `applications`; omitted selections enable all compatible
+  capabilities.
+- Renamed VNA internals, manifests, coverage reports, tools, tests, CSV fixtures, and documentation
+  to the project-owned vocabulary with no legacy aliases.
+- Interactive and long-running CLI status output now uses console-safe text so redirected Windows
+  processes do not terminate with a code-page `UnicodeEncodeError`.
 - The legacy single-context PSU block in `detailed_instruments.csv` is now labeled generically
   instead of claiming to be the stateful triple-output model.
 - ZIP installation documentation now explains environment activation and stale executable detection.
@@ -57,8 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioned JSON and compressed-binary scenario codecs with complex and typed binary-vector values.
 - An immutable instrument-driver metadata contract, catalog, model lookup, factory API, and
   `scpi_emulator.drivers` entry-point discovery for external emulator families.
-- A built-in VNA/VNA-EXTENDED catalog driver derived from the pinned compatibility snapshot.
-- Explicit model-faithful and all-applications VNA compatibility modes.
+- A built-in VNA catalog driver derived from a versioned capability snapshot.
+- Capability-gated VNA application profiles for strict and broad development testing.
 - Coherent developer profiles that select capable modeled hardware and compatible application
   licenses while preserving truthful identity, option, and hardware queries.
 - VNA application capability names wired into typed command availability gates.

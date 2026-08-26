@@ -49,7 +49,7 @@ class CommandManifest:
 def load_command_manifest(path: str | Path | None = None) -> CommandManifest:
     """Load and validate the packaged manifest or an explicitly supplied file."""
     if path is None:
-        resource = files("scpi_emulator").joinpath("profiles/pna_commands.v1.json")
+        resource = files("scpi_emulator").joinpath("profiles/vna_commands.v1.json")
         raw = json.loads(resource.read_text(encoding="utf-8"))
     else:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))

@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .measurements import MAX_CHANNEL, MAX_TRACE, MAX_WINDOW, PNAMeasurementSystem
+from .measurements import MAX_CHANNEL, MAX_TRACE, MAX_WINDOW, VNAMeasurementSystem
 from .registry import (
     CommandRegistry,
     CommandSpec,
@@ -22,12 +22,12 @@ from .registry import (
 _SAFE_COMPONENT = re.compile(r"[A-Za-z0-9_. -]{1,128}\Z")
 
 
-class PNAStateFileStore:
+class VNAStateFileStore:
     """Save and recall only channel, measurement, window, and trace existence."""
 
     def __init__(
         self,
-        measurements: PNAMeasurementSystem,
+        measurements: VNAMeasurementSystem,
         instrument_id: str,
         root: str | Path | None = None,
     ) -> None:
@@ -87,7 +87,7 @@ class PNAStateFileStore:
         return self.directory / filename
 
 
-def register_state_file_commands(registry: CommandRegistry, store: PNAStateFileStore) -> None:
+def register_state_file_commands(registry: CommandRegistry, store: VNAStateFileStore) -> None:
     """Register named VNA save/recall commands."""
     memory = HeaderNode("MMEMory")
     filename = (ParameterSpec(ParameterType.STRING, name="filename"),)
@@ -113,7 +113,7 @@ def register_state_file_commands(registry: CommandRegistry, store: PNAStateFileS
     )
 
 
-def _serialize(state: PNAMeasurementSystem) -> dict[str, Any]:
+def _serialize(state: VNAMeasurementSystem) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "channels": [
@@ -189,7 +189,7 @@ def _validate(raw: Any) -> dict[str, Any]:
     return {"channels": normalized_channels, "windows": normalized_windows}
 
 
-def _restore(state: PNAMeasurementSystem, composition: dict[str, Any]) -> None:
+def _restore(state: VNAMeasurementSystem, composition: dict[str, Any]) -> None:
     with state._lock:
         state.channels.clear()
         state.windows.clear()

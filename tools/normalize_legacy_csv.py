@@ -34,9 +34,6 @@ def normalize_rows(path: Path) -> list[list[str]]:
         elif tail:
             response = ",".join([response, *tail])
 
-        if equipment == "Virtual VNA-EXTENDED N5222B-EMU":
-            equipment = "Virtual VNA N5222B-EMU"
-
         normalized.append([equipment, port, command, response, validation])
 
     return normalized

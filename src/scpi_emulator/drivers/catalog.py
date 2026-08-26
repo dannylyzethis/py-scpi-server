@@ -29,6 +29,41 @@ class SupportLevel(str, Enum):
     IMPLEMENTED = "implemented"
 
 
+class ConfigurationFieldType(str, Enum):
+    """JSON value shape accepted by one catalog configuration field."""
+
+    STRING = "string"
+    STRING_LIST = "string-list"
+    INTEGER = "integer"
+    NUMBER = "number"
+
+
+@dataclass(frozen=True)
+class ConfigurationFieldDescriptor:
+    """Driver-owned metadata used by interactive and future graphical builders."""
+
+    name: str
+    value_type: ConfigurationFieldType
+    description: str
+    default: str | int | float | tuple[str, ...] | None = None
+    choices: tuple[str, ...] = ()
+    minimum: int | float | None = None
+    maximum: int | float | None = None
+
+    def __post_init__(self) -> None:
+        _require_identifier(self.name, "configuration field name")
+        _require_text(self.description, "configuration field description")
+        if not isinstance(self.value_type, ConfigurationFieldType):
+            raise CatalogError("configuration field value_type is invalid")
+        _require_unique(self.choices, f"configuration field {self.name!r} choices")
+        if (
+            self.minimum is not None
+            and self.maximum is not None
+            and self.minimum > self.maximum
+        ):
+            raise CatalogError(f"configuration field {self.name!r} range is inverted")
+
+
 @dataclass(frozen=True)
 class TransportDescriptor:
     """One resource/transport shape advertised by a driver."""
@@ -61,15 +96,15 @@ class ScenarioInputDescriptor:
 
 @dataclass(frozen=True)
 class ModelDescriptor:
-    """Immutable compatibility metadata for one instrument model."""
+    """Immutable catalog metadata for one instrument model."""
 
     model: str
     display_name: str
     instrument_class: str
     firmware_snapshots: tuple[str, ...]
-    hardware_configurations: tuple[str, ...] = ()
-    hardware_options: tuple[str, ...] = ()
-    application_options: tuple[str, ...] = ()
+    available_hardware_features: tuple[str, ...] = ()
+    available_applications: tuple[str, ...] = ()
+    configuration_fields: tuple[ConfigurationFieldDescriptor, ...] = ()
 
     def __post_init__(self) -> None:
         _require_identifier(self.model, "model")
@@ -78,9 +113,18 @@ class ModelDescriptor:
         if not self.firmware_snapshots:
             raise CatalogError(f"model {self.model!r} requires a firmware snapshot")
         _require_unique(self.firmware_snapshots, f"model {self.model!r} firmware snapshots")
-        _require_unique(self.hardware_configurations, f"model {self.model!r} configurations")
-        _require_unique(self.hardware_options, f"model {self.model!r} hardware options")
-        _require_unique(self.application_options, f"model {self.model!r} application options")
+        _require_unique(
+            self.available_hardware_features,
+            f"model {self.model!r} hardware features",
+        )
+        _require_unique(
+            self.available_applications,
+            f"model {self.model!r} applications",
+        )
+        _require_unique(
+            tuple(field.name for field in self.configuration_fields),
+            f"model {self.model!r} configuration fields",
+        )
 
 
 @dataclass(frozen=True)

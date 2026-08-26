@@ -61,6 +61,8 @@ def dmm_scenario():
 
 def test_remote_scenario_select_start_pause_step_reset_and_inspect() -> None:
     instrument, dashboard, client = controlled_dashboard()
+    socket_client = dashboard.socketio.test_client(dashboard.app)
+    socket_client.get_received()
     assert client.get("/api/session").get_json()["csrf_token"] == dashboard.csrf_token
     selected = client.put(
         "/api/scenario/dmm1",
@@ -93,6 +95,18 @@ def test_remote_scenario_select_start_pause_step_reset_and_inspect() -> None:
     status = client.get("/api/scenario/dmm1").get_json()["scenario"]
     assert status["scenario"] == "remote-dut-cycle"
     assert status["streams"][0]["index"] == 1
+    state_events = [
+        event["args"][0]
+        for event in socket_client.get_received()
+        if event["name"] == "state_changed"
+    ]
+    assert {event["reason"] for event in state_events} >= {
+        "scenario-selected",
+        "scenario-start",
+        "scenario-pause",
+        "scenario-reset",
+        "scenario-step",
+    }
 
 
 def test_fault_injection_uses_the_scpi_error_and_status_system() -> None:

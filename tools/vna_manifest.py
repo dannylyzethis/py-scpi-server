@@ -22,7 +22,7 @@ def implementation_keys(instrument: SCPIInstrument) -> frozenset[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path)
-    parser.add_argument("--model", choices=("N5222B-EMU", "N5242B-EMU"), default="N5222B-EMU")
+    parser.add_argument("--model", choices=("VNA-2PORT-EMU", "VNA-4PORT-EMU"), default="VNA-2PORT-EMU")
     parser.add_argument("--firmware", default="E.1.0")
     parser.add_argument("--output", type=Path)
     parser.add_argument(

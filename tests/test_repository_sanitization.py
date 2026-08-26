@@ -23,7 +23,11 @@ TEXT_SUFFIXES = {".csv", ".json", ".jsonl", ".md", ".py", ".toml", ".txt", ".yam
 def _repository_files() -> list[Path]:
     files: list[Path] = []
     for root, directories, filenames in os.walk(REPOSITORY_ROOT):
-        directories[:] = [name for name in directories if name not in SKIPPED_PARTS]
+        directories[:] = [
+            name
+            for name in directories
+            if name not in SKIPPED_PARTS and not name.endswith(".egg-info")
+        ]
         files.extend(
             Path(root) / filename
             for filename in filenames
@@ -109,12 +113,31 @@ def test_public_model_labels_use_emulator_suffix() -> None:
 
 
 def test_public_vna_profile_uses_project_owned_identity() -> None:
-    profile_path = REPOSITORY_ROOT / "src/scpi_emulator/profiles/pna_compatibility.v1.json"
+    profile_path = REPOSITORY_ROOT / "src/scpi_emulator/profiles/vna_capabilities.v1.json"
     text = profile_path.read_text(encoding="utf-8")
     assert '"reference_firmware": "E.1.0"' in text
-    assert '"firmware_pattern": "^E\\\\.1\\\\.0$"' in text
-    assert '"instrument_class": "VNA"' in text
-    assert '"instrument_class": "VNA-EXTENDED"' in text
-    legacy_class = "PN" + "A"
-    assert '"instrument_class": "' + legacy_class + '"' not in text
-    assert '"instrument_class": "' + legacy_class + '-X"' not in text
+    assert '"VNA-2PORT-EMU"' in text
+    assert '"VNA-4PORT-EMU"' in text
+    assert '"hardware_features"' in text
+    assert '"applications"' in text
+
+
+def test_tracked_text_has_no_legacy_vna_identity_or_coded_options() -> None:
+    prohibited = re.compile(
+        "|".join(
+            (
+                re.escape("N5222" + "B"),
+                re.escape("N5242" + "B"),
+                r"\b" + re.escape("PN" + "A") + r"(?:-X)?\b",
+                r"\b" + "E" + r"93\d+[AB]\b",
+            )
+        ),
+        re.IGNORECASE,
+    )
+    found: list[str] = []
+    for path in _repository_files():
+        if path.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        if prohibited.search(path.read_text(encoding="utf-8", errors="replace")):
+            found.append(str(path.relative_to(REPOSITORY_ROOT)))
+    assert found == []

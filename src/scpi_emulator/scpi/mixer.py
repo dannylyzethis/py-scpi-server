@@ -6,7 +6,7 @@ import cmath
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from .measurements import PNAMeasurementSystem
+from .measurements import VNAMeasurementSystem
 from .parser import NumericValue
 from .registry import (
     CommandRegistry,
@@ -54,12 +54,12 @@ class MixerChannel:
     embedded_lo_span: float = 1e6
 
 
-class PNAMixerSystem:
+class VNAMixerSystem:
     """Translate generic traces through deterministic converter configuration."""
 
     def __init__(
         self,
-        measurements: PNAMeasurementSystem,
+        measurements: VNAMeasurementSystem,
         frequency_minimum: float,
         frequency_maximum: float,
         source_count: int,
@@ -192,7 +192,7 @@ class PNAMixerSystem:
             raise SCPICommandError(-222, "Data out of range; source number")
 
 
-def register_mixer_commands(registry: CommandRegistry, state: PNAMixerSystem) -> None:
+def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) -> None:
     """Register profile-gated FOM, mixer, segment, and embedded-LO commands."""
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     fom = (sense, HeaderNode("FOM"))

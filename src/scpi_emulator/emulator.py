@@ -31,18 +31,18 @@ from .scpi import (
     SCPICommandError,
     SCPIParseError,
     StatusSystem,
-    PNACapabilities,
-    PNAActiveDeviceSystem,
-    PNAAdvancedSystem,
-    PNAMeasurementSystem,
-    PNAMixerSystem,
-    PNADataSystem,
-    PNAPulseSystem,
-    PNASweepSystem,
-    PNAStateFileStore,
-    PNATimeDomainSystem,
+    VNACapabilities,
+    VNAActiveDeviceSystem,
+    VNAAdvancedSystem,
+    VNAMeasurementSystem,
+    VNAMixerSystem,
+    VNADataSystem,
+    VNAPulseSystem,
+    VNASweepSystem,
+    VNAStateFileStore,
+    VNATimeDomainSystem,
     ScalarScenarioSystem,
-    detect_pna_model,
+    detect_vna_model,
     parse_program_message,
     register_operation_commands,
     register_active_device_commands,
@@ -54,7 +54,7 @@ from .scpi import (
     register_status_commands,
     register_measurement_commands,
     register_mixer_commands,
-    register_pna_data_commands,
+    register_vna_data_commands,
     register_pulse_commands,
     register_sweep_commands,
     register_scalar_commands,
@@ -270,7 +270,7 @@ class SCPIInstrument:
         name,
         instrument_id,
         *,
-        pna_capabilities=None,
+        vna_capabilities=None,
         state_directory=None,
         serial_number=None,
     ):
@@ -284,32 +284,32 @@ class SCPIInstrument:
         self.data_format = DataFormat()
         self.output_queue = OutputQueue(self.status)
         self.scenario_control = ScenarioController(self)
-        model = detect_pna_model(str(name), str(instrument_id))
-        self.pna_capabilities = pna_capabilities
-        self.pna_measurements = None
-        self.pna_sweeps = None
-        self.pna_data = None
-        self.pna_pulse = None
-        self.pna_active_device = None
-        self.pna_advanced = None
-        self.pna_state_files = None
-        self.pna_time_domain = None
-        self.pna_mixer = None
+        model = detect_vna_model(str(name), str(instrument_id))
+        self.vna_capabilities = vna_capabilities
+        self.vna_measurements = None
+        self.vna_sweeps = None
+        self.vna_data = None
+        self.vna_pulse = None
+        self.vna_active_device = None
+        self.vna_advanced = None
+        self.vna_state_files = None
+        self.vna_time_domain = None
+        self.vna_mixer = None
         self.scalar_data = None
         self.power_supply = None
-        if self.pna_capabilities is None and model is not None:
-            self.pna_capabilities = PNACapabilities.create(
+        if self.vna_capabilities is None and model is not None:
+            self.vna_capabilities = VNACapabilities.create(
                 model,
             )
         registry_capabilities = (
-            self.pna_capabilities.command_capabilities
-            if self.pna_capabilities is not None
+            self.vna_capabilities.command_capabilities
+            if self.vna_capabilities is not None
             else ()
         )
         self.core_registry = CommandRegistry(registry_capabilities)
         self.identification = (
-            self.pna_capabilities.identification
-            if self.pna_capabilities is not None
+            self.vna_capabilities.identification
+            if self.vna_capabilities is not None
             else f"SCPI_Emulator,{self.name},{serial_number or self.id},{EMULATOR_FIRMWARE}"
         )
         register_common_commands(self.core_registry, lambda: self.identification, self._reset)
@@ -317,53 +317,54 @@ class SCPIInstrument:
         register_operation_commands(self.core_registry, self.operation_manager)
         register_acquisition_commands(self.core_registry, self.acquisition)
         register_format_commands(self.core_registry, self.data_format)
-        if self.pna_capabilities is not None:
-            register_capability_commands(self.core_registry, self.pna_capabilities)
-            self.pna_measurements = PNAMeasurementSystem()
-            register_measurement_commands(self.core_registry, self.pna_measurements)
-            self.pna_sweeps = PNASweepSystem(
-                self.pna_capabilities, self.pna_measurements, self.acquisition
+        if self.vna_capabilities is not None:
+            register_capability_commands(self.core_registry, self.vna_capabilities)
+            self.vna_measurements = VNAMeasurementSystem()
+            register_measurement_commands(self.core_registry, self.vna_measurements)
+            self.vna_sweeps = VNASweepSystem(
+                self.vna_capabilities, self.vna_measurements, self.acquisition
             )
-            register_sweep_commands(self.core_registry, self.pna_sweeps)
-            self.pna_data = PNADataSystem(
-                self.pna_measurements, self.data_format, self.pna_capabilities.ports
+            register_sweep_commands(self.core_registry, self.vna_sweeps)
+            self.vna_data = VNADataSystem(
+                self.vna_measurements, self.data_format, self.vna_capabilities.ports
             )
-            register_pna_data_commands(self.core_registry, self.pna_data)
-            self.pna_mixer = PNAMixerSystem(
-                self.pna_measurements,
-                float(self.pna_capabilities.frequency_minimum),
-                float(self.pna_capabilities.frequency_maximum),
-                self.pna_capabilities.sources,
+            register_vna_data_commands(self.core_registry, self.vna_data)
+            self.vna_mixer = VNAMixerSystem(
+                self.vna_measurements,
+                float(self.vna_capabilities.frequency_minimum),
+                float(self.vna_capabilities.frequency_maximum),
+                self.vna_capabilities.source_count,
             )
-            self.pna_data.add_application(self.pna_mixer)
-            register_mixer_commands(self.core_registry, self.pna_mixer)
-            self.pna_active_device = PNAActiveDeviceSystem(
-                self.pna_measurements, self.data_format
+            self.vna_data.add_application(self.vna_mixer)
+            register_mixer_commands(self.core_registry, self.vna_mixer)
+            self.vna_active_device = VNAActiveDeviceSystem(
+                self.vna_measurements, self.data_format
             )
-            self.pna_data.add_application(self.pna_active_device)
-            register_active_device_commands(self.core_registry, self.pna_active_device)
-            self.pna_pulse = PNAPulseSystem(self.pna_measurements)
-            self.pna_data.add_application(self.pna_pulse)
-            register_pulse_commands(self.core_registry, self.pna_pulse)
-            self.pna_advanced = PNAAdvancedSystem(self.pna_measurements, self.data_format)
-            self.pna_data.add_application(self.pna_advanced)
-            register_advanced_commands(self.core_registry, self.pna_advanced)
-            self.pna_time_domain = PNATimeDomainSystem(
-                self.pna_measurements, self.pna_capabilities.ports
+            self.vna_data.add_application(self.vna_active_device)
+            register_active_device_commands(self.core_registry, self.vna_active_device)
+            self.vna_pulse = VNAPulseSystem(self.vna_measurements)
+            self.vna_data.add_application(self.vna_pulse)
+            register_pulse_commands(self.core_registry, self.vna_pulse)
+            self.vna_advanced = VNAAdvancedSystem(self.vna_measurements, self.data_format)
+            self.vna_data.add_application(self.vna_advanced)
+            register_advanced_commands(self.core_registry, self.vna_advanced)
+            self.vna_time_domain = VNATimeDomainSystem(
+                self.vna_measurements, self.vna_capabilities.ports
             )
-            self.pna_data.add_application(self.pna_time_domain)
-            register_time_domain_commands(self.core_registry, self.pna_time_domain)
-            self.pna_state_files = PNAStateFileStore(
-                self.pna_measurements, str(instrument_id), state_directory
+            self.vna_data.add_application(self.vna_time_domain)
+            register_time_domain_commands(self.core_registry, self.vna_time_domain)
+            self.vna_state_files = VNAStateFileStore(
+                self.vna_measurements, str(instrument_id), state_directory
             )
-            register_state_file_commands(self.core_registry, self.pna_state_files)
-            self.acquisition.add_trigger_listener(self.pna_data.notify_trigger)
-            self.acquisition.add_completion_listener(self.pna_data.notify_complete)
+            register_state_file_commands(self.core_registry, self.vna_state_files)
+            self.acquisition.add_trigger_listener(self.vna_data.notify_trigger)
+            self.acquisition.add_completion_listener(self.vna_data.notify_complete)
         elif _is_dmm(name, instrument_id):
             self.scalar_data = ScalarScenarioSystem(self.operation_manager)
             register_scalar_commands(self.core_registry, self.scalar_data)
         self.last_command = ""
         self.command_count = 0
+        self._command_observers = []
 
     def set_serial_number(self, serial_number):
         """Override the third field of the instrument's four-field identity response."""
@@ -392,22 +393,22 @@ class SCPIInstrument:
         self.operation_manager.abort()
         self.csv_compatibility.reset()
         self.data_format.reset()
-        if self.pna_measurements is not None:
-            self.pna_measurements.reset()
-        if self.pna_sweeps is not None:
-            self.pna_sweeps.reset()
-        if self.pna_data is not None:
-            self.pna_data.reset()
-        if self.pna_active_device is not None:
-            self.pna_active_device.reset()
-        if self.pna_pulse is not None:
-            self.pna_pulse.reset()
-        if self.pna_advanced is not None:
-            self.pna_advanced.reset()
-        if self.pna_time_domain is not None:
-            self.pna_time_domain.reset()
-        if self.pna_mixer is not None:
-            self.pna_mixer.reset()
+        if self.vna_measurements is not None:
+            self.vna_measurements.reset()
+        if self.vna_sweeps is not None:
+            self.vna_sweeps.reset()
+        if self.vna_data is not None:
+            self.vna_data.reset()
+        if self.vna_active_device is not None:
+            self.vna_active_device.reset()
+        if self.vna_pulse is not None:
+            self.vna_pulse.reset()
+        if self.vna_advanced is not None:
+            self.vna_advanced.reset()
+        if self.vna_time_domain is not None:
+            self.vna_time_domain.reset()
+        if self.vna_mixer is not None:
+            self.vna_mixer.reset()
         if self.scalar_data is not None:
             self.scalar_data.reset()
         if self.power_supply is not None:
@@ -429,8 +430,8 @@ class SCPIInstrument:
         from .scenario import ScenarioPlayer
 
         player = scenario if isinstance(scenario, ScenarioPlayer) else ScenarioPlayer(scenario)
-        if self.pna_data is not None:
-            self.pna_data.attach(player)
+        if self.vna_data is not None:
+            self.vna_data.attach(player)
         if self.scalar_data is not None:
             self.scalar_data.attach(player)
         if self.csv_compatibility is not None:
@@ -441,19 +442,16 @@ class SCPIInstrument:
     def inspect_state(self):
         """Return a non-destructive snapshot of instrument-owned runtime state."""
         capabilities = None
-        if self.pna_capabilities is not None:
-            profile = self.pna_capabilities
+        if self.vna_capabilities is not None:
+            profile = self.vna_capabilities
             capabilities = {
                 'model': profile.model,
                 'instrument_class': profile.instrument_class,
                 'firmware': profile.firmware,
-                'mode': profile.mode.value,
-                'hardware_configuration': profile.hardware_configuration,
-                'hardware_addons': list(profile.hardware_addons),
-                'application_options': list(profile.application_options),
                 'ports': profile.ports,
-                'sources': profile.sources,
-                'features': sorted(profile.features),
+                'source_count': profile.source_count,
+                'hardware_features': sorted(profile.hardware_features),
+                'applications': list(profile.applications),
                 'frequency_minimum': profile.frequency_minimum,
                 'frequency_maximum': profile.frequency_maximum,
             }
@@ -463,7 +461,7 @@ class SCPIInstrument:
             'acquisition': self.acquisition.inspect(),
             'scenario': self.scenario_control.inspect(),
             'measurements': (
-                self.pna_measurements.inspect() if self.pna_measurements is not None else None
+                self.vna_measurements.inspect() if self.vna_measurements is not None else None
             ),
             'scalar': self.scalar_data.inspect() if self.scalar_data is not None else None,
             'power_supply': (
@@ -479,6 +477,11 @@ class SCPIInstrument:
     def add_binary_query(self, command, data, *, definite=True):
         """Add a byte-preserving binary query response to the active instrument."""
         self.csv_compatibility.add_binary_query(command, data, definite=definite)
+
+    def add_command_observer(self, observer):
+        """Observe completed commands without coupling transports to a dashboard."""
+        if observer not in self._command_observers:
+            self._command_observers.append(observer)
 
     def queue_command_response(self, command, *, termination=b'\n'):
         """Execute a program message and leave any response in the output queue."""
@@ -518,10 +521,22 @@ class SCPIInstrument:
             command.decode('utf-8', errors='replace') if isinstance(command, bytes) else command
         )
         self.command_count += 1
-        
+
         command = command.strip()
         if not command:
             return ''
+
+        response = self._process_program_message(command)
+        error = self.error_queue.last_response() if self.error_queue else None
+        for observer in tuple(self._command_observers):
+            try:
+                observer(self, self.last_command, response, error)
+            except Exception:
+                logger.exception("Instrument command observer failed")
+        return response
+
+    def _process_program_message(self, command):
+        """Dispatch one complete byte or text program message."""
 
         # Byte input remains binary-safe for typed commands. The CSV adapter is
         # intentionally text-only and rejects undecodable input.
@@ -605,6 +620,7 @@ class SCPIServer:
             self.thread.start()
             
             logger.info(f"Started SCPI server for '{self.instrument.name}' on {self.host}:{self.port}")
+            self._notify_dashboard_state('server-started')
             return True
             
         except Exception as e:
@@ -644,6 +660,7 @@ class SCPIServer:
             self.thread.join(timeout=1)
 
         logger.info(f"Stopped SCPI server for '{self.instrument.name}'")
+        self._notify_dashboard_state('server-stopped')
 
     def _server_loop(self):
         """Main server loop"""
@@ -686,11 +703,13 @@ class SCPIServer:
             except OSError:
                 pass
             self._session_lock.release()
+            self._notify_dashboard_state('client-disconnected')
 
     def _handle_client(self, client_socket, address):
         """Receive and execute framed messages for the active session."""
         with self._clients_lock:
             self.clients.append(client_socket)
+        self._notify_dashboard_state('client-connected')
 
         try:
             self.instrument.visa_device_clear()
@@ -738,39 +757,20 @@ class SCPIServer:
             logger.error("Client %s error: %s", address, exc)
 
     def _execute_message(self, client_socket, message):
-        response = self.instrument.queue_command_response(
+        self.instrument.queue_command_response(
             message,
             termination=self.transport_config.write_termination,
         )
-        command_text = message.decode('utf-8', errors='replace')
-        if len(command_text) > 512:
-            command_text = f"{command_text[:509]}..."
-        error = None
-        if self.instrument.error_queue:
-            error = self.instrument.error_queue.last_response()
-
-        command_logger.log_command(
-            self.instrument.name,
-            command_text,
-            response or '(no response)',
-            error,
-        )
-
-        if HAS_FLASK and getattr(self.manager, 'web_dashboard', None):
-            timestamp = time.time()
-            self.manager.web_dashboard.socketio.emit('command_update', {
-                'timestamp': timestamp,
-                'time_str': datetime.fromtimestamp(timestamp).strftime('%H:%M:%S'),
-                'instrument': self.instrument.name,
-                'command': command_text,
-                'response': response or '(no response)',
-                'error': error,
-            })
 
         if self.instrument.output_queue:
             client_socket.settimeout(self.transport_config.send_timeout)
             client_socket.sendall(self.instrument.read_output())
             client_socket.settimeout(min(0.1, self.transport_config.accept_poll_interval))
+
+    def _notify_dashboard_state(self, reason):
+        dashboard = getattr(self.manager, 'web_dashboard', None)
+        if HAS_FLASK and dashboard is not None:
+            dashboard.emit_state_changed(reason)
 
     def execute_control_command(self, command):
         """Serialize dashboard execution with the physical-style TCP session."""
@@ -786,6 +786,14 @@ class SCPIServer:
             return action(self.instrument)
         finally:
             self._session_lock.release()
+
+def _dashboard_display_response(response):
+    if response in (None, ''):
+        return '(no response)'
+    if isinstance(response, (bytes, bytearray, memoryview)):
+        return f"<{len(response)} binary bytes>"
+    return str(response)
+
 
 class WebDashboard:
     """Flask-based web dashboard for SCPI emulator"""
@@ -809,6 +817,8 @@ class WebDashboard:
         self.app.config['SECRET_KEY'] = secrets.token_hex(32)
         self.app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
         self.socketio = SocketIO(self.app)
+        self._observed_instruments = set()
+        self._attach_instrument_observers()
         
         self._setup_routes()
         self._setup_socketio()
@@ -854,36 +864,7 @@ class WebDashboard:
         @self.app.route('/api/status')
         def api_status():
             """Get system status"""
-            instruments = []
-            for inst_id, inst_data in self.manager.instruments.items():
-                instrument = inst_data['instrument']
-                port = inst_data['port']
-                server = self.manager.servers.get(inst_id)
-                
-                instruments.append({
-                    'id': inst_id,
-                    'name': instrument.name,
-                    'port': port,
-                    'running': server is not None and server.running,
-                    'clients': len(getattr(server, 'clients', ())) if server else 0,
-                    'commands': instrument.command_count,
-                    'errors': len(instrument.error_queue),
-                    'state': dict(instrument.state),
-                    'snapshot': instrument.inspect_state(),
-                })
-            
-            return jsonify({
-                'instruments': instruments,
-                'stats': command_logger.get_stats(),
-                'system': {
-                    'total_instruments': len(self.manager.instruments),
-                    'running_servers': sum(
-                        bool(getattr(server, 'running', False))
-                        for server in self.manager.servers.values()
-                    ),
-                    'timestamp': time.time()
-                }
-            })
+            return jsonify(self.status_payload())
 
         @self.app.route('/api/session')
         def api_session():
@@ -941,6 +922,7 @@ class WebDashboard:
                 return jsonify({'status': 'error', 'message': str(exc)}), 409
             except (ScenarioError, ValueError, TypeError) as exc:
                 return jsonify({'status': 'error', 'message': str(exc)}), 400
+            self.emit_state_changed('scenario-selected', instrument_id)
             return jsonify({'status': 'success', 'scenario': selected})
 
         @self.app.route('/api/scenario/<instrument_id>/<action>', methods=['POST'])
@@ -985,6 +967,7 @@ class WebDashboard:
                 return jsonify({'status': 'error', 'message': str(exc)}), 409
             except (ScenarioError, ValueError, TypeError) as exc:
                 return jsonify({'status': 'error', 'message': str(exc)}), 400
+            self.emit_state_changed(f'scenario-{action}', instrument_id)
             return jsonify({'status': 'success', 'scenario': result})
         
         @self.app.route('/api/restart/<instrument_id>', methods=['POST'])
@@ -998,6 +981,7 @@ class WebDashboard:
                         restarted = server.start()
 
                     if restarted:
+                        self.emit_state_changed('server-restarted', instrument_id)
                         return jsonify({'status': 'success', 'message': f'Restarted {instrument_id}'})
                     else:
                         return jsonify({'status': 'error', 'message': f'Failed to restart {instrument_id}'}), 500
@@ -1013,6 +997,7 @@ class WebDashboard:
             try:
                 with self._mutation_lock:
                     self.manager.stop_all_servers()
+                self.emit_state_changed('servers-stopped')
                 return jsonify({'status': 'success', 'message': 'All servers stopped'})
             except Exception as e:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -1024,6 +1009,7 @@ class WebDashboard:
                 with self._mutation_lock:
                     started = self.manager.start_all_servers()
                 if started:
+                    self.emit_state_changed('servers-started')
                     return jsonify({'status': 'success', 'message': 'All servers started'})
                 else:
                     return jsonify({'status': 'error', 'message': 'Failed to start some servers'}), 500
@@ -1052,7 +1038,6 @@ class WebDashboard:
                 except RuntimeError as exc:
                     return jsonify({'status': 'error', 'message': str(exc)}), 409
                 error = server.instrument.error_queue.last_response()
-                self.manager.web_dashboard.emit_command_update(server.instrument.name, command, response or '(no response)', error)
                 return jsonify({'status': 'success', 'message': 'Command sent', 'response': response, 'error': error})
             except Exception as e:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -1074,17 +1059,87 @@ class WebDashboard:
         def handle_disconnect():
             logger.info("Web client disconnected")
     
+    def _attach_instrument_observers(self):
+        for entry in self.manager.instruments.values():
+            instrument = entry['instrument']
+            marker = id(instrument)
+            if marker not in self._observed_instruments:
+                instrument.add_command_observer(self._handle_instrument_command)
+                instrument.acquisition.add_trigger_listener(
+                    lambda channel, instrument_id=instrument.id: self.emit_state_changed(
+                        'acquisition-triggered', instrument_id
+                    )
+                )
+                instrument.acquisition.add_completion_listener(
+                    lambda channel, instrument_id=instrument.id: self.emit_state_changed(
+                        'acquisition-complete', instrument_id
+                    )
+                )
+                self._observed_instruments.add(marker)
+
+    def _handle_instrument_command(self, instrument, command, response, error):
+        display_response = _dashboard_display_response(response)
+        command_logger.log_command(
+            instrument.name,
+            command,
+            display_response,
+            error,
+        )
+        self.emit_command_update(instrument.name, command, display_response, error)
+
+    def status_payload(self):
+        """Build one authoritative non-destructive dashboard snapshot."""
+        self._attach_instrument_observers()
+        instruments = []
+        for inst_id, inst_data in self.manager.instruments.items():
+            instrument = inst_data['instrument']
+            port = inst_data['port']
+            server = self.manager.servers.get(inst_id)
+            instruments.append({
+                'id': inst_id,
+                'name': instrument.name,
+                'port': port,
+                'running': server is not None and server.running,
+                'clients': len(getattr(server, 'clients', ())) if server else 0,
+                'commands': instrument.command_count,
+                'errors': len(instrument.error_queue),
+                'state': dict(instrument.state),
+                'snapshot': instrument.inspect_state(),
+            })
+        return {
+            'instruments': instruments,
+            'stats': command_logger.get_stats(),
+            'system': {
+                'total_instruments': len(self.manager.instruments),
+                'running_servers': sum(
+                    bool(getattr(server, 'running', False))
+                    for server in self.manager.servers.values()
+                ),
+                'timestamp': time.time(),
+            },
+        }
+
+    def emit_state_changed(self, reason, instrument_id=None):
+        """Tell clients to coalesce and fetch a fresh authoritative snapshot."""
+        self.socketio.emit('state_changed', {
+            'reason': reason,
+            'instrument_id': instrument_id,
+            'timestamp': time.time(),
+        })
+
     def emit_command_update(self, instrument_name, command, response, error=None):
         """Emit real-time command update to web clients"""
         if hasattr(self, 'socketio'):
+            timestamp = time.time()
             self.socketio.emit('command_update', {
-                'timestamp': time.time(),
+                'timestamp': timestamp,
+                'time_str': datetime.fromtimestamp(timestamp).strftime('%H:%M:%S'),
                 'instrument': instrument_name,
                 'command': command,
                 'response': response,
                 'error': error
             })
-    
+            self.emit_state_changed('command')
     def start(self):
         """Start the web dashboard"""
         if not HAS_FLASK:
@@ -1238,7 +1293,7 @@ def load_compatibility_instruments(file_path, port_start=5025, *, reserved_ports
                     f"row {row_num}: validation requires a parameterized command"
                 )
             validate_compatibility_rule(validation, row_num)
-            if command_key == "*IDN?" and current_instrument.pna_capabilities is None:
+            if command_key == "*IDN?" and current_instrument.vna_capabilities is None:
                 current_instrument.identification = response
             if command_key not in {"*IDN?", "*RST", "*TST?", "SYST:VERS?"}:
                 current_instrument.csv_compatibility.add_command(command, response, validation)
@@ -1326,6 +1381,9 @@ class SCPIEmulatorManager:
         self.servers = {}
         self.running = False
         self.web_dashboard = None
+        self._bench_runtime = None
+        self._active_source = None
+        self._interactive_catalog = None
         
         # Register signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -1334,7 +1392,7 @@ class SCPIEmulatorManager:
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals"""
         logger.info("Received shutdown signal, stopping servers...")
-        self.stop_all_servers()
+        self.stop_active_servers()
         sys.exit(0)
 
     @staticmethod
@@ -1347,9 +1405,14 @@ class SCPIEmulatorManager:
 
     def load_from_file(self, file_path, port_start=5025):
         """Load instrument definitions from Excel or CSV file"""
+        if self.active_running:
+            logger.error("Stop the active instruments before loading another configuration")
+            return False
         try:
             loaded_instruments, commands_added = load_compatibility_path(file_path, port_start)
             self.instruments = loaded_instruments
+            self._bench_runtime = None
+            self._active_source = str(Path(file_path).resolve())
             logger.info(
                 f"Successfully loaded {len(loaded_instruments)} instruments with "
                 f"{commands_added} commands"
@@ -1361,6 +1424,95 @@ class SCPIEmulatorManager:
         except Exception as e:
             logger.exception(f"Error loading file: {e}")
             return False
+
+    def load_bench_file(self, file_path):
+        """Compose a precise bench transactionally and make it the interactive runtime."""
+        from .bench import BenchComposer, BenchRuntime, load_bench
+        from .drivers import build_driver_catalog
+
+        if self.active_running:
+            raise ConfigurationError(
+                "stop the active instruments before loading another configuration"
+            )
+        path = Path(file_path).resolve()
+        definition = load_bench(path)
+        uses_csv = any(
+            item.driver.casefold() == 'csv-instruments'
+            for item in definition.instruments
+        )
+        catalog = build_driver_catalog(csv_directory=path.parent if uses_csv else None)
+        runtime = BenchRuntime(BenchComposer(catalog).compose(definition))
+        self._bench_runtime = runtime
+        self._active_source = str(path)
+        return runtime
+
+    def use_bench_runtime(self, runtime, source=None):
+        """Adopt an already composed runtime, such as one created by the CLI."""
+        self._bench_runtime = runtime
+        self._active_source = str(Path(source).resolve()) if source is not None else None
+
+    @property
+    def active_runtime(self):
+        return self._bench_runtime or self
+
+    @property
+    def active_running(self):
+        return self._bench_runtime.running if self._bench_runtime is not None else self.running
+
+    @property
+    def active_instruments(self):
+        return (
+            self._bench_runtime.instruments
+            if self._bench_runtime is not None
+            else self.instruments
+        )
+
+    def start_active_servers(self):
+        if self._bench_runtime is not None:
+            self._bench_runtime.start()
+            return True
+        return self.start_all_servers()
+
+    def stop_active_servers(self):
+        if self._bench_runtime is not None:
+            self._bench_runtime.stop()
+        else:
+            self.stop_all_servers()
+
+    def start_active_dashboard(self, host='127.0.0.1', port=8081, *, auth_token=None):
+        return self.active_runtime.start_web_dashboard(
+            host, port, auth_token=auth_token
+        )
+
+    def configured_instruments(self):
+        """Return UI-neutral rows for every active configured instrument."""
+        rows = []
+        if self._bench_runtime is not None:
+            for composed in self._bench_runtime.bench.instruments:
+                definition = composed.definition
+                server = self._bench_runtime.servers.get(definition.id)
+                rows.append(
+                    _interactive_instrument_row(
+                        definition.id,
+                        composed.instrument,
+                        composed.resource_name(),
+                        bool(getattr(server, 'running', False)),
+                        model=definition.model,
+                        serial=definition.serial_number,
+                    )
+                )
+            return tuple(rows)
+        for instrument_id, item in self.instruments.items():
+            server = self.servers.get(instrument_id)
+            rows.append(
+                _interactive_instrument_row(
+                    instrument_id,
+                    item['instrument'],
+                    f"TCPIP::127.0.0.1::{item['port']}::SOCKET",
+                    bool(getattr(server, 'running', False)),
+                )
+            )
+        return tuple(rows)
 
     def start_all_servers(self, host='localhost'):
         """Start TCP servers for all instruments"""
@@ -1410,11 +1562,18 @@ class SCPIEmulatorManager:
         print(f"\n SCPI Emulator Manager {__version__} - Interactive Mode")
         print("=" * 60)
         print("Commands:")
-        print("  load <file>       - Load instruments from Excel/CSV")
-        print("  start             - Start all servers")
-        print("  web               - Start web dashboard")
-        print("  status            - Show server status")
-        print("  stop              - Stop all servers")
+        print("  load <path>       - Load a CSV/XLSX file or CSV folder")
+        print("  load bench <file> - Load a precise bench JSON file")
+        print("  bench <file>      - Alias for 'load bench <file>'")
+        print("  instruments       - List configured instruments and VISA resources")
+        print("  catalog [driver [model]] - Browse available drivers and models")
+        print("  catalog csv <folder>     - Include CSV-defined models")
+        print("  create bench <file>      - Guided create, validate, save, and load")
+        print("  start             - Start the active instruments")
+        print("  web               - Start dashboard for the active instruments")
+        print("  status            - Show active configuration and server status")
+        print("  stop              - Stop the active instruments")
+        print("  help              - Show these commands")
         print("  quit              - Exit")
         print("=" * 60)
         
@@ -1425,69 +1584,240 @@ class SCPIEmulatorManager:
                 if not user_input:
                     continue
                 
-                parts = user_input.split()
+                parts = user_input.split(maxsplit=1)
                 command = parts[0].lower()
                 
                 if command == 'quit':
-                    if self.running:
-                        self.stop_all_servers()
+                    if self.active_running:
+                        self.stop_active_servers()
                     break
                 
                 elif command == 'load':
                     if len(parts) < 2:
-                        print("Usage: load <file>")
+                        print("Usage: load <path> or load bench <file>")
                         continue
-                    
-                    file_path = ' '.join(parts[1:])
-                    if self.load_from_file(file_path):
-                        print("✅ File loaded successfully!")
+                    argument = parts[1].strip()
+                    if argument.casefold().startswith('bench '):
+                        file_path = _interactive_path(argument[6:])
+                        try:
+                            self.load_bench_file(file_path)
+                            print(f"[OK] Bench loaded: {file_path}")
+                            self._print_configured_instruments()
+                        except Exception as error:
+                            print(f"[ERROR] Could not load bench {file_path!r}: {error}")
                     else:
-                        print("❌ Failed to load file")
+                        file_path = _interactive_path(argument)
+                        if self.load_from_file(file_path):
+                            print(f"[OK] Instruments loaded: {file_path}")
+                            self._print_configured_instruments()
+                        else:
+                            print(f"[ERROR] Could not load instruments from {file_path!r}")
+
+                elif command == 'bench':
+                    if len(parts) < 2:
+                        print("Usage: bench <file>")
+                        continue
+                    file_path = _interactive_path(parts[1])
+                    try:
+                        self.load_bench_file(file_path)
+                        print(f"[OK] Bench loaded: {file_path}")
+                        self._print_configured_instruments()
+                    except Exception as error:
+                        print(f"[ERROR] Could not load bench {file_path!r}: {error}")
+
+                elif command == 'instruments':
+                    self._print_configured_instruments()
+
+                elif command == 'catalog':
+                    self._print_catalog(parts[1] if len(parts) > 1 else "")
+
+                elif command == 'create':
+                    if len(parts) < 2 or not parts[1].casefold().startswith('bench '):
+                        print("Usage: create bench <file>")
+                        continue
+                    target = Path(_interactive_path(parts[1][6:])).resolve()
+                    try:
+                        from .bench import BenchBuildCancelled, BenchRuntime, GuidedBenchBuilder
+                        from .drivers import build_driver_catalog
+
+                        csv_directory = (
+                            target.parent
+                            if target.parent.is_dir() and any(target.parent.glob('*.csv'))
+                            else None
+                        )
+                        catalog = build_driver_catalog(csv_directory=csv_directory)
+                        composed = GuidedBenchBuilder(catalog).build_and_save(target)
+                        self.use_bench_runtime(BenchRuntime(composed), target)
+                        self._interactive_catalog = catalog
+                        print(f"[OK] Bench saved and loaded: {target}")
+                        self._print_configured_instruments()
+                    except BenchBuildCancelled as error:
+                        print(f"Bench creation cancelled: {error}")
+                    except Exception as error:
+                        print(f"[ERROR] Could not create bench {str(target)!r}: {error}")
                 
                 elif command == 'start':
-                    if not self.instruments:
-                        print("❌ No instruments loaded. Use 'load <file>' first.")
+                    if not self.active_instruments:
+                        print("[ERROR] No instruments loaded. Use 'load' or 'load bench' first.")
                         continue
-                    
-                    if self.start_all_servers():
-                        print("✅ All servers started!")
+                    try:
+                        started = self.start_active_servers()
+                    except Exception as error:
+                        print(f"[ERROR] Failed to start instruments: {error}")
+                        continue
+                    if not started:
+                        print("[ERROR] Failed to start servers")
                     else:
-                        print("❌ Failed to start servers")
+                        print("[OK] Active instruments started")
+                        self._print_configured_instruments()
                 
                 elif command == 'web':
-                    if self.start_web_dashboard():
-                        print("✅ Web dashboard started at http://localhost:8081")
+                    try:
+                        started = self.start_active_dashboard()
+                    except Exception as error:
+                        print(f"[ERROR] Failed to start web dashboard: {error}")
+                        continue
+                    if not started:
+                        print("[ERROR] Failed to start web dashboard")
                     else:
-                        print("❌ Failed to start web dashboard")
+                        print("[OK] Web dashboard started at http://127.0.0.1:8081")
                 
                 elif command == 'status':
-                    if self.running:
-                        print(f"✅ Running {len(self.servers)} servers:")
-                        for inst_id, server in self.servers.items():
-                            print(f"   {server.instrument.name}: {server.host}:{server.port}")
-                        
-                        if self.web_dashboard:
-                            print("   Web dashboard: http://localhost:8081")
-                    else:
-                        print("❌ No servers running")
+                    source = self._active_source or "none"
+                    state = "running" if self.active_running else "stopped"
+                    print(f"Active configuration: {source}")
+                    print(f"Server state: {state}")
+                    self._print_configured_instruments()
                 
                 elif command == 'stop':
-                    self.stop_all_servers()
-                    print("✅ All servers stopped")
+                    self.stop_active_servers()
+                    print("[OK] Active instruments stopped")
+
+                elif command == 'help':
+                    print("Use load, load bench, create bench, instruments, catalog, start, web, status, stop, or quit.")
                 
                 else:
-                    print(f"❌ Unknown command: {command}")
+                    print(f"[ERROR] Unknown command: {command}")
                     
             except KeyboardInterrupt:
-                print("\n👋 Shutting down...")
-                if self.running:
-                    self.stop_all_servers()
+                print("\nShutting down...")
+                if self.active_running:
+                    self.stop_active_servers()
                 break
             except EOFError:
-                print("\n👋 Goodbye!")
-                if self.running:
-                    self.stop_all_servers()
+                print("\nGoodbye!")
+                if self.active_running:
+                    self.stop_active_servers()
                 break
+
+    def _print_configured_instruments(self):
+        rows = self.configured_instruments()
+        if not rows:
+            print("No instruments configured.")
+            return
+        print(f"Configured instruments ({len(rows)}):")
+        for row in rows:
+            print(
+                f"  {row['id']}: {row['model']} | serial {row['serial']} | "
+                f"{row['state']} | {row['resource']}"
+            )
+
+    def _print_catalog(self, argument):
+        from .drivers import CatalogError, build_driver_catalog
+
+        argument = argument.strip()
+        try:
+            if argument.casefold().startswith('csv '):
+                directory = _interactive_path(argument[4:])
+                self._interactive_catalog = build_driver_catalog(csv_directory=directory)
+                print(f"[OK] Included CSV instruments from {directory}")
+                argument = 'csv-instruments'
+            elif self._interactive_catalog is None:
+                self._interactive_catalog = build_driver_catalog()
+            selected = argument.split(maxsplit=1) if argument else []
+            if not selected:
+                print("Driver catalog:")
+                for descriptor in self._interactive_catalog.descriptors:
+                    print(
+                        f"  {descriptor.id}: {descriptor.display_name} | "
+                        f"{descriptor.maturity.value} | {len(descriptor.models)} model(s)"
+                    )
+                return
+            driver = self._interactive_catalog.get(selected[0]).descriptor
+            if len(selected) == 1:
+                print(f"Driver {driver.id}: {driver.display_name} ({driver.maturity.value})")
+                for model in driver.models:
+                    print(
+                        f"  {model.model}: {model.display_name} | "
+                        f"firmware {', '.join(model.firmware_snapshots)}"
+                    )
+                return
+            model = driver.model(selected[1])
+            print(f"Model {model.model}: {model.display_name}")
+            print(f"  Class: {model.instrument_class}")
+            print(f"  Firmware: {', '.join(model.firmware_snapshots)}")
+            print(
+                "  Transports: "
+                + ", ".join(
+                    f"{item.name} ({item.support.value})" for item in driver.transports
+                )
+            )
+            print(f"  Hardware features: {len(model.available_hardware_features)}")
+            print(f"  Applications: {len(model.available_applications)}")
+            if model.configuration_fields:
+                print("  Configuration fields:")
+                for field in model.configuration_fields:
+                    default = f", default {field.default}" if field.default is not None else ""
+                    choices = f", {len(field.choices)} choice(s)" if field.choices else ""
+                    print(
+                        f"    {field.name}: {field.value_type.value}{default}{choices} - "
+                        f"{field.description}"
+                    )
+            else:
+                print("  Configuration fields: none")
+            if driver.scenario_inputs:
+                print(
+                    "  Scenario inputs: "
+                    + ", ".join(
+                        f"{item.kind} ({item.support.value})"
+                        for item in driver.scenario_inputs
+                    )
+                )
+            coverage = [item for item in driver.command_coverage if item.model == model.model]
+            if coverage:
+                print(
+                    "  Command coverage: "
+                    + ", ".join(
+                        f"{item.implemented}/{item.documented} ({item.percent}%)"
+                        for item in coverage
+                    )
+                )
+        except (CatalogError, ConfigurationError, OSError, ValueError) as error:
+            print(f"[ERROR] Could not browse catalog: {error}")
+
+
+def _interactive_path(value):
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'\"', "'"}:
+        return value[1:-1]
+    return value
+
+
+def _interactive_instrument_row(
+    instrument_id, instrument, resource, running, *, model=None, serial=None
+):
+    identity = str(getattr(instrument, 'identification', '')).split(',', 3)
+    model = model or (
+        identity[1] if len(identity) == 4 else getattr(instrument, 'name', instrument_id)
+    )
+    serial = serial or (identity[2] if len(identity) == 4 else instrument_id)
+    return {
+        'id': instrument_id,
+        'model': model,
+        'serial': serial,
+        'state': 'running' if running else 'stopped',
+        'resource': resource,
+    }
 
 
 def create_example_csv():
@@ -1589,6 +1919,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             composed = BenchComposer(catalog).compose(definition)
             runtime = BenchRuntime(composed)
+            manager.use_bench_runtime(runtime, args.bench)
             resources = composed.resources()
         except (BenchError, CatalogError, ConfigurationError) as error:
             print(f"Error: could not load bench {args.bench!r}: {error}", file=sys.stderr)
@@ -1626,13 +1957,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.interactive or (not args.load and not args.bench and not args.create_example):
         manager.interactive_mode()
     elif (args.load or args.bench) and (args.start or args.web):
-        print("\n🚀 SCPI Emulator running!")
+        print("\nSCPI Emulator running!")
         if args.start:
-            print("📡 VISA resources:")
+            print("VISA resources:")
             for instrument_id, resource in resources.items():
                 print(f"   {instrument_id}: {resource}")
         if args.web:
-            print(f"🌐 Web dashboard: http://{args.web_host}:{args.web_port}")
+            print(f"Web dashboard: http://{args.web_host}:{args.web_port}")
         print("\nPress Ctrl+C to stop...")
         
         try:

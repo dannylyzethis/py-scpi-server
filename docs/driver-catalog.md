@@ -11,7 +11,7 @@ Each driver provides an immutable `DriverDescriptor` containing:
 - a stable driver ID, display name, version, and maturity level;
 - supported instrument models and classes;
 - pinned firmware snapshots;
-- hardware configurations, hardware add-ons, and application options;
+- driver-owned configuration fields plus available semantic hardware and application capabilities;
 - resource/transport templates and whether each is planned, partial, or implemented;
 - supported scenario input shapes and their implementation status;
 - model-specific documented-command coverage and report locations.
@@ -35,18 +35,20 @@ instrument = catalog.create(
     "virtual-vna",
     InstrumentRequest(
         instrument_id="vna1",
-        model="N5242B-EMU",
+        model="VNA-4PORT-EMU",
         serial_number="VNA-001",
         configuration={
-            "mode": "all-applications",
-            "hardware_configuration": "425",
+            "source_count": 2,
+            "frequency_maximum_hz": 67_000_000_000,
+            "hardware_features": ["all"],
+            "applications": ["all"],
         },
     ),
 )
 ```
 
-The VNA descriptor is generated from the packaged compatibility matrix. Its coverage records are
-checked against the versioned reports, and its factory uses the same `PNACapabilities` object that
+The VNA descriptor is generated from the packaged project-owned capability profile. Its coverage records are
+checked against the versioned reports, and its factory uses the same `VNACapabilities` object that
 drives identity, option, license, hardware, and command-availability behavior.
 
 ## Adding an external driver

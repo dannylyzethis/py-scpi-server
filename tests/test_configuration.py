@@ -86,7 +86,7 @@ def test_configuration_rejects_missing_required_columns(tmp_path: Path) -> None:
     [
         ("scpi_instruments_example.csv", 2),
         ("detailed_instruments.csv", 8),
-        ("pna-commands.csv", 1),
+        ("vna-commands.csv", 1),
     ],
 )
 def test_shipped_catalogs_are_canonical_and_loadable(
@@ -105,20 +105,20 @@ def test_shipped_catalogs_are_canonical_and_loadable(
     assert "```" not in manager.instruments
 
 
-def test_pna_identity_response_is_not_truncated() -> None:
+def test_vna_identity_response_is_not_truncated() -> None:
     manager = SCPIEmulatorManager()
-    assert manager.load_from_file(REPOSITORY_ROOT / "pna-commands.csv")
+    assert manager.load_from_file(REPOSITORY_ROOT / "vna-commands.csv")
 
-    pna = manager.instruments["virtual_vna_n5222b_emu"]["instrument"]
-    assert pna.process_command("*IDN?") == (
-        "SCPI Emulator,N5222B-EMU,US12345678,E.1.0"
+    vna = manager.instruments["virtual_vna_2port_emu_csv_static"]["instrument"]
+    assert vna.process_command("*IDN?") == (
+        "SCPI Emulator,VNA-2PORT-EMU,EMU00000001,E.1.0"
     )
-    assert pna.process_command("SYST:CAP:FREQ:MAX?") == "26500000000"
-    assert pna.process_command("SENS1:FREQ:STOP?") == "26500000000"
-    assert pna.process_command("SENS1:FREQ:STOP 30e9") == ""
-    assert pna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+    assert vna.process_command("SYST:CAP:FREQ:MAX?") == "50000000000"
+    assert vna.process_command("SENS1:FREQ:STOP?") == "50000000000"
+    assert vna.process_command("SENS1:FREQ:STOP 51e9") == ""
+    assert vna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
     # Typed VNA data owns this command now; validate sweep shape instead of the old canned row.
-    formatted = pna.process_command("CALC1:DATA? FDAT").split(",")
+    formatted = vna.process_command("CALC1:DATA? FDAT").split(",")
     assert len(formatted) == 201
     assert set(formatted) == {"-inf"}
 

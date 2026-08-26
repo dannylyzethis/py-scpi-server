@@ -7,7 +7,7 @@ Beads (`bd`) is the source of truth for issue status, priority, and dependencies
 - [x] `scpi-001` — Create the canonical `src/scpi_emulator` package, project metadata, and CLI.
 - [x] `scpi-002` — Characterize current behavior with regression tests before replacing it.
 - [x] `scpi-003` — Repair malformed CSV profiles and introduce strict configuration validation.
-- [x] `scpi-201` — Pin the initial N5222B-EMU and N5242B-EMU models, firmware families, options, and application matrix.
+- [x] `scpi-201` — Pin the initial VNA-2PORT-EMU and VNA-4PORT-EMU models, firmware families, options, and application matrix.
 
 These four tasks can proceed independently and establish the baseline for the rest of the work.
 
@@ -15,7 +15,7 @@ These four tasks can proceed independently and establish the baseline for the re
 
 - [x] `scpi-m0` — Maintainable emulator foundation
 - [x] `scpi-m1` — SCPI and IEEE 488.2 core
-- [x] `scpi-m2` — Versioned VNA/VNA-EXTENDED capability system
+- [x] `scpi-m2` — Versioned VNA capability system
 - [x] `scpi-m3` — Base VNA measurement engine
 - [x] `scpi-m4` — All selected VNA application command families
 - [ ] `scpi-m5` — VISA/LXI-compatible transports

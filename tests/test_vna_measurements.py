@@ -1,19 +1,19 @@
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument
-from scpi_emulator.scpi import PNACapabilities, SCPICommandError
+from scpi_emulator.scpi import VNACapabilities, SCPICommandError
 
 
-def pna() -> SCPIInstrument:
+def vna() -> SCPIInstrument:
     return SCPIInstrument(
-        "Virtual N5222B-EMU",
-        "pna",
-        pna_capabilities=PNACapabilities.create("N5222B-EMU"),
+        "Virtual VNA-2PORT-EMU",
+        "vna",
+        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU"),
     )
 
 
 def test_preset_state_has_coherent_channel_measurement_trace_and_selection() -> None:
-    instrument = pna()
+    instrument = vna()
 
     assert instrument.process_command("CALC:PAR:CAT:EXT?") == '"CH1_S11_1,S11"'
     assert instrument.process_command("CALC:PAR:MNUM?") == "1"
@@ -26,7 +26,7 @@ def test_preset_state_has_coherent_channel_measurement_trace_and_selection() -> 
 
 
 def test_indexed_abbreviated_define_feed_select_modify_and_delete_workflow() -> None:
-    instrument = pna()
+    instrument = vna()
 
     assert instrument.process_command('CALC2:PAR:DEF:EXT "InputGain","S21"') == ""
     assert instrument.process_command('CALC2:PAR:DEF:EXT "Receiver","A/R1,3"') == ""
@@ -53,7 +53,7 @@ def test_indexed_abbreviated_define_feed_select_modify_and_delete_workflow() -> 
 
 
 def test_legacy_define_generates_unique_names_and_format_enums_accept_abbreviations() -> None:
-    instrument = pna()
+    instrument = vna()
 
     instrument.process_command("CALC2:PAR:DEF S21")
     instrument.process_command("CALC2:PAR:DEF S21")
@@ -66,8 +66,8 @@ def test_legacy_define_generates_unique_names_and_format_enums_accept_abbreviati
 
 
 def test_marker_position_format_search_and_y_data_follow_selected_measurement() -> None:
-    instrument = pna()
-    measurement = instrument.pna_measurements.selected(1)
+    instrument = vna()
+    measurement = instrument.vna_measurements.selected(1)
     measurement.stimulus = (1e9, 2e9, 3e9)
     measurement.samples = (0.1 + 0j, 0.5 + 0.25j, 0.2 - 0.1j)
 
@@ -85,8 +85,8 @@ def test_marker_position_format_search_and_y_data_follow_selected_measurement() 
 
 
 def test_math_memory_limit_and_equation_state_are_measurement_scoped() -> None:
-    instrument = pna()
-    measurement = instrument.pna_measurements.selected(1)
+    instrument = vna()
+    measurement = instrument.vna_measurements.selected(1)
     measurement.samples = (1 + 2j, 3 + 4j)
 
     instrument.process_command("CALC:MATH:MEM")
@@ -107,7 +107,7 @@ def test_math_memory_limit_and_equation_state_are_measurement_scoped() -> None:
 
 
 def test_channel_window_and_trace_lifecycles_do_not_delete_measurements_accidentally() -> None:
-    instrument = pna()
+    instrument = vna()
     instrument.process_command('CALC3:PAR:DEF:EXT "S33","S33"')
     instrument.process_command('DISP:WIND3:TRAC2:FEED "S33"')
 
@@ -125,7 +125,7 @@ def test_channel_window_and_trace_lifecycles_do_not_delete_measurements_accident
 
 
 def test_clear_and_device_clear_preserve_composition_but_reset_restores_preset() -> None:
-    instrument = pna()
+    instrument = vna()
     instrument.process_command('CALC2:PAR:DEF:EXT "DUT","S21"')
     instrument.process_command('DISP:WIND2:TRAC1:FEED "DUT"')
 
@@ -140,12 +140,12 @@ def test_clear_and_device_clear_preserve_composition_but_reset_restores_preset()
 
 
 def test_duplicate_missing_and_out_of_range_addresses_return_scpi_errors() -> None:
-    state = pna().pna_measurements
+    state = vna().vna_measurements
     with pytest.raises(SCPICommandError) as duplicate:
         state.define(1, "CH1_S11_1", "S21")
     assert duplicate.value.code == -200
 
-    instrument = pna()
+    instrument = vna()
     for command, code in (
         ('CALC:PAR:SEL "missing"', -200),
         ('DISP:WIND2:TRAC1:FEED "missing"', -200),

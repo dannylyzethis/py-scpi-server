@@ -3,10 +3,10 @@
 from .active_device import (
     GainCompressionState,
     NoiseFigureState,
-    PNAActiveDeviceSystem,
+    VNAActiveDeviceSystem,
     register_active_device_commands,
 )
-from .advanced import AdvancedChannel, AdvancedMarker, PNAAdvancedSystem, register_advanced_commands
+from .advanced import AdvancedChannel, AdvancedMarker, VNAAdvancedSystem, register_advanced_commands
 
 from .acquisition import (
     AcquisitionChannel,
@@ -19,9 +19,8 @@ from .acquisition import (
 )
 from .capabilities import (
     CapabilityError,
-    CompatibilityMode,
-    PNACapabilities,
-    detect_pna_model,
+    VNACapabilities,
+    detect_vna_model,
     register_capability_commands,
 )
 from .common import register_common_commands
@@ -56,7 +55,7 @@ from .measurements import (
     ChannelState,
     MarkerState,
     MeasurementState,
-    PNAMeasurementSystem,
+    VNAMeasurementSystem,
     TraceState,
     WindowState,
     register_measurement_commands,
@@ -65,7 +64,7 @@ from .mixer import (
     FrequencyOffsetRange,
     MixerChannel,
     MixerSegment,
-    PNAMixerSystem,
+    VNAMixerSystem,
     register_mixer_commands,
 )
 from .output import (
@@ -77,8 +76,8 @@ from .output import (
     OutputQueueFull,
     register_format_commands,
 )
-from .pna_data import PNADataSystem, register_pna_data_commands
-from .pulse import PulseChannel, PulseGenerator, PNAPulseSystem, register_pulse_commands
+from .vna_data import VNADataSystem, register_vna_data_commands
+from .pulse import PulseChannel, PulseGenerator, VNAPulseSystem, register_pulse_commands
 from .parser import (
     BinaryBlock,
     Command,
@@ -109,18 +108,18 @@ from .status import (
     StatusSystem,
     register_status_commands,
 )
-from .sweeps import PNASweepChannel, PNASweepSystem, register_sweep_commands
+from .sweeps import VNASweepChannel, VNASweepSystem, register_sweep_commands
 from .scalar_data import ScalarConfiguration, ScalarScenarioSystem, register_scalar_commands
-from .state_files import PNAStateFileStore, register_state_file_commands
-from .time_domain import PNATimeDomainSystem, TimeDomainChannel, register_time_domain_commands
+from .state_files import VNAStateFileStore, register_state_file_commands
+from .time_domain import VNATimeDomainSystem, TimeDomainChannel, register_time_domain_commands
 
 __all__ = [
     "GainCompressionState",
     "AdvancedChannel",
     "AdvancedMarker",
     "NoiseFigureState",
-    "PNAActiveDeviceSystem",
-    "PNAAdvancedSystem",
+    "VNAActiveDeviceSystem",
+    "VNAAdvancedSystem",
     "register_active_device_commands",
     "register_advanced_commands",
     "BinaryBlock",
@@ -128,7 +127,6 @@ __all__ = [
     "ByteOrder",
     "CapabilityError",
     "ChannelState",
-    "CompatibilityMode",
     "AcquisitionChannel",
     "AcquisitionController",
     "AcquisitionState",
@@ -164,15 +162,15 @@ __all__ = [
     "ParameterKind",
     "ParameterSpec",
     "ParameterType",
-    "PNACapabilities",
-    "PNADataSystem",
-    "PNAPulseSystem",
-    "PNAMeasurementSystem",
-    "PNAMixerSystem",
-    "PNASweepChannel",
-    "PNASweepSystem",
-    "PNAStateFileStore",
-    "PNATimeDomainSystem",
+    "VNACapabilities",
+    "VNADataSystem",
+    "VNAPulseSystem",
+    "VNAMeasurementSystem",
+    "VNAMixerSystem",
+    "VNASweepChannel",
+    "VNASweepSystem",
+    "VNAStateFileStore",
+    "VNATimeDomainSystem",
     "ProgramMessage",
     "PulseChannel",
     "PulseGenerator",
@@ -197,7 +195,7 @@ __all__ = [
     "classify_error",
     "command_spec_key",
     "coverage_report",
-    "detect_pna_model",
+    "detect_vna_model",
     "load_command_manifest",
     "mnemonic_matches",
     "parse_program_message",
@@ -210,7 +208,7 @@ __all__ = [
     "register_format_commands",
     "register_measurement_commands",
     "register_mixer_commands",
-    "register_pna_data_commands",
+    "register_vna_data_commands",
     "register_pulse_commands",
     "register_scalar_commands",
     "register_sweep_commands",

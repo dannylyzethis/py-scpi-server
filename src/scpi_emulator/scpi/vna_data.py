@@ -6,16 +6,16 @@ import math
 
 from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
 
-from .measurements import MeasurementState, PNAMeasurementSystem
+from .measurements import MeasurementState, VNAMeasurementSystem
 from .output import DataFormat
 from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, ParameterType, SCPICommandError
 
 
-class PNADataSystem:
+class VNADataSystem:
     """Adapt generic scenario trace streams to VNA data access points."""
 
     def __init__(
-        self, measurements: PNAMeasurementSystem, data_format: DataFormat, maximum_ports: int
+        self, measurements: VNAMeasurementSystem, data_format: DataFormat, maximum_ports: int
     ) -> None:
         self.measurements = measurements
         self.data_format = data_format
@@ -184,7 +184,7 @@ class PNADataSystem:
             raise SCPICommandError(-230, f"Data corrupt or stale; {error}")
 
 
-def register_pna_data_commands(registry: CommandRegistry, state: PNADataSystem) -> None:
+def register_vna_data_commands(registry: CommandRegistry, state: VNADataSystem) -> None:
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     data = HeaderNode("DATA")
     access = ParameterSpec(ParameterType.ENUM, choices=("SDATa", "FDATa", "RDATa"))

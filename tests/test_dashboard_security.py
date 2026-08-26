@@ -137,6 +137,8 @@ def test_dashboard_scenario_mutation_respects_active_instrument_session() -> Non
 
 def test_valid_control_command_is_serialized_and_returned_as_json() -> None:
     dashboard, server = make_dashboard()
+    socket_client = dashboard.socketio.test_client(dashboard.app)
+    socket_client.get_received()
     response = dashboard.app.test_client().post(
         "/api/send_command/web_test",
         headers=mutation_headers(dashboard),
@@ -146,6 +148,45 @@ def test_valid_control_command_is_serialized_and_returned_as_json() -> None:
     assert response.status_code == 200
     assert server.commands == ["*IDN?"]
     assert response.get_json()["response"].startswith("SCPI_Emulator,")
+    events = socket_client.get_received()
+    assert [event["name"] for event in events] == ["command_update", "state_changed"]
+    assert events[0]["args"][0]["command"] == "*IDN?"
+
+
+def test_instrument_layer_events_cover_non_raw_transport_command_paths() -> None:
+    dashboard, server = make_dashboard()
+    socket_client = dashboard.socketio.test_client(dashboard.app)
+    socket_client.get_received()
+
+    assert server.instrument.process_command("*ESE 1") == ""
+
+    events = socket_client.get_received()
+    assert [event["name"] for event in events] == ["command_update", "state_changed"]
+    assert events[0]["args"][0]["instrument"] == server.instrument.name
+    assert events[1]["args"][0]["reason"] == "command"
+
+
+def test_asynchronous_acquisition_completion_pushes_live_state() -> None:
+    dashboard, server = make_dashboard()
+    server.instrument.acquisition.auto_progress = False
+    socket_client = dashboard.socketio.test_client(dashboard.app)
+    socket_client.get_received()
+
+    server.instrument.process_command("INIT")
+    socket_client.get_received()
+    server.instrument.acquisition.complete_sweep(1)
+    server.instrument.acquisition.complete_processing(1)
+
+    state_events = [
+        event["args"][0]
+        for event in socket_client.get_received()
+        if event["name"] == "state_changed"
+    ]
+    assert state_events[-1] == {
+        "reason": "acquisition-complete",
+        "instrument_id": "web_test",
+        "timestamp": state_events[-1]["timestamp"],
+    }
 
 
 def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> None:
@@ -160,6 +201,10 @@ def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> 
     assert "noise-apply" in html
     assert "fault-inject" in html
     assert "Channels, measurements, and traces" in html
+    assert "socket.on('state_changed',scheduleRefresh)" in html
+    assert "setInterval(refreshStatus,30000)" in html
+    assert "captureInstrumentUi" in html
+    assert "restoreInstrumentUi" in html
 
 
 def test_status_snapshot_is_detailed_and_non_destructive() -> None:
@@ -183,12 +228,12 @@ def test_status_snapshot_is_detailed_and_non_destructive() -> None:
     assert instrument.process_command("SYST:ERR?").startswith('-113,"Undefined header')
 
 
-def test_pna_snapshot_exposes_capabilities_channels_measurements_and_traces() -> None:
-    instrument = SCPIInstrument("Virtual N5222B-EMU", "N5222B-EMU")
+def test_vna_snapshot_exposes_capabilities_channels_measurements_and_traces() -> None:
+    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "VNA-2PORT-EMU")
     server = FakeServer(instrument)
     manager = SimpleNamespace(
-        instruments={"pna1": {"instrument": instrument, "port": 5025}},
-        servers={"pna1": server},
+        instruments={"vna1": {"instrument": instrument, "port": 5025}},
+        servers={"vna1": server},
         web_dashboard=None,
     )
     dashboard = WebDashboard(manager)
@@ -198,7 +243,7 @@ def test_pna_snapshot_exposes_capabilities_channels_measurements_and_traces() ->
         "snapshot"
     ]
 
-    assert snapshot["capabilities"]["model"] == "N5222B-EMU"
+    assert snapshot["capabilities"]["model"] == "VNA-2PORT-EMU"
     assert snapshot["measurements"]["channels"][0]["selected"] == "CH1_S11_1"
     assert snapshot["measurements"]["channels"][0]["measurements"][0]["parameter"] == "S11"
     assert snapshot["measurements"]["windows"][0]["traces"][0] == {

@@ -7,13 +7,13 @@ from scpi_emulator.scenario import (
     ScenarioStream,
     StreamKind,
 )
-from scpi_emulator.scpi import PNACapabilities
+from scpi_emulator.scpi import VNACapabilities
 
 
-def active_device_pna(*streams: ScenarioStream) -> SCPIInstrument:
-    capabilities = PNACapabilities.create("N5242B-EMU", mode="all-applications")
+def active_device_vna(*streams: ScenarioStream) -> SCPIInstrument:
+    capabilities = VNACapabilities.create("VNA-4PORT-EMU")
     instrument = SCPIInstrument(
-        "Virtual N5242B-EMU", "active-device", pna_capabilities=capabilities
+        "Virtual VNA-4PORT-EMU", "active-device", vna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
@@ -42,7 +42,7 @@ def numbers(response: str) -> tuple[float, ...]:
 
 
 def test_gain_compression_configuration_and_scenario_results() -> None:
-    instrument = active_device_pna(
+    instrument = active_device_vna(
         trace("gain_compression.gain", (12, 12, 11.5, 10.5, 9)),
         trace("gain_compression.output_power", (-8, -3, 1.5, 5.5, 9)),
     )
@@ -73,7 +73,7 @@ def test_gain_compression_configuration_and_scenario_results() -> None:
 
 
 def test_noise_figure_configuration_and_scenario_results() -> None:
-    instrument = active_device_pna(
+    instrument = active_device_vna(
         trace("noise_figure.nf", (2.1, 2.2, 2.3, 2.4)),
         trace("noise_figure.gain", (15, 14, 13, 12)),
         trace("noise_figure.yfactor", (1.6, 1.7, 1.8, 1.9)),
@@ -102,7 +102,7 @@ def test_noise_figure_configuration_and_scenario_results() -> None:
 
 
 def test_active_device_state_survives_cls_and_resets_with_rst() -> None:
-    instrument = active_device_pna()
+    instrument = active_device_vna()
     instrument.process_command("SENS:GC:STAT ON")
     instrument.process_command("SENS:NOIS:STAT ON")
 
@@ -118,20 +118,20 @@ def test_active_device_state_survives_cls_and_resets_with_rst() -> None:
 
 def test_application_commands_enforce_license_and_address_existence() -> None:
     strict = SCPIInstrument(
-        "Virtual N5222B-EMU",
+        "Virtual VNA-2PORT-EMU",
         "strict",
-        pna_capabilities=PNACapabilities.create("N5222B-EMU"),
+        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
     )
     assert strict.process_command("SENS:GC:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    licensed = active_device_pna()
+    licensed = active_device_vna()
     assert licensed.process_command("SENS2:GC:STAT?") == ""
     assert licensed.process_command("SYST:ERR?").startswith('-200,"Execution error')
 
 
 def test_trigger_policy_advances_shared_gain_result_stream() -> None:
-    instrument = active_device_pna(
+    instrument = active_device_vna(
         trace(
             "gain_compression.gain",
             (12, 12, 12),
@@ -146,7 +146,7 @@ def test_trigger_policy_advances_shared_gain_result_stream() -> None:
 
 
 def test_bad_active_device_trace_length_reports_data_error() -> None:
-    instrument = active_device_pna(trace("noise_figure.nf", (1, 2)))
+    instrument = active_device_vna(trace("noise_figure.nf", (1, 2)))
     assert instrument.process_command("CALC:NOIS:DATA? NF") == ""
     assert instrument.process_command("SYST:ERR?").startswith(
         '-230,"Data corrupt or stale'

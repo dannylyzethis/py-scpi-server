@@ -7,7 +7,7 @@ import hashlib
 import math
 from dataclasses import dataclass, field
 
-from .measurements import PNAMeasurementSystem
+from .measurements import VNAMeasurementSystem
 from .parser import NumericValue
 from .registry import (
     CommandRegistry,
@@ -36,10 +36,10 @@ class TimeDomainChannel:
     topology: str = "NONE"
 
 
-class PNATimeDomainSystem:
+class VNATimeDomainSystem:
     """Apply repeatable application transforms without replacing scenario data."""
 
-    def __init__(self, measurements: PNAMeasurementSystem, maximum_ports: int) -> None:
+    def __init__(self, measurements: VNAMeasurementSystem, maximum_ports: int) -> None:
         self.measurements = measurements
         self.maximum_ports = maximum_ports
         self.channels: dict[int, TimeDomainChannel] = {}
@@ -124,7 +124,7 @@ class PNATimeDomainSystem:
 
 
 def register_time_domain_commands(
-    registry: CommandRegistry, state: PNATimeDomainSystem
+    registry: CommandRegistry, state: VNATimeDomainSystem
 ) -> None:
     """Register profile-gated CALCulate time-domain and fixture command families."""
     calc = HeaderNode("CALCulate", index="channel", index_default=1)

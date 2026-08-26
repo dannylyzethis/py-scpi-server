@@ -109,7 +109,7 @@ class WindowState:
     active_trace: int | None = None
 
 
-class PNAMeasurementSystem:
+class VNAMeasurementSystem:
     """Own coherent VNA measurement and front-panel addressing state."""
 
     def __init__(self) -> None:
@@ -402,7 +402,7 @@ class PNAMeasurementSystem:
         return tuple(result)
 
 
-def register_measurement_commands(registry: CommandRegistry, state: PNAMeasurementSystem) -> None:
+def register_measurement_commands(registry: CommandRegistry, state: VNAMeasurementSystem) -> None:
     """Register indexed VNA measurement and display workflows."""
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     display = HeaderNode("DISPlay")
@@ -632,7 +632,7 @@ def _memorize(measurement: MeasurementState) -> str:
     return ""
 
 
-def _window_or_zero(state: PNAMeasurementSystem, name: str, item: int) -> str:
+def _window_or_zero(state: VNAMeasurementSystem, name: str, item: int) -> str:
     result = state.measurement_window_trace(name)
     return str(result[item] if result else 0)
 
@@ -677,7 +677,7 @@ def _markers_off(measurement: MeasurementState) -> str:
     return ""
 
 
-def _channel_state(state: PNAMeasurementSystem, channel: int, enabled: bool) -> str:
+def _channel_state(state: VNAMeasurementSystem, channel: int, enabled: bool) -> str:
     state.create_channel(channel) if enabled else state.delete_channel(channel)
     return ""
 
@@ -692,13 +692,13 @@ def _trace_title(state, invocation, value: str) -> str:
     return ""
 
 
-def _trace_catalog(state: PNAMeasurementSystem, window: int) -> str:
+def _trace_catalog(state: VNAMeasurementSystem, window: int) -> str:
     if window not in state.windows or not state.windows[window].traces:
         return "EMPTY"
     return ",".join(str(number) for number in sorted(state.windows[window].traces))
 
 
-def _next_trace(state: PNAMeasurementSystem, window: int) -> int:
+def _next_trace(state: VNAMeasurementSystem, window: int) -> int:
     used = set(state.windows.get(window, WindowState(window)).traces)
     available = next((number for number in range(1, MAX_TRACE + 1) if number not in used), None)
     if available is None:

@@ -21,7 +21,7 @@ def trace_stream(name, traces, *, advance=AdvancePolicy.READ):
 
 
 def instrument_with(stream) -> SCPIInstrument:
-    instrument = SCPIInstrument("Virtual N5222B-EMU", "N5222B-EMU")
+    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "VNA-2PORT-EMU")
     instrument.process_command("SENS:SWE:POIN 2")
     instrument.attach_scenario(ScenarioDefinition("dut", (stream,), seed=19))
     return instrument
@@ -50,13 +50,13 @@ def test_late_measurement_binding_and_wrong_length_report_scpi_data_error() -> N
     instrument = instrument_with(trace_stream("dut-gain", ((1 + 0j,),)))
     instrument.process_command('CALC:PAR:DEF:EXT "Gain","S21"')
     instrument.process_command('CALC:PAR:SEL "Gain"')
-    instrument.pna_data.bind("Gain", "dut-gain")
+    instrument.vna_data.bind("Gain", "dut-gain")
     instrument.process_command("FORM:DATA ASC")
     assert instrument.process_command("CALC:DATA? SDAT") == ""
     assert instrument.error_queue.pop().code == -230
 
 
-def test_trigger_policy_advances_shared_player_used_by_pna_adapter() -> None:
+def test_trigger_policy_advances_shared_player_used_by_vna_adapter() -> None:
     instrument = instrument_with(trace_stream(
         "S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.TRIGGER
     ))
@@ -81,7 +81,7 @@ def test_reset_rewinds_same_shared_player_while_cls_preserves_position() -> None
 
 
 def test_receiver_and_snp_queries_use_named_streams_and_column_order() -> None:
-    instrument = SCPIInstrument("Virtual N5222B-EMU", "N5222B-EMU")
+    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "VNA-2PORT-EMU")
     instrument.process_command("SENS:SWE:POIN 2")
     streams = (
         trace_stream("A", ((10 + 1j, 20 + 2j),)),

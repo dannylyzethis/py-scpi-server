@@ -26,6 +26,18 @@ Each instrument card reports:
 
 The `/api/status` response contains this data under each instrument's `snapshot` field.
 
+## Live updates
+
+The dashboard observes completed commands at the instrument layer, so raw socket, VXI-11, HiSLIP,
+and dashboard-console commands all update the command stream, cards, status registers, counters,
+errors, measurements, and scenario position immediately. Server lifecycle, client-session, and
+scenario-control changes also publish update events.
+
+Rapid events are coalesced into one authoritative `/api/status` refresh after 75 milliseconds. The
+browser retains open instrument details and unsent fault/noise control values while cards refresh.
+A 30-second poll remains only as a recovery fallback, and reconnecting the live socket immediately
+requests a complete snapshot.
+
 ## Controls and invariants
 
 The command console is serialized with physical-style client sessions. It returns HTTP `409` when

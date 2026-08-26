@@ -410,7 +410,7 @@
   },
   "target": {
     "firmware": "E.1.0",
-    "model": "N5222B-EMU"
+    "model": "VNA-4PORT-EMU"
   },
   "undocumented_implementation_keys": [
     "CALCULATE<CHANNEL>:DIQ:DATA?",

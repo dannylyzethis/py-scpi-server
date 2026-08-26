@@ -7,7 +7,7 @@
 
 A stateful SCPI instrument emulator for developing and testing automation software without
 physical instruments. The current alpha provides configurable raw-TCP, VXI-11, and HiSLIP
-instruments on a standards-oriented SCPI, IEEE 488.2, and VNA/VNA-EXTENDED foundation.
+instruments on a standards-oriented SCPI, IEEE 488.2, and VNA foundation.
 
 For a detailed, plain-language explanation of the architecture changes and completed-system vision,
 see [From command responder to instrument emulator](docs/foundation-evolution.md).
@@ -31,8 +31,10 @@ Dashboard state visibility and scenario/fault controls are documented in
 - A bounded FIFO error queue connected to IEEE 488.2 event and status registers.
 - Active `*CLS`, `*OPC`, `*OPC?`, `*WAI`, ESE/SRE/status-byte, trigger, and acquisition behavior.
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
-- Versioned N5222B-EMU VNA and N5242B-EMU VNA-EXTENDED hardware, option, license, and capability profiles,
-  including model-faithful and all-applications developer modes.
+- Project-owned `VNA-2PORT-EMU` and `VNA-4PORT-EMU` models with semantic source, hardware,
+  application, identity, option, and license reporting. Defaults enable every compatible capability.
+- Bench-defined VNA minimum/maximum frequency limits defaulting to 10 MHz–50 GHz, with explicit
+  wider ranges supported because no physical product ceiling is imposed.
 - Stateful VNA channel, measurement, display-window, trace, format, math, marker, limit, and
   equation workflows with indexed and abbreviated SCPI forms.
 - VNA frequency, CW, power, and segment sweep axes with IF-bandwidth/dwell-derived acquisition
@@ -47,8 +49,8 @@ Dashboard state visibility and scenario/fault controls are documented in
   results, and deterministic trigger behavior in the shared VNA data pipeline.
 - Profile-gated basic and Integrated Pulse generators, point-in-pulse/profile traces, time axes, IF
   filters/gates, and shared deterministic trigger playback.
-- Profile-gated Spectrum Analyzer, Swept IMD, Modulation Distortion, Phase Noise, Differential I/Q, and
-  wideband-I/Q workflows with option gates, scenario results, application axes, and markers.
+- Application-gated spectrum, swept IMD, modulation distortion, phase noise, differential I/Q, and
+  wideband-I/Q workflows with scenario results, application axes, and markers.
 - A catalog-visible Virtual 34461A-EMU reference DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
@@ -83,19 +85,19 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
   control plane rather than an internet-facing service.
 
 See [TODO.md](TODO.md) and `bd ready` for the implementation backlog.
-VNA state semantics are described in [VNA measurement workflows](docs/pna-measurements.md).
-Scenario trace mapping is described in [VNA scenario data](docs/pna-scenario-data.md).
+VNA state semantics are described in [VNA measurement workflows](docs/vna-measurements.md).
+Scenario trace mapping is described in [VNA scenario data](docs/vna-scenario-data.md).
 Scalar/DMM playback is described in [DMM scenario data](docs/dmm-scenario-data.md).
 Time-domain and fixture behavior is described in
-[VNA time-domain and fixture behavior](docs/pna-time-domain.md).
+[VNA time-domain and fixture behavior](docs/vna-time-domain.md).
 Frequency-offset and converter behavior is described in
-[VNA frequency-offset and converter behavior](docs/pna-mixer.md).
+[VNA frequency-offset and converter behavior](docs/vna-mixer.md).
 Gain-compression and noise-figure behavior is described in
-[VNA active-device behavior](docs/pna-active-device.md).
+[VNA active-device behavior](docs/vna-active-device.md).
 Pulse generator and Integrated Pulse behavior is described in
-[VNA pulse behavior](docs/pna-pulse.md).
+[VNA pulse behavior](docs/vna-pulse.md).
 Spectrum, IMD, modulation-distortion, phase-noise, and I/Q behavior is described in
-[VNA advanced-application behavior](docs/pna-advanced.md).
+[VNA advanced-application behavior](docs/vna-advanced.md).
 The end-to-end bench/scenario workflow is in
 [Remote ATE development workflow](docs/remote-ate-workflow.md).
 
@@ -235,6 +237,36 @@ scpi-emulator --interactive
 scpi-emulator --load detailed_instruments.csv --start --verbose --log-file emulator.log
 ```
 
+With no flags, the interactive manager can load either simple CSV definitions or a precise bench
+and show every configured instrument before it is started:
+
+```text
+SCPI-MGR> load bench "C:\ATE Projects\benches\development bench.json"
+SCPI-MGR> instruments
+SCPI-MGR> catalog
+SCPI-MGR> catalog virtual-vna VNA-2PORT-EMU
+SCPI-MGR> create bench "C:\ATE Projects\benches\new bench.json"
+SCPI-MGR> start
+SCPI-MGR> status
+SCPI-MGR> web
+SCPI-MGR> stop
+```
+
+Quotes are required only when the path contains spaces. `bench <file>` is a shorter alias for
+`load bench <file>`. The `instruments` output includes the instance ID, model, serial number,
+running state, and VISA resource string.
+
+Use `catalog` to list driver families, `catalog <driver>` to list that driver's models, and
+`catalog <driver> <model>` to inspect firmware, transports, configuration fields, scenario inputs,
+and command coverage. `catalog csv <folder>` temporarily includes every CSV-defined model in that
+folder for browsing; quote the folder only when its path contains spaces.
+
+`create bench <file>` starts a guided workflow over that same catalog. Press Enter for safe defaults,
+add one or more instruments, preview their VISA resources, and confirm the save. The complete bench
+is validated before an atomic write and is loaded immediately. Put any CSV definitions beside the
+target JSON so their models are included automatically. Type `cancel` at any prompt to leave without
+creating or replacing a file.
+
 Container quick start:
 
 ```bash
@@ -306,7 +338,7 @@ The repository includes:
 - `scpi_instruments_example.csv` — two small development instruments.
 - `detailed_instruments.csv` — eight legacy instrument command catalogs, including a generic
   single-output PSU compatibility block rather than the stateful triple-output model.
-- `pna-commands.csv` — the current static N5222B-EMU VNA catalog.
+- `vna-commands.csv` — a static generic two-port VNA CSV catalog.
 
 ## CLI reference
 

@@ -1,337 +1,206 @@
 # Instrument catalog and bench configuration reference
 
-This is the user-facing source of truth for instruments that can be created in a bench. You should
-not need to read Python source or internal profile JSON to discover a driver name, model name, or
-accepted configuration field.
+This document is the user-facing inventory for instruments that can be selected in a JSON bench.
+The built-in catalog currently contains 4 built-in models plus 10 bundled CSV model IDs. A CSV
+folder supplied beside a bench may add more models without changing the bench schema.
 
-## Fastest choices
+## Built-in drivers
 
-Use one of these driver/model pairs:
+| Instrument | Driver | Model | Firmware |
+|---|---|---|---|
+| Digital multimeter | `virtual-3446x` | `34461A-EMU` | `E.1.0` |
+| Triple-output power supply | `virtual-triple-psu` | `E36312A-EMU` | `E.1.0` |
+| Two-port vector network analyzer | `virtual-vna` | `VNA-2PORT-EMU` | `E.1.0` |
+| Four-port vector network analyzer | `virtual-vna` | `VNA-4PORT-EMU` | `E.1.0` |
 
-| Instrument | `driver` | `model` | Configuration required? |
-| --- | --- | --- | --- |
-| Reference DMM | `virtual-3446x` | `34461A-EMU` | No |
-| Triple-output power supply | `virtual-triple-psu` | `E36312A-EMU` | No |
-| VNA | `virtual-vna` | `N5222B-EMU` | Optional |
-| Extended VNA | `virtual-vna` | `N5242B-EMU` | Optional |
-| Instrument declared by CSV | `csv-instruments` | Normalized `Equipment` name | No |
+Each built-in driver implements `raw-socket`, `vxi-11`, and `hislip` transports. The interactive
+command `catalog` lists drivers, `catalog virtual-vna` lists its models, and
+`catalog virtual-vna VNA-4PORT-EMU` prints the driver-owned configuration contract.
 
-All built-in models currently use firmware `E.1.0` and support `raw-socket`, `vxi-11`, and `hislip`.
-For a first bench, use `raw-socket`.
+## Bench fields
 
-To create the extended VNA with every compatible modeled application capability, use:
+Every item in `instruments` uses the same fields:
+
+| Field | Required | Meaning |
+|---|---:|---|
+| `id` | Yes | Unique instance name used by the emulator and dashboard. |
+| `driver` | Yes | Catalog driver ID. |
+| `model` | Yes | Model ID advertised by that driver. |
+| `resource` | Yes | Object containing `transport`, `host`, and `port`. |
+| `name` | No | Human-readable display name. |
+| `serial_number` | No | Per-instance serial returned by `*IDN?`; use a unique value for duplicate models. |
+| `firmware` | No | Firmware token; blank inherits the driver default. |
+| `configuration` | No | Driver-specific object; blank inherits safe driver defaults. |
+
+The `id`, resource endpoint, and nonblank serial numbers must be unique within one bench.
+
+## Generic VNA configuration
+
+The VNA driver has two project-owned models. Port count is part of the model and cannot be changed
+through `configuration`.
+
+| Field | Type | Default | Validation |
+|---|---|---|---|
+| `source_count` | integer | 1 on `VNA-2PORT-EMU`; 2 on `VNA-4PORT-EMU` | 1 or 2 |
+| `frequency_minimum_hz` | number | 10000000 | Positive and no greater than the maximum |
+| `frequency_maximum_hz` | number | 50000000000 | Positive and no less than the minimum; no fixed upper ceiling |
+| `hardware_features` | array of strings | `["all"]` | `all` alone, or listed semantic feature IDs |
+| `applications` | array of strings | `["all"]` | `all` alone, or listed semantic application IDs |
+
+The frequency values are emulated instrument limits. They also initialize ordinary sweep start and
+stop values. They are not merely an initial sweep request, so later SCPI sweep commands remain
+bounded by them.
+
+The semantic hardware IDs are:
+
+- `bias_tees`
+- `direct_receiver_access`
+- `internal_combiner`
+- `internal_rf_switches`
+- `noise_receiver`
+- `pulse_control`
+- `receiver_attenuators`
+- `source_attenuators`
+
+The semantic application IDs are stored in [instrument-options.json](instrument-options.json).
+They include:
+
+- `active_hot_parameters`
+- `arbitrary_waveform_generation`
+- `basic_pulsed_rf`
+- `differential_iq`
+- `embedded_lo`
+- `enhanced_time_domain`
+- `fast_cw`
+- `fixture_removal`
+- `frequency_converter`
+- `frequency_offset`
+- `gain_compression`
+- `integrated_pulsed_rf`
+- `intermodulation_distortion`
+- `measurement_uncertainty`
+- `modulation_distortion`
+- `n_port`
+- `noise_figure`
+- `performance_test`
+- `phase_noise`
+- `scalar_mixer`
+- `source_phase_control`
+- `spectrum_analysis`
+- `time_domain`
+- `true_mode_stimulus`
+- `wideband_iq`
+
+Four-port-only applications are omitted from the two-port model. Applications that require two
+sources or a named hardware feature are enabled only when that capability exists. Explicit
+application selections automatically include their software dependencies. An incompatible explicit
+selection fails bench composition with a plain-language error.
+
+The easiest all-capability VNA entry needs no configuration at all:
 
 ```json
 {
   "id": "vna1",
-  "name": "Development VNA",
   "driver": "virtual-vna",
-  "model": "N5242B-EMU",
-  "serial_number": "VNA-001",
+  "model": "VNA-4PORT-EMU",
+  "serial_number": "EMU-VNA-001",
+  "configuration": {},
+  "resource": {
+    "transport": "raw-socket",
+    "host": "127.0.0.1",
+    "port": 5025
+  }
+}
+```
+
+An explicit 67 GHz two-port instrument with a selected application subset looks like this:
+
+```json
+{
+  "id": "wideband_vna",
+  "driver": "virtual-vna",
+  "model": "VNA-2PORT-EMU",
+  "serial_number": "EMU-VNA-067",
   "configuration": {
-    "mode": "all-applications"
+    "frequency_minimum_hz": 100000,
+    "frequency_maximum_hz": 67000000000,
+    "source_count": 2,
+    "hardware_features": ["direct_receiver_access", "noise_receiver"],
+    "applications": ["time_domain", "noise_figure"]
   },
   "resource": {
-    "transport": "raw-socket",
+    "transport": "hislip",
     "host": "127.0.0.1",
-    "port": 5025
+    "port": 4880
   }
 }
 ```
 
-`all-applications` chooses a coherent developer hardware profile and enables one compatible current
-option token for every application capability that can coexist. It does not install mutually
-incompatible hardware or both alternative tokens for the same capability.
+`*IDN?` reports the selected generic model. `*OPT?` reports readable topology, hardware, and
+application tokens such as `PORTS-4`, `HW-NOISE-RECEIVER`, and `APP-TIME-DOMAIN`.
 
-## Common bench fields
+## Mixed built-in and CSV bench
 
-Every object in the bench's `instruments` array uses these fields:
-
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `id` | Yes | Unique bench instance ID. Use letters, numbers, `_`, `-`, or `.`; no spaces. |
-| `driver` | Yes | Driver ID from the table above. |
-| `model` | Yes | Model ID advertised by that driver. |
-| `resource` | Yes | Transport, host, and port used by clients. |
-| `name` | No | Human-readable instance name; spaces are allowed. |
-| `serial_number` | No | Per-instance serial returned as the third field of `*IDN?`. |
-| `firmware` | No | Pinned firmware token. Omit it to use the model default. |
-| `configuration` | Driver-specific | Configuration object documented under the selected driver below. |
-
-Every `id` and every transport/host/port combination must be unique. Use a different
-`serial_number` when creating two instances of the same model.
-
-## `virtual-vna`
-
-Models:
-
-- `N5222B-EMU`
-- `N5242B-EMU`
-
-Accepted `configuration` fields:
-
-| Field | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `mode` | string | `model-faithful` | `model-faithful` or `all-applications`. |
-| `hardware_configuration` | string | Model/mode default | One configuration token listed below. |
-| `hardware_addons` | array of strings | Mode default | Zero or more add-on tokens listed below. |
-| `application_options` | array of strings | Empty or automatic | Zero or more application-option tokens listed below. |
-| `frequency_minimum_hz` | number | Model minimum | Optional higher lower-bound for the emulated frequency range. |
-| `frequency_maximum_hz` | number | Model maximum | Optional lower upper-bound for the emulated frequency range. |
-
-Use top-level `serial_number` for new bench files. The older driver-specific
-`configuration.serial` field remains accepted for compatibility, but do not specify both with
-different values.
-
-Both frequency fields are optional and independent. If either is omitted, that endpoint inherits
-the selected model's default: currently 10 MHz minimum and 26.5 GHz maximum. Overrides may narrow
-that model range but cannot extend it. They control the frequency capability queries, initial sweep
-and trace axis, and the same range checks used by sweep and application commands. Invalid or inverted
-ranges stop bench composition before any socket opens.
-
-For example, this keeps the model minimum while emulating a 20 GHz upper limit:
-
-```json
-{
-  "configuration": {
-    "mode": "model-faithful",
-    "frequency_maximum_hz": 20000000000
-  }
-}
-```
-
-### Compatibility modes
-
-`model-faithful` is the default. It uses the default hardware configuration, no hardware add-ons,
-and only application tokens explicitly listed in `application_options`.
-
-`all-applications` is the easiest development setting. When hardware fields are omitted, it uses:
-
-| Model | Hardware configuration | Hardware add-ons |
-| --- | --- | --- |
-| `N5222B-EMU` | `419` | `021` |
-| `N5242B-EMU` | `425` | `021` |
-
-You may explicitly choose hardware while using `all-applications`; the driver then enables every
-application token compatible with that chosen shape. Invalid combinations fail before any bench
-server starts.
-
-### Hardware configuration tokens
-
-| Model | Default in `model-faithful` | Accepted values |
-| --- | --- | --- |
-| `N5222B-EMU` | `200` | `200`, `201`, `205`, `217`, `219`, `220`, `400`, `401`, `405`, `417`, `419`, `420` |
-| `N5242B-EMU` | `201` | `201`, `205`, `217`, `219`, `222`, `224`, `401`, `417`, `419`, `422`, `423`, `425` |
-
-### Hardware add-on tokens
-
-| Model | Accepted values |
-| --- | --- |
-| `N5222B-EMU` | `020`, `021`, `022`, `UNY` |
-| `N5242B-EMU` | `020`, `021`, `022`, `UNY`, `XSB` |
-
-These are emulator-owned opaque compatibility identifiers. This project intentionally does not map
-them to commercial products or reproduce manufacturer option descriptions.
-
-### Application option tokens
-
-The complete per-model token lists are in
-[`instrument-options.json`](instrument-options.json). That structured document also repeats mode
-defaults, hardware configurations, and add-ons so it can be read by a person or tooling without
-scraping Markdown.
-
-Application tokens are intentionally opaque. Some require particular hardware or another option;
-the driver validates those relationships. Copy selected values into the `application_options`
-array of a `model-faithful` configuration. Use `all-applications` when you do not need to test a
-specific installed-option combination.
-
-## `virtual-3446x`
-
-Model: `34461A-EMU`
-
-This driver accepts no `configuration` fields. Omit `configuration` or use an empty object.
-
-```json
-{
-  "id": "meter1",
-  "name": "Development DMM",
-  "driver": "virtual-3446x",
-  "model": "34461A-EMU",
-  "serial_number": "DMM-001",
-  "resource": {
-    "transport": "raw-socket",
-    "host": "127.0.0.1",
-    "port": 5025
-  }
-}
-```
-
-## `virtual-triple-psu`
-
-Model: `E36312A-EMU`
-
-This driver accepts no `configuration` fields. Each instance contains three independent outputs.
-See [Triple-output power-supply emulator](power-supply.md) for its selected-output commands and
-reset behavior.
-
-```json
-{
-  "id": "supply1",
-  "name": "Primary Power Supply",
-  "driver": "virtual-triple-psu",
-  "model": "E36312A-EMU",
-  "serial_number": "PSU-001",
-  "resource": {
-    "transport": "raw-socket",
-    "host": "127.0.0.1",
-    "port": 5026
-  }
-}
-```
-
-## `csv-instruments`
-
-When a bench contains `driver: "csv-instruments"`, the CLI scans every `.csv` file beside the bench
-JSON. Every CSV `Equipment` block becomes an available model. No separate catalog file or CSV flag
-is required.
-
-The model ID is the equipment name converted to lowercase with punctuation replaced by underscores:
-
-| CSV `Equipment` | Bench `model` |
-| --- | --- |
-| `Fixture Controller` | `fixture_controller` |
-| `Power Supply A` | `power_supply_a` |
-| `Virtual DMM #1` | `virtual_dmm_1` |
-
-CSV instruments accept no `configuration` fields and only advertise `raw-socket`. The resource port
-comes from the bench JSON; leave the CSV `Port` blank. A top-level `serial_number` overrides the
-third field of `*IDN?`; a custom CSV identity must contain four comma-separated fields.
-
-```json
-{
-  "id": "fixture1",
-  "name": "Fixture Controller",
-  "driver": "csv-instruments",
-  "model": "fixture_controller",
-  "serial_number": "FIXTURE-001",
-  "resource": {
-    "transport": "raw-socket",
-    "host": "127.0.0.1",
-    "port": 5027
-  }
-}
-```
-
-See [Loading CSV and XLSX instrument definitions](csv-loading.md) for the five-column CSV format.
-
-### Bundled CSV model inventory
-
-The repository root currently contains 11 CSV `Equipment` blocks representing 10 unique normalized
-model IDs. These are legacy/experimental command catalogs; they do not claim the same stateful
-fidelity as built-in drivers.
-
-`detailed_instruments.csv` contains eight models:
-
-| CSV equipment name | Bench `model` |
-| --- | --- |
-| `Virtual 34461A-EMU DMM` | `virtual_34461a_emu_dmm` |
-| `Virtual Generic Single-Output PSU-EMU` | `virtual_generic_single_output_psu_emu` |
-| `Virtual TDS2024B-EMU Scope` | `virtual_tds2024b_emu_scope` |
-| `Virtual 33220A-EMU Generator` | `virtual_33220a_emu_generator` |
-| `Virtual N5222B-EMU VNA` | `virtual_n5222b_emu_vna` |
-| `Virtual 8846A-EMU DMM` | `virtual_8846a_emu_dmm` |
-| `Virtual E5071C-EMU VNA` | `virtual_e5071c_emu_vna` |
-| `Virtual 8753D-EMU VNA` | `virtual_8753d_emu_vna` |
-
-`pna-commands.csv` contains one model:
-
-| CSV equipment name | Bench `model` |
-| --- | --- |
-| `Virtual VNA N5222B-EMU` | `virtual_vna_n5222b_emu` |
-
-`scpi_instruments_example.csv` contains two example models:
-
-| CSV equipment name | Bench `model` |
-| --- | --- |
-| `Virtual 34461A-EMU DMM` | `virtual_34461a_emu_dmm` |
-| `Debug Test Instrument` | `debug_test_instrument` |
-
-The example DMM duplicates the same equipment/model ID in `detailed_instruments.csv`. Do not put
-both files beside one CSV-backed bench; duplicate equipment is a deliberate hard error. Use a
-dedicated bench directory containing only the CSV files that bench needs.
-
-Counting unique selectable IDs across the project gives 4 built-in models plus 10 bundled CSV model
-IDs, or 14. A bench directory containing only `detailed_instruments.csv` exposes the 4 built-ins plus
-its 8 CSV models, or 12 catalog entries.
-
-## Complete bench and validation
-
-Wrap one or more instrument objects in the bench root:
+CSV models become catalog-visible when their folder is supplied to the bench loader. The `model`
+is the normalized Equipment name from the CSV. This example mixes a built-in DMM, a generic VNA,
+and a CSV relay:
 
 ```json
 {
   "schema_version": 1,
-  "name": "my-bench",
-  "description": "DMM, power supply, and all-applications VNA.",
+  "name": "mixed-ate-bench",
+  "description": "Built-in and CSV instruments on one virtual bench.",
+  "metadata": {},
   "instruments": [
     {
       "id": "meter1",
       "driver": "virtual-3446x",
       "model": "34461A-EMU",
-      "serial_number": "DMM-001",
-      "resource": {
-        "transport": "raw-socket",
-        "host": "127.0.0.1",
-        "port": 5025
-      }
-    },
-    {
-      "id": "supply1",
-      "driver": "virtual-triple-psu",
-      "model": "E36312A-EMU",
-      "serial_number": "PSU-001",
-      "resource": {
-        "transport": "raw-socket",
-        "host": "127.0.0.1",
-        "port": 5026
-      }
+      "serial_number": "EMU-DMM-001",
+      "configuration": {},
+      "resource": {"transport": "raw-socket", "host": "127.0.0.1", "port": 5025}
     },
     {
       "id": "vna1",
       "driver": "virtual-vna",
-      "model": "N5242B-EMU",
-      "serial_number": "VNA-001",
-      "configuration": {
-        "mode": "all-applications"
-      },
-      "resource": {
-        "transport": "raw-socket",
-        "host": "127.0.0.1",
-        "port": 5027
-      }
+      "model": "VNA-4PORT-EMU",
+      "serial_number": "EMU-VNA-001",
+      "configuration": {},
+      "resource": {"transport": "raw-socket", "host": "127.0.0.1", "port": 5026}
+    },
+    {
+      "id": "relay1",
+      "driver": "csv-instruments",
+      "model": "bench_relay",
+      "serial_number": "EMU-RELAY-001",
+      "configuration": {},
+      "resource": {"transport": "raw-socket", "host": "127.0.0.1", "port": 5027}
     }
   ]
 }
 ```
 
-This is valid JSON and can be copied directly. Use `examples/virtual-bench.json` for a smaller file
-or `examples/mixed-bench.json` for a complete built-in/CSV composition.
+## Bundled CSV equipment
 
-Validate without opening ports, then start the bench:
+| Equipment value | Normalized CSV model ID |
+|---|---|
+| `Virtual 34461A-EMU DMM` | `virtual_34461a_emu_dmm` |
+| `Virtual Generic Single-Output PSU-EMU` | `virtual_generic_single_output_psu_emu` |
+| `Virtual TDS2024B-EMU Scope` | `virtual_tds2024b_emu_scope` |
+| `Virtual 33220A-EMU Generator` | `virtual_33220a_emu_generator` |
+| `Virtual VNA-2PORT-EMU CSV Basic` | `virtual_vna_2port_emu_csv_basic` |
+| `Virtual 8846A-EMU DMM` | `virtual_8846a_emu_dmm` |
+| `Virtual VNA-4PORT-EMU CSV Full` | `virtual_vna_4port_emu_csv_full` |
+| `Virtual VNA-2PORT-EMU CSV Minimal` | `virtual_vna_2port_emu_csv_minimal` |
+| `Debug Test Instrument` | `debug_test_instrument` |
+| `Virtual VNA-2PORT-EMU CSV Static` | `virtual_vna_2port_emu_csv_static` |
 
-```powershell
-scpi-emulator --bench .\my-bench.json
-scpi-emulator --bench .\my-bench.json --start
-```
+`Virtual 34461A-EMU DMM` occurs in two bundled files and therefore counts once among the 10 unique
+CSV model IDs. Loading both files in one directory is intentionally rejected because duplicate
+Equipment names are ambiguous.
 
-Composition fails before startup if a driver/model/firmware/transport is unknown, an option set is
-incoherent, IDs or resource endpoints are duplicated, or a driver receives unsupported
-configuration fields.
-
-## Where the runtime catalog comes from
-
-The catalog is assembled at runtime; it is not a second JSON file that users must maintain.
-Built-in driver descriptors live in `src/scpi_emulator/drivers/`. CSV model descriptors are created
-from the files beside a bench. The VNA's project-owned compatibility tokens are stored in
-`src/scpi_emulator/profiles/pna_compatibility.v1.json` and are checked against this document by the
-test suite.
+Use `scpi-emulator --bench bench.json --start` for a precise saved composition. Use
+`scpi-emulator --load instruments/ --start` when every instrument comes from CSV files and sequential
+ports are sufficient. See [Virtual benches](virtual-benches.md) and [CSV loading](csv-loading.md).
+The ready-to-run [`generic-vna-bench.json`](../examples/generic-vna-bench.json) demonstrates a
+four-port 67 GHz configuration with all compatible applications.

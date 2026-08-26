@@ -9,7 +9,7 @@ from scpi_emulator.drivers import build_driver_catalog
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CATALOG_DOCUMENT = REPOSITORY_ROOT / "docs" / "instrument-catalog.md"
 OPTION_DOCUMENT = REPOSITORY_ROOT / "docs" / "instrument-options.json"
-MATRIX = REPOSITORY_ROOT / "src" / "scpi_emulator" / "profiles" / "pna_compatibility.v1.json"
+PROFILE = REPOSITORY_ROOT / "src" / "scpi_emulator" / "profiles" / "vna_capabilities.v1.json"
 
 
 def test_user_catalog_lists_every_runtime_driver_model_firmware_and_transport() -> None:
@@ -26,33 +26,27 @@ def test_user_catalog_lists_every_runtime_driver_model_firmware_and_transport() 
             assert f"`{transport.name}`" in document
 
 
-def test_user_catalog_lists_every_vna_configuration_addon_and_application_token() -> None:
+def test_user_catalog_lists_every_vna_hardware_and_application_token() -> None:
     document = CATALOG_DOCUMENT.read_text(encoding="utf-8")
-    matrix = json.loads(MATRIX.read_text(encoding="utf-8"))
+    profile = json.loads(PROFILE.read_text(encoding="utf-8"))
     options = json.loads(OPTION_DOCUMENT.read_text(encoding="utf-8"))
+    documented_driver = options["drivers"]["virtual-vna"]
     documented_models = options["drivers"]["virtual-vna"]["models"]
 
-    for model_name, model in matrix["models"].items():
+    assert set(documented_driver["hardware_features"]) == set(profile["hardware_features"])
+    for feature in profile["hardware_features"]:
+        assert f"`{feature}`" in document
+    for model_name, model in profile["models"].items():
         documented = documented_models[model_name]
-        assert set(documented["hardware_configurations"]) == set(
-            model["hardware_configurations"]
-        )
-        assert set(documented["hardware_addons"]) == set(model["hardware_addons"])
-        for configuration in model["hardware_configurations"]:
-            assert f"`{configuration}`" in document
-        for addon in model["hardware_addons"]:
-            assert f"`{addon}`" in document
-        expected_options = {
-            option
-            for application in matrix["applications"].values()
-            if model_name in application["models"]
-            for option in application["options"]
-        }
-        assert set(documented["application_options"]) == expected_options
+        assert documented["ports"] == model["ports"]
+        assert documented["default_source_count"] == model["default_source_count"]
+        assert set(documented["applications"]) <= set(profile["applications"])
+        for application in documented["applications"]:
+            assert f"`{application}`" in document
     assert "instrument-options.json" in document
 
 
-def test_user_catalog_explains_all_bench_fields_and_both_vna_modes() -> None:
+def test_user_catalog_explains_all_bench_and_generic_vna_fields() -> None:
     document = CATALOG_DOCUMENT.read_text(encoding="utf-8")
 
     for field in (
@@ -64,13 +58,16 @@ def test_user_catalog_explains_all_bench_fields_and_both_vna_modes() -> None:
         "serial_number",
         "firmware",
         "configuration",
-        "hardware_configuration",
-        "hardware_addons",
-        "application_options",
+        "source_count",
+        "hardware_features",
+        "applications",
+        "frequency_minimum_hz",
+        "frequency_maximum_hz",
     ):
         assert f"`{field}`" in document
-    assert "`model-faithful`" in document
-    assert "`all-applications`" in document
+    assert "`VNA-2PORT-EMU`" in document
+    assert "`VNA-4PORT-EMU`" in document
+    assert "no fixed upper ceiling" in document
 
 
 def test_every_catalog_json_example_is_copyable_and_readme_links_catalog() -> None:

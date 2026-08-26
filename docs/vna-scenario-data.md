@@ -12,7 +12,7 @@ a trace stream named `S21`. Code can bind a developer-friendly measurement name 
 
 ```python
 instrument.attach_scenario(definition)
-instrument.pna_data.bind("Gain", "compression-run-1")
+instrument.vna_data.bind("Gain", "compression-run-1")
 ```
 
 Each trace sample must contain exactly one complex value per configured sweep point. A missing,

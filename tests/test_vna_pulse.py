@@ -9,16 +9,16 @@ from scpi_emulator.scenario import (
     ScenarioStream,
     StreamKind,
 )
-from scpi_emulator.scpi import CapabilityError, PNACapabilities
+from scpi_emulator.scpi import CapabilityError, VNACapabilities
 
 
-def pulse_pna(*streams: ScenarioStream, integrated=True) -> SCPIInstrument:
-    options = ("E93025B", "E93026B") if integrated else ("E93025B",)
-    capabilities = PNACapabilities.create(
-        "N5222B-EMU", hardware_addons=("021",), application_options=options
+def pulse_vna(*streams: ScenarioStream, integrated=True) -> SCPIInstrument:
+    options = ("basic_pulsed_rf", "integrated_pulsed_rf") if integrated else ("basic_pulsed_rf",)
+    capabilities = VNACapabilities.create(
+        "VNA-2PORT-EMU", hardware_features=("pulse_control",), applications=options
     )
     instrument = SCPIInstrument(
-        "Virtual N5222B-EMU", "pulse", pna_capabilities=capabilities
+        "Virtual VNA-2PORT-EMU", "pulse", vna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
@@ -47,7 +47,7 @@ def values(response: str) -> tuple[float, ...]:
 
 
 def test_pulse_generator_configuration_round_trips() -> None:
-    instrument = pulse_pna()
+    instrument = pulse_vna()
     commands = (
         "SENS:PULS:PER 1ms",
         "SENS:PULS1:DEL 50us",
@@ -77,7 +77,7 @@ def test_pulse_generator_configuration_round_trips() -> None:
 
 
 def test_integrated_pulse_profile_changes_axis_and_uses_scenario_trace() -> None:
-    instrument = pulse_pna(
+    instrument = pulse_vna(
         pulse_trace("pulse.profile", (0j, 1 + 0j, 0.5 + 0.25j, 0j))
     )
     instrument.process_command("SENS:SWE:PULS:PROF:STAR 0")
@@ -94,7 +94,7 @@ def test_integrated_pulse_profile_changes_axis_and_uses_scenario_trace() -> None
 
 
 def test_point_in_pulse_follows_shared_trigger_policy() -> None:
-    instrument = pulse_pna(
+    instrument = pulse_vna(
         pulse_trace(
             "pulse.point",
             (1, 1, 1, 1),
@@ -114,7 +114,7 @@ def test_point_in_pulse_follows_shared_trigger_policy() -> None:
 
 
 def test_integrated_setup_if_filter_gate_and_master_timing_round_trip() -> None:
-    instrument = pulse_pna()
+    instrument = pulse_vna()
     commands = (
         "SENS:SWE:PULS:CWT OFF",
         "SENS:SWE:PULS:DET OFF",
@@ -147,7 +147,7 @@ def test_integrated_setup_if_filter_gate_and_master_timing_round_trip() -> None:
 
 
 def test_pulse_timing_and_scenario_shape_errors_are_scpi_errors() -> None:
-    instrument = pulse_pna(pulse_trace("pulse.profile", (1, 2)))
+    instrument = pulse_vna(pulse_trace("pulse.profile", (1, 2)))
     assert instrument.process_command("SENS:PULS1:DEL 71s") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
 
@@ -157,17 +157,21 @@ def test_pulse_timing_and_scenario_shape_errors_are_scpi_errors() -> None:
 
 
 def test_pulse_license_hardware_address_and_reset_semantics() -> None:
-    with pytest.raises(CapabilityError, match="requires one"):
-        PNACapabilities.create("N5222B-EMU", application_options=("E93026B",))
+    with pytest.raises(CapabilityError, match="requires hardware features"):
+        VNACapabilities.create(
+            "VNA-2PORT-EMU",
+            hardware_features=(),
+            applications=("integrated_pulsed_rf",),
+        )
 
-    basic = pulse_pna(integrated=False)
+    basic = pulse_vna(integrated=False)
     assert basic.process_command("SENS:PULS1:STAT ON") == ""
     assert basic.process_command("SENS:SWE:PULS:MODE?") == ""
     assert basic.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
     assert basic.process_command("SENS2:PULS1:STAT?") == ""
     assert basic.process_command("SYST:ERR?").startswith('-200,"Execution error')
 
-    integrated = pulse_pna()
+    integrated = pulse_vna()
     integrated.process_command("SENS:PULS1:STAT ON")
     integrated.process_command("SENS:SWE:PULS:MODE PROF")
     integrated.process_command("*CLS")

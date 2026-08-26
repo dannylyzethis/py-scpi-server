@@ -1,4 +1,4 @@
-"""Model-faithful VNA hardware, option, and license capabilities."""
+"""Project-owned VNA hardware, application, and identity capabilities."""
 
 from __future__ import annotations
 
@@ -6,84 +6,39 @@ import json
 import math
 import re
 from dataclasses import dataclass
-from enum import Enum
 from importlib.resources import files
 from typing import Any
 
 from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, ParameterType
 
 
-DEFAULT_HARDWARE_CONFIGURATION = {"N5222B-EMU": "200", "N5242B-EMU": "201"}
-DEVELOPER_HARDWARE_CONFIGURATION = {"N5222B-EMU": "419", "N5242B-EMU": "425"}
-DEVELOPER_HARDWARE_ADDONS = {"N5222B-EMU": ("021",), "N5242B-EMU": ("021",)}
-
-OPTION_QUERY_CODES: dict[str, tuple[str, ...]] = {
-    "E93007A": ("007",),
-    "E93007B": ("007",),
-    "E93010A": ("010",),
-    "E93010B": ("010",),
-    "E93011A": ("011",),
-    "E93011B": ("011",),
-    "E93015A": ("015",),
-    "E93015B": ("015",),
-    "E93025A": ("025",),
-    "E93025B": ("025",),
-    "E93026A": ("008",),
-    "E93026B": ("008",),
-    "E93029A": ("028", "080"),
-    "E93029B": ("028", "080"),
-    "E93080A": ("080",),
-    "E93080B": ("080",),
-    "E93082A": ("082", "080"),
-    "E93082B": ("082", "080"),
-    "E93083A": ("083", "080"),
-    "E93083B": ("083", "080"),
-    "E93084A": ("084", "080"),
-    "E93084B": ("084", "080"),
-    "E93086A": ("086", "080"),
-    "E93086B": ("086", "080"),
-    "E93087A": ("087", "080"),
-    "E93087B": ("087", "080"),
-    "E93088A": ("088",),
-    "E93088B": ("088",),
-    "E93089A": ("089", "080"),
-    "E93089B": ("089", "080"),
-    "E930902A": ("090", "902"),
-    "E930902B": ("090", "902"),
-    "E93118A": ("118",),
-    "E93118B": ("118",),
-    "E93460A": ("460",),
-    "E93460B": ("460",),
-    "E93551A": ("551",),
-    "E93551B": ("551",),
-    "E93898A": ("898",),
-    "E93898B": ("898",),
-}
+DEFAULT_FREQUENCY_MINIMUM_HZ = 10_000_000
+DEFAULT_FREQUENCY_MAXIMUM_HZ = 50_000_000_000
+GENERIC_VNA_MODELS = ("VNA-2PORT-EMU", "VNA-4PORT-EMU")
+ALL_HARDWARE_FEATURES = (
+    "bias_tees",
+    "direct_receiver_access",
+    "internal_combiner",
+    "internal_rf_switches",
+    "noise_receiver",
+    "pulse_control",
+    "receiver_attenuators",
+    "source_attenuators",
+)
 
 
 class CapabilityError(ValueError):
     """Raised when a requested VNA configuration cannot exist."""
 
 
-class CompatibilityMode(str, Enum):
-    """Policy used to choose installed VNA application capabilities."""
-
-    MODEL_FAITHFUL = "model-faithful"
-    ALL_APPLICATIONS = "all-applications"
-
-
 @dataclass(frozen=True)
-class PNACapabilities:
-    mode: CompatibilityMode
+class VNACapabilities:
     model: str
     instrument_class: str
-    hardware_configuration: str
-    hardware_addons: tuple[str, ...]
-    application_options: tuple[str, ...]
-    application_features: tuple[tuple[str, str], ...]
     ports: int
-    sources: int
-    features: frozenset[str]
+    source_count: int
+    hardware_features: frozenset[str]
+    applications: tuple[str, ...]
     frequency_minimum: int | float
     frequency_maximum: int | float
     serial: str
@@ -94,93 +49,47 @@ class PNACapabilities:
         cls,
         model: str,
         *,
-        mode: CompatibilityMode | str = CompatibilityMode.MODEL_FAITHFUL,
-        hardware_configuration: str | None = None,
-        hardware_addons: tuple[str, ...] | None = None,
-        application_options: tuple[str, ...] | None = None,
+        source_count: int | None = None,
+        hardware_features: tuple[str, ...] | list[str] | None = None,
+        applications: tuple[str, ...] | list[str] | None = None,
         frequency_minimum_hz: int | float | None = None,
         frequency_maximum_hz: int | float | None = None,
-        serial: str = "US12345678",
+        serial: str = "EMU00000001",
         firmware: str = "E.1.0",
-    ) -> "PNACapabilities":
-        matrix = _load_compatibility_matrix()
+    ) -> "VNACapabilities":
+        profile = _load_capability_profile()
         model = model.upper()
-        try:
-            mode = CompatibilityMode(mode)
-        except ValueError as error:
-            choices = ", ".join(item.value for item in CompatibilityMode)
-            raise CapabilityError(f"unsupported compatibility mode {mode!r}; choose {choices}") from error
-        models = matrix["models"]
+        models = profile["models"]
         if model not in models:
-            raise CapabilityError(f"unsupported VNA model {model!r}")
+            valid = ", ".join(sorted(models))
+            raise CapabilityError(f"unsupported VNA model {model!r}; choose {valid}")
         model_data = models[model]
-        default_configurations = (
-            DEVELOPER_HARDWARE_CONFIGURATION
-            if mode is CompatibilityMode.ALL_APPLICATIONS
-            else DEFAULT_HARDWARE_CONFIGURATION
-        )
-        configuration = hardware_configuration or default_configurations[model]
-        configurations = model_data["hardware_configurations"]
-        if configuration not in configurations:
-            raise CapabilityError(
-                f"hardware configuration {configuration!r} is not available on {model}"
-            )
-        if hardware_addons is None:
-            hardware_addons = (
-                DEVELOPER_HARDWARE_ADDONS[model]
-                if mode is CompatibilityMode.ALL_APPLICATIONS
-                else ()
-            )
-        requested_addons = tuple(dict.fromkeys(option.upper() for option in hardware_addons))
-        unknown_addons = set(requested_addons) - set(model_data["hardware_addons"])
-        if unknown_addons:
-            raise CapabilityError(f"hardware add-ons are not available on {model}: {sorted(unknown_addons)}")
-        if "XSB" in requested_addons and configuration not in {"422", "423"}:
-            raise CapabilityError("XSB requires N5242B-EMU hardware configuration 422 or 423")
+        ports = model_data["ports"]
+        selected_sources = model_data["default_source_count"] if source_count is None else source_count
+        if isinstance(selected_sources, bool) or not isinstance(selected_sources, int):
+            raise CapabilityError("source_count must be an integer")
+        if selected_sources not in (1, 2):
+            raise CapabilityError("source_count must be 1 or 2")
 
-        hardware = configurations[configuration]
-        explicit_apps = tuple(
-            dict.fromkeys(option.upper() for option in (application_options or ()))
+        selected_hardware = _select_hardware_features(hardware_features, profile)
+        selected_applications = _select_applications(
+            applications,
+            profile["applications"],
+            ports=ports,
+            source_count=selected_sources,
+            hardware_features=selected_hardware,
         )
-        if mode is CompatibilityMode.ALL_APPLICATIONS:
-            automatic_apps = _compatible_application_options(
-                matrix["applications"], model, configuration, requested_addons, hardware
-            )
-            requested_apps = tuple(dict.fromkeys((*automatic_apps, *explicit_apps)))
-        else:
-            requested_apps = explicit_apps
-        application_features: list[tuple[str, str]] = []
-        for option in requested_apps:
-            application_id = _application_for_option(matrix["applications"], model, option)
-            if application_id is None:
-                raise CapabilityError(f"application option {option!r} is not available on {model}")
-            _validate_application_requirements(
-                matrix["applications"][application_id],
-                application_id,
-                configuration,
-                requested_addons,
-                requested_apps,
-                hardware,
-            )
-            application_features.append((application_id, _feature_name(application_id)))
-
-        frequency = model_data["frequency_hz"]
         frequency_minimum, frequency_maximum = _resolve_frequency_range(
-            frequency,
             frequency_minimum_hz,
             frequency_maximum_hz,
         )
         return cls(
-            mode=mode,
             model=model,
-            instrument_class=model_data["instrument_class"],
-            hardware_configuration=configuration,
-            hardware_addons=requested_addons,
-            application_options=requested_apps,
-            application_features=tuple(application_features),
-            ports=hardware["ports"],
-            sources=hardware["sources"],
-            features=frozenset(hardware["features"]),
+            instrument_class="VNA",
+            ports=ports,
+            source_count=selected_sources,
+            hardware_features=selected_hardware,
+            applications=selected_applications,
             frequency_minimum=frequency_minimum,
             frequency_maximum=frequency_maximum,
             serial=serial,
@@ -197,87 +106,176 @@ class PNACapabilities:
 
     @property
     def receiver_count(self) -> int:
-        return self.ports + self.sources
+        return self.ports + self.source_count
 
     @property
     def has_attenuators(self) -> bool:
-        return {"source_attenuators", "receiver_attenuators"} <= self.features
+        return {"source_attenuators", "receiver_attenuators"} <= self.hardware_features
 
     @property
     def has_direct_receiver_access(self) -> bool:
-        return bool({"front_panel_access", "configurable_test_set"} & self.features)
+        return "direct_receiver_access" in self.hardware_features
 
     @property
     def has_low_frequency_extension(self) -> bool:
-        return "low_frequency_extension" in self.features
+        return self.frequency_minimum < DEFAULT_FREQUENCY_MINIMUM_HZ
 
     @property
-    def option_query_codes(self) -> tuple[str, ...]:
-        codes = [self.hardware_configuration, *self.hardware_addons]
-        for option in self.application_options:
-            codes.extend(OPTION_QUERY_CODES.get(option, (_fallback_option_code(option),)))
-        return tuple(dict.fromkeys(codes))
+    def option_query_tokens(self) -> tuple[str, ...]:
+        hardware = tuple(f"HW-{_token(item)}" for item in sorted(self.hardware_features))
+        applications = tuple(f"APP-{_token(item)}" for item in self.applications)
+        return (f"PORTS-{self.ports}", f"SOURCES-{self.source_count}", *hardware, *applications)
 
     def license_catalog(self, selection: str) -> tuple[str, ...]:
         if selection.upper() == "IGNORED":
             return ()
-        licenses = [f"{self.model}-{self.hardware_configuration}"]
-        licenses.extend(f"{self.model}-{option}" for option in self.hardware_addons)
-        licenses.extend(f"{option}-1FP" for option in self.application_options)
-        return tuple(licenses)
+        return tuple(f"APP-{_token(item)}" for item in self.applications)
 
     @property
     def license_feature_names(self) -> tuple[str, ...]:
-        return tuple(feature for _, feature in self.application_features)
+        return tuple(f"APP-{_token(item)}" for item in self.applications)
 
     def feature_enabled(self, name: str) -> bool:
-        normalized = name.casefold()
-        return any(
-            normalized in {application_id.casefold(), feature.casefold()}
-            for application_id, feature in self.application_features
-        )
+        normalized = _normalize_identifier(name.removeprefix("APP-").removeprefix("app-"))
+        return normalized in self.applications
 
     @property
     def command_capabilities(self) -> frozenset[str]:
-        """Names application command specifications can use as availability gates."""
         names: set[str] = set()
-        for application_id, feature in self.application_features:
+        for application in self.applications:
             names.update(
                 {
-                    application_id,
-                    application_id.replace("_", "-"),
-                    feature.casefold(),
+                    application,
+                    application.replace("_", "-"),
+                    application.replace("_", " ").title().casefold(),
                 }
             )
-        names.update(option.casefold() for option in self.application_options)
         return frozenset(names)
 
 
+def _select_hardware_features(
+    requested: tuple[str, ...] | list[str] | None,
+    profile: dict[str, Any],
+) -> frozenset[str]:
+    available = frozenset(profile["hardware_features"])
+    if requested is None:
+        return available
+    normalized = tuple(_normalize_identifier(value) for value in requested)
+    if "all" in normalized:
+        if len(normalized) != 1:
+            raise CapabilityError("hardware_features 'all' cannot be combined with other values")
+        return available
+    unknown = set(normalized) - available
+    if unknown:
+        raise CapabilityError(f"unknown VNA hardware features: {sorted(unknown)}")
+    return frozenset(normalized)
+
+
+def _select_applications(
+    requested: tuple[str, ...] | list[str] | None,
+    available: dict[str, Any],
+    *,
+    ports: int,
+    source_count: int,
+    hardware_features: frozenset[str],
+) -> tuple[str, ...]:
+    normalized = ("all",) if requested is None else tuple(
+        dict.fromkeys(_normalize_identifier(value) for value in requested)
+    )
+    if "all" in normalized:
+        if len(normalized) != 1:
+            raise CapabilityError("applications 'all' cannot be combined with other values")
+        return tuple(
+            application
+            for application, requirements in sorted(available.items())
+            if _application_is_compatible(
+                requirements,
+                ports=ports,
+                source_count=source_count,
+                hardware_features=hardware_features,
+            )
+        )
+
+    unknown = set(normalized) - set(available)
+    if unknown:
+        raise CapabilityError(f"unknown VNA applications: {sorted(unknown)}")
+    expanded: set[str] = set()
+
+    def add_with_dependencies(application: str) -> None:
+        if application in expanded:
+            return
+        for dependency in available[application].get("requires_applications", ()):
+            add_with_dependencies(dependency)
+        expanded.add(application)
+
+    for application in normalized:
+        add_with_dependencies(application)
+    for application in sorted(expanded):
+        _validate_application_requirements(
+            application,
+            available[application],
+            ports=ports,
+            source_count=source_count,
+            hardware_features=hardware_features,
+        )
+    return tuple(sorted(expanded))
+
+
+def _application_is_compatible(
+    requirements: dict[str, Any],
+    *,
+    ports: int,
+    source_count: int,
+    hardware_features: frozenset[str],
+) -> bool:
+    try:
+        _validate_application_requirements(
+            "candidate",
+            requirements,
+            ports=ports,
+            source_count=source_count,
+            hardware_features=hardware_features,
+        )
+    except CapabilityError:
+        return False
+    return True
+
+
+def _validate_application_requirements(
+    application: str,
+    requirements: dict[str, Any],
+    *,
+    ports: int,
+    source_count: int,
+    hardware_features: frozenset[str],
+) -> None:
+    required_ports = requirements.get("requires_ports")
+    if required_ports is not None and ports < required_ports:
+        raise CapabilityError(f"application {application!r} requires {required_ports} ports")
+    required_sources = requirements.get("requires_sources")
+    if required_sources is not None and source_count < required_sources:
+        raise CapabilityError(f"application {application!r} requires {required_sources} sources")
+    missing_hardware = set(requirements.get("requires_hardware", ())) - hardware_features
+    if missing_hardware:
+        raise CapabilityError(
+            f"application {application!r} requires hardware features {sorted(missing_hardware)}"
+        )
+
+
 def _resolve_frequency_range(
-    model_frequency: dict[str, int],
     minimum_override: int | float | None,
     maximum_override: int | float | None,
 ) -> tuple[int | float, int | float]:
-    model_minimum = model_frequency["minimum"]
-    model_maximum = model_frequency["maximum"]
     minimum = (
-        model_minimum
+        DEFAULT_FREQUENCY_MINIMUM_HZ
         if minimum_override is None
         else _frequency_value(minimum_override, "frequency_minimum_hz")
     )
     maximum = (
-        model_maximum
+        DEFAULT_FREQUENCY_MAXIMUM_HZ
         if maximum_override is None
         else _frequency_value(maximum_override, "frequency_maximum_hz")
     )
-    if minimum < model_minimum:
-        raise CapabilityError(
-            f"frequency_minimum_hz cannot be below the {model_minimum} Hz model minimum"
-        )
-    if maximum > model_maximum:
-        raise CapabilityError(
-            f"frequency_maximum_hz cannot exceed the {model_maximum} Hz model maximum"
-        )
     if minimum > maximum:
         raise CapabilityError("frequency_minimum_hz cannot exceed frequency_maximum_hz")
     return minimum, maximum
@@ -292,20 +290,20 @@ def _frequency_value(value: int | float, field_name: str) -> int | float:
     return int(numeric) if numeric.is_integer() else numeric
 
 
-def detect_pna_model(*values: str) -> str | None:
+def detect_vna_model(*values: str) -> str | None:
     combined = " ".join(values).upper()
-    match = re.search(r"\b(N5222B-EMU|N5242B-EMU)\b", combined)
+    match = re.search(r"\b(VNA-(?:2|4)PORT-EMU)\b", combined)
     return match.group(1) if match else None
 
 
 def register_capability_commands(
-    registry: CommandRegistry, capabilities: PNACapabilities
+    registry: CommandRegistry, capabilities: VNACapabilities
 ) -> None:
-    """Register model identity and the core Virtual capability catalogs."""
+    """Register model identity and the core virtual capability catalogs."""
     _register_query(
         registry,
         (HeaderNode("*OPT"),),
-        lambda: ",".join(capabilities.option_query_codes),
+        lambda: ",".join(capabilities.option_query_tokens),
         common=True,
     )
 
@@ -332,8 +330,10 @@ def register_capability_commands(
 
     hardware = (*capability, HeaderNode("HARDware"))
     ports = (*hardware, HeaderNode("PORTs"))
+
     def port_catalog() -> str:
         return ",".join(capabilities.port_names)
+
     _register_query(registry, (*ports, HeaderNode("CATalog")), port_catalog)
     _register_query(registry, (*ports, HeaderNode("COUNt")), lambda: str(capabilities.ports))
     internal = (*ports, HeaderNode("INTernal"))
@@ -349,7 +349,7 @@ def register_capability_commands(
     _register_query(
         registry,
         (*hardware, HeaderNode("SOURce"), HeaderNode("COUNt")),
-        lambda: str(capabilities.sources),
+        lambda: str(capabilities.source_count),
     )
     receiver = (*hardware, HeaderNode("RECeiver"))
     _register_query(
@@ -405,9 +405,11 @@ def register_capability_commands(
 def _register_attenuator_queries(
     registry: CommandRegistry,
     hardware: tuple[HeaderNode, ...],
-    capabilities: PNACapabilities,
+    capabilities: VNACapabilities,
 ) -> None:
-    parameter = (ParameterSpec(ParameterType.INTEGER, "port", minimum=1, maximum=capabilities.ports),)
+    parameter = (
+        ParameterSpec(ParameterType.INTEGER, "port", minimum=1, maximum=capabilities.ports),
+    )
     attenuator = (*hardware, HeaderNode("ATTenuator"))
     for kind, maximum in (("RECeiver", 35), ("SOURce", 65)):
         prefix = (*attenuator, HeaderNode(kind))
@@ -437,100 +439,19 @@ def _register_query(registry, path, response, *, common=False) -> None:
     )
 
 
-def _load_compatibility_matrix() -> dict[str, Any]:
-    resource = files("scpi_emulator").joinpath("profiles/pna_compatibility.v1.json")
+def _load_capability_profile() -> dict[str, Any]:
+    resource = files("scpi_emulator").joinpath("profiles/vna_capabilities.v1.json")
     return json.loads(resource.read_text(encoding="utf-8"))
 
 
-def _application_for_option(applications: dict[str, Any], model: str, option: str) -> str | None:
-    for application_id, application in applications.items():
-        if model in application["models"] and option in application["options"]:
-            return application_id
-    return None
+def _normalize_identifier(value: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise CapabilityError("VNA feature and application names must be non-empty strings")
+    return value.strip().casefold().replace("-", "_").replace(" ", "_")
 
 
-def _compatible_application_options(
-    applications: dict[str, Any],
-    model: str,
-    configuration: str,
-    addons: tuple[str, ...],
-    hardware: dict[str, Any],
-) -> tuple[str, ...]:
-    """Select one current license per application that fits the physical profile."""
-    candidates = tuple(
-        _preferred_option(application["options"])
-        for application in applications.values()
-        if model in application["models"]
-    )
-    compatible: list[str] = []
-    for option in candidates:
-        application_id = _application_for_option(applications, model, option)
-        if application_id is None:
-            continue
-        try:
-            _validate_application_requirements(
-                applications[application_id],
-                application_id,
-                configuration,
-                addons,
-                candidates,
-                hardware,
-            )
-        except CapabilityError:
-            continue
-        compatible.append(option)
-    return tuple(compatible)
-
-
-def _preferred_option(options: list[str]) -> str:
-    """Prefer the current B-generation license when a matrix lists A and B products."""
-    return next((option for option in options if option.endswith("B")), options[-1])
-
-
-def _validate_application_requirements(
-    application: dict[str, Any],
-    application_id: str,
-    configuration: str,
-    addons: tuple[str, ...],
-    applications: tuple[str, ...],
-    hardware: dict[str, Any],
-) -> None:
-    installed_hardware = {configuration, *addons}
-    required_hardware = set(application.get("requires_any_hardware", ()))
-    if required_hardware and not required_hardware & installed_hardware:
-        raise CapabilityError(
-            f"application {application_id!r} requires one of {sorted(required_hardware)}"
-        )
-    excluded_hardware = set(application.get("excludes_hardware", ()))
-    if excluded_hardware & installed_hardware:
-        raise CapabilityError(
-            f"application {application_id!r} is not available with {configuration}"
-        )
-    for requirement in application.get("requires_software", ()):
-        if not any(_software_requirement_matches(requirement, option) for option in applications):
-            raise CapabilityError(
-                f"application {application_id!r} requires software {requirement}"
-            )
-    if application.get("requires_ports") not in (None, hardware["ports"]):
-        raise CapabilityError(f"application {application_id!r} requires four ports")
-    if application.get("requires_sources") not in (None, hardware["sources"]):
-        raise CapabilityError(f"application {application_id!r} requires two sources")
-
-
-def _software_requirement_matches(requirement: str, option: str) -> bool:
-    if requirement.endswith("A/B"):
-        prefix = requirement[:-3]
-        return option in {f"{prefix}A", f"{prefix}B"}
-    return option == requirement
-
-
-def _feature_name(application_id: str) -> str:
-    return application_id.replace("_", " ").title()
-
-
-def _fallback_option_code(option: str) -> str:
-    match = re.fullmatch(r"E93(\d+)[AB]", option)
-    return match.group(1)[-3:] if match else option
+def _token(value: str) -> str:
+    return value.replace("_", "-").upper()
 
 
 def _boolean(value: bool) -> str:

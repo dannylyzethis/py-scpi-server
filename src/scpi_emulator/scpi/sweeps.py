@@ -8,8 +8,8 @@ from decimal import Decimal
 from threading import RLock
 
 from .acquisition import AcquisitionController
-from .capabilities import PNACapabilities
-from .measurements import PNAMeasurementSystem
+from .capabilities import VNACapabilities
+from .measurements import VNAMeasurementSystem
 from .parser import NumericValue
 from .registry import (
     CommandRegistry,
@@ -41,7 +41,7 @@ class SegmentState:
 
 
 @dataclass
-class PNASweepChannel:
+class VNASweepChannel:
     number: int
     frequency_start: float
     frequency_stop: float
@@ -90,19 +90,19 @@ class PNASweepChannel:
         return self.points * (1 / self.if_bandwidth + self.dwell)
 
 
-class PNASweepSystem:
+class VNASweepSystem:
     """Maintain coherent per-channel axes and acquisition durations."""
 
     def __init__(
         self,
-        capabilities: PNACapabilities,
-        measurements: PNAMeasurementSystem,
+        capabilities: VNACapabilities,
+        measurements: VNAMeasurementSystem,
         acquisition: AcquisitionController,
     ) -> None:
         self.capabilities = capabilities
         self.measurements = measurements
         self.acquisition = acquisition
-        self.channels: dict[int, PNASweepChannel] = {}
+        self.channels: dict[int, VNASweepChannel] = {}
         self._lock = RLock()
         measurements.axis_provider = lambda number: self.channel(number).axis()
         self.reset()
@@ -113,12 +113,12 @@ class PNASweepSystem:
             self.channel(1)
             self._synchronize(1)
 
-    def channel(self, number: int) -> PNASweepChannel:
+    def channel(self, number: int) -> VNASweepChannel:
         with self._lock:
             if number not in self.channels:
                 minimum = float(self.capabilities.frequency_minimum)
                 maximum = float(self.capabilities.frequency_maximum)
-                self.channels[number] = PNASweepChannel(
+                self.channels[number] = VNASweepChannel(
                     number, minimum, maximum, (minimum + maximum) / 2
                 )
             return self.channels[number]
@@ -219,7 +219,7 @@ class PNASweepSystem:
         self._synchronize(number)
 
     @staticmethod
-    def _renumber(channel: PNASweepChannel) -> None:
+    def _renumber(channel: VNASweepChannel) -> None:
         for number, segment in enumerate(channel.segments, 1):
             segment.number = number
 
@@ -239,7 +239,7 @@ class PNASweepSystem:
         self.acquisition.set_sweep_time(number, channel.duration)
 
 
-def register_sweep_commands(registry: CommandRegistry, state: PNASweepSystem) -> None:
+def register_sweep_commands(registry: CommandRegistry, state: VNASweepSystem) -> None:
     """Register the common VNA frequency, power, IFBW, points, and type commands."""
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     source = HeaderNode("SOURce", index="channel", index_default=1)
@@ -364,7 +364,7 @@ def register_sweep_commands(registry: CommandRegistry, state: PNASweepSystem) ->
             query=True)
 
 
-def _set_number(state: PNASweepSystem, invocation, attribute: str, value: NumericValue) -> str:
+def _set_number(state: VNASweepSystem, invocation, attribute: str, value: NumericValue) -> str:
     state.configure(invocation.indices["channel"], attribute, _number(value))
     return ""
 

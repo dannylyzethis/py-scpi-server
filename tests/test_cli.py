@@ -1,15 +1,17 @@
 import json
+import io
+import socket
 
 import pytest
 
 from scpi_emulator import __version__
 from scpi_emulator import emulator
-from scpi_emulator.bench import BenchRuntime
+from scpi_emulator.bench import BenchError, BenchRuntime
 from scpi_emulator.emulator import SCPIEmulatorManager, build_parser, main
 
 
 def test_package_version_is_exposed() -> None:
-    assert __version__ == "2.4.0"
+    assert __version__ == "3.0.0"
 
 
 def test_parser_accepts_create_example() -> None:
@@ -219,3 +221,190 @@ def test_no_flags_still_enters_interactive_menu(monkeypatch) -> None:
 
     assert main([]) == 0
     assert called == [True]
+
+
+def _interactive_bench(path, port: int) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "name": "interactive-bench",
+                "instruments": [
+                    {
+                        "id": "meter1",
+                        "driver": "virtual-3446x",
+                        "model": "34461A-EMU",
+                        "serial_number": "DMM-INTERACTIVE-1",
+                        "resource": {
+                            "transport": "raw-socket",
+                            "host": "127.0.0.1",
+                            "port": port,
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_interactive_loads_quoted_bench_lists_resources_and_controls_runtime(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    folder = tmp_path / "bench definitions"
+    folder.mkdir()
+    bench = folder / "development bench.json"
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    _interactive_bench(bench, port)
+    commands = iter(
+        [
+            f'load bench "{bench}"',
+            "instruments",
+            "start",
+            "status",
+            "stop",
+            "quit",
+        ]
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(commands))
+
+    manager = SCPIEmulatorManager()
+    manager.interactive_mode()
+
+    output = capsys.readouterr().out
+    assert f"Bench loaded: {bench}" in output
+    assert "meter1: 34461A-EMU | serial DMM-INTERACTIVE-1" in output
+    assert f"TCPIP::127.0.0.1::{port}::SOCKET" in output
+    assert "Active instruments started" in output
+    assert "Server state: running" in output
+    assert manager.active_running is False
+
+
+def test_failed_interactive_bench_load_preserves_previous_composition(tmp_path) -> None:
+    good = tmp_path / "good.json"
+    _interactive_bench(good, 6401)
+    broken = tmp_path / "broken.json"
+    broken.write_text("{bad-json", encoding="utf-8")
+    manager = SCPIEmulatorManager()
+    original = manager.load_bench_file(good)
+
+    with pytest.raises(BenchError, match="invalid bench JSON"):
+        manager.load_bench_file(broken)
+
+    assert manager.active_runtime is original
+    assert manager.configured_instruments()[0]["id"] == "meter1"
+
+
+def test_bench_plus_interactive_adopts_cli_composition(tmp_path, monkeypatch) -> None:
+    bench = tmp_path / "bench.json"
+    _interactive_bench(bench, 6402)
+    seen = []
+    monkeypatch.setattr(
+        SCPIEmulatorManager,
+        "interactive_mode",
+        lambda self: seen.extend(self.configured_instruments()),
+    )
+
+    assert main(["--bench", str(bench), "--interactive"]) == 0
+    assert [row["id"] for row in seen] == ["meter1"]
+
+
+def test_running_bench_output_is_safe_for_ascii_only_windows_streams(
+    tmp_path, monkeypatch
+) -> None:
+    bench = tmp_path / "bench.json"
+    _interactive_bench(bench, 6403)
+    monkeypatch.setattr(BenchRuntime, "start", lambda self: None)
+    monkeypatch.setattr(emulator.time, "sleep", _interrupt_on_sleep)
+    raw_output = io.BytesIO()
+    ascii_output = io.TextIOWrapper(raw_output, encoding="ascii", errors="strict")
+    monkeypatch.setattr(emulator.sys, "stdout", ascii_output)
+
+    assert main(["--bench", str(bench), "--start"]) == 0
+
+    ascii_output.flush()
+    rendered = raw_output.getvalue().decode("ascii")
+    assert "SCPI Emulator running!" in rendered
+    assert "VISA resources:" in rendered
+
+
+def test_interactive_catalog_lists_drivers_and_describes_model_contract(
+    monkeypatch, capsys
+) -> None:
+    commands = iter(
+        [
+            "catalog",
+            "catalog virtual-vna",
+            "catalog virtual-vna VNA-2PORT-EMU",
+            "quit",
+        ]
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(commands))
+
+    SCPIEmulatorManager().interactive_mode()
+
+    output = capsys.readouterr().out
+    assert "Driver catalog:" in output
+    assert "virtual-vna: Virtual Vector Network Analyzer" in output
+    assert "Driver virtual-vna:" in output
+    assert "Model VNA-2PORT-EMU:" in output
+    assert "frequency_maximum_hz: number, default 50000000000" in output
+    assert "Hardware features: 8" in output
+    assert "Command coverage: 393/393 (100.0%)" in output
+
+
+def test_interactive_catalog_can_include_csv_models_from_quoted_folder(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    folder = tmp_path / "CSV catalog"
+    folder.mkdir()
+    (folder / "fixtures.csv").write_text(
+        "Equipment,Port,Command,Response,Validation\n"
+        "Bench Relay,,STATE?,OPEN,\n",
+        encoding="utf-8",
+    )
+    commands = iter([f'catalog csv "{folder}"', "quit"])
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(commands))
+
+    SCPIEmulatorManager().interactive_mode()
+
+    output = capsys.readouterr().out
+    assert f"Included CSV instruments from {folder}" in output
+    assert "Driver csv-instruments: CSV instruments" in output
+    assert "bench_relay: Bench Relay" in output
+
+
+def test_interactive_create_bench_saves_and_loads_active_composition(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    target = tmp_path / "created bench.json"
+    commands = iter(
+        [
+            f'create bench "{target}"',
+            "",
+            "virtual-3446x",
+            "34461A-EMU",
+            "meter1",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "n",
+            "y",
+            "instruments",
+            "quit",
+        ]
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(commands))
+
+    manager = SCPIEmulatorManager()
+    manager.interactive_mode()
+
+    output = capsys.readouterr().out
+    assert target.exists()
+    assert f"Bench saved and loaded: {target}" in output
+    assert "meter1: 34461A-EMU | serial EMU-METER1" in output
+    assert manager.configured_instruments()[0]["id"] == "meter1"

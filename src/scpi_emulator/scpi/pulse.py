@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
 
-from .measurements import PNAMeasurementSystem
+from .measurements import VNAMeasurementSystem
 from .parser import NumericValue
 from .registry import (
     CommandRegistry,
@@ -58,10 +58,10 @@ class PulseChannel:
     path_elements: dict[str, str] = field(default_factory=dict)
 
 
-class PNAPulseSystem:
+class VNAPulseSystem:
     """Process point-in-pulse and profile data over the shared scenario player."""
 
-    def __init__(self, measurements: PNAMeasurementSystem) -> None:
+    def __init__(self, measurements: VNAMeasurementSystem) -> None:
         self.measurements = measurements
         self.channels: dict[int, PulseChannel] = {}
         self.player: ScenarioPlayer | None = None
@@ -130,7 +130,7 @@ class PNAPulseSystem:
         return values
 
 
-def register_pulse_commands(registry: CommandRegistry, state: PNAPulseSystem) -> None:
+def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) -> None:
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     pulse_node = HeaderNode("PULSe", index="pulse", index_default=0)
     pulse = (sense, pulse_node)

@@ -53,21 +53,17 @@ def bench_json(first_port: int, second_port: int) -> dict:
     return {
         "schema_version": 1,
         "name": "rf-bench",
-        "description": "Two model-faithful network analyzers.",
+        "description": "Two generic vector network analyzers.",
         "metadata": {"site": "remote-lab"},
         "instruments": [
             {
-                "id": "pna1",
+                "id": "vna1",
                 "name": "Input VNA",
                 "driver": "virtual-vna",
-                "model": "N5222B-EMU",
+                "model": "VNA-2PORT-EMU",
                 "firmware": "E.1.0",
                 "serial_number": "VNA-001",
-                "configuration": {
-                    "mode": "model-faithful",
-                    "hardware_configuration": "200",
-                    "application_options": ["E93010B"],
-                },
+                "configuration": {"applications": ["time_domain"]},
                 "resource": {
                     "transport": "raw-socket",
                     "host": "127.0.0.1",
@@ -75,12 +71,12 @@ def bench_json(first_port: int, second_port: int) -> dict:
                 },
             },
             {
-                "id": "pnax1",
+                "id": "vnax1",
                 "driver": "virtual-vna",
-                "model": "N5242B-EMU",
+                "model": "VNA-4PORT-EMU",
                 "configuration": {
-                    "hardware_configuration": "425",
-                    "application_options": ["E93080B", "E93029B"],
+                    "source_count": 2,
+                    "applications": ["frequency_offset", "noise_figure"],
                 },
                 "resource": {
                     "transport": "raw-socket",
@@ -97,8 +93,8 @@ def test_versioned_bench_file_round_trips_and_preserves_configuration(tmp_path) 
 
     assert definition.name == "rf-bench"
     assert definition.metadata == {"site": "remote-lab"}
-    assert definition.instrument("PNA1").serial_number == "VNA-001"
-    assert definition.instrument("PNA1").configuration["application_options"] == ("E93010B",)
+    assert definition.instrument("VNA1").serial_number == "VNA-001"
+    assert definition.instrument("VNA1").configuration["applications"] == ("time_domain",)
     assert loads_bench(dumps_bench(definition)) == definition
 
     path = tmp_path / "rf-bench.json"
@@ -110,15 +106,17 @@ def test_catalog_composition_creates_each_selected_model_and_resource() -> None:
     definition = loads_bench(json.dumps(bench_json(5201, 5202)))
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
 
-    assert composed.instrument("pna1").instrument.process_command("*OPT?") == "200,010"
-    assert composed.instrument("pnax1").instrument.process_command("*OPT?") == "425,080,028"
+    assert "PORTS-2" in composed.instrument("vna1").instrument.process_command("*OPT?")
+    assert "APP-TIME-DOMAIN" in composed.instrument("vna1").instrument.process_command("*OPT?")
+    assert "PORTS-4" in composed.instrument("vnax1").instrument.process_command("*OPT?")
+    assert "APP-NOISE-FIGURE" in composed.instrument("vnax1").instrument.process_command("*OPT?")
     assert composed.resources() == {
-        "pna1": "TCPIP::127.0.0.1::5201::SOCKET",
-        "pnax1": "TCPIP::127.0.0.1::5202::SOCKET",
+        "vna1": "TCPIP::127.0.0.1::5201::SOCKET",
+        "vnax1": "TCPIP::127.0.0.1::5202::SOCKET",
     }
     assert composed.resources(host="ate-host.example") == {
-        "pna1": "TCPIP::ate-host.example::5201::SOCKET",
-        "pnax1": "TCPIP::ate-host.example::5202::SOCKET",
+        "vna1": "TCPIP::ate-host.example::5201::SOCKET",
+        "vnax1": "TCPIP::ate-host.example::5202::SOCKET",
     }
 
 
@@ -128,15 +126,21 @@ def test_bench_vna_frequency_override_defaults_and_failures_are_clear() -> None:
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
         loads_bench(json.dumps(raw))
     )
-    instrument = composed.instrument("pna1").instrument
+    instrument = composed.instrument("vna1").instrument
 
     assert instrument.process_command("SYST:CAP:FREQ:MIN?") == "10000000"
     assert instrument.process_command("SYST:CAP:FREQ:MAX?") == "18000000000"
 
-    raw["instruments"][0]["configuration"]["frequency_maximum_hz"] = 50_000_000_000
-    with pytest.raises(
-        BenchCompositionError, match="frequency_maximum_hz cannot exceed"
-    ):
+    raw["instruments"][0]["configuration"]["frequency_maximum_hz"] = 67_000_000_000
+    widened = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
+        loads_bench(json.dumps(raw))
+    )
+    assert widened.instrument("vna1").instrument.process_command("SYST:CAP:FREQ:MAX?") == (
+        "67000000000"
+    )
+
+    raw["instruments"][0]["configuration"]["frequency_minimum_hz"] = 68_000_000_000
+    with pytest.raises(BenchCompositionError, match="cannot exceed"):
         BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
             loads_bench(json.dumps(raw))
         )
@@ -176,7 +180,7 @@ def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> 
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [
-        (lambda raw: raw["instruments"][1].update(id="pna1"), "ids must be unique"),
+        (lambda raw: raw["instruments"][1].update(id="vna1"), "ids must be unique"),
         (
             lambda raw: raw["instruments"][1]["resource"].update(
                 raw["instruments"][0]["resource"]
@@ -214,7 +218,7 @@ def test_unknown_driver_model_transport_and_configuration_fail_transactionally()
 
     invalid_config = bench_json(5401, 5402)
     invalid_config["instruments"][1]["configuration"] = {"imaginary_option": True}
-    with pytest.raises(BenchCompositionError, match="could not compose instrument 'pnax1'"):
+    with pytest.raises(BenchCompositionError, match="could not compose instrument 'vnax1'"):
         composer.compose(loads_bench(json.dumps(invalid_config)))
 
     valid = composer.compose(loads_bench(json.dumps(bench_json(5401, 5402))))
@@ -230,10 +234,10 @@ def test_same_definition_starts_two_real_socket_instruments_with_bind_override()
     try:
         assert runtime.running is True
         assert receive_line(first_port, "*IDN?").startswith(
-            "SCPI Emulator,N5222B-EMU,"
+            "SCPI Emulator,VNA-2PORT-EMU,"
         )
         assert receive_line(second_port, "*IDN?").startswith(
-            "SCPI Emulator,N5242B-EMU,"
+            "SCPI Emulator,VNA-4PORT-EMU,"
         )
     finally:
         runtime.stop()
@@ -248,15 +252,15 @@ def test_bind_override_conflicts_are_rejected_before_any_server_starts() -> None
         "host-specific",
         (
             BenchInstrument(
-                "pna1",
+                "vna1",
                 "virtual-vna",
-                "N5222B-EMU",
+                "VNA-2PORT-EMU",
                 ResourceAddress("raw-socket", "127.0.0.1", port),
             ),
             BenchInstrument(
-                "pna2",
+                "vna2",
                 "virtual-vna",
-                "N5222B-EMU",
+                "VNA-2PORT-EMU",
                 ResourceAddress("raw-socket", "localhost", port),
             ),
         ),
@@ -279,7 +283,7 @@ def test_failed_second_bind_rolls_back_the_first_server() -> None:
         definition = loads_bench(json.dumps(bench_json(first_port, second_port)))
         composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
 
-        with pytest.raises(BenchStartError, match="could not bind 'pnax1'"):
+        with pytest.raises(BenchStartError, match="could not bind 'vnax1'"):
             composed.start(bind_host="127.0.0.1")
 
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as probe:
@@ -292,20 +296,20 @@ def test_composed_vxi11_resource_starts_transactionally() -> None:
         "vxi-bench",
         (
             BenchInstrument(
-                "pna1",
+                "vna1",
                 "virtual-vna",
-                "N5222B-EMU",
+                "VNA-2PORT-EMU",
                 ResourceAddress("vxi-11", "127.0.0.1", portmapper_port),
             ),
         ),
     )
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
 
-    assert composed.resources() == {"pna1": "TCPIP::127.0.0.1::INSTR"}
+    assert composed.resources() == {"vna1": "TCPIP::127.0.0.1::INSTR"}
     runtime = composed.start()
     try:
-        assert isinstance(runtime.servers["pna1"], VXI11Server)
-        assert runtime.servers["pna1"].running is True
+        assert isinstance(runtime.servers["vna1"], VXI11Server)
+        assert runtime.servers["vna1"].running is True
     finally:
         runtime.stop()
 
@@ -318,9 +322,9 @@ def test_composed_hislip_resource_starts_transactionally() -> None:
         "hislip-bench",
         (
             BenchInstrument(
-                "pna1",
+                "vna1",
                 "virtual-vna",
-                "N5222B-EMU",
+                "VNA-2PORT-EMU",
                 ResourceAddress("hislip", "127.0.0.1", port),
             ),
         ),
@@ -328,12 +332,12 @@ def test_composed_hislip_resource_starts_transactionally() -> None:
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
 
     assert composed.resources() == {
-        "pna1": f"TCPIP::127.0.0.1::hislip0,{port}::INSTR"
+        "vna1": f"TCPIP::127.0.0.1::hislip0,{port}::INSTR"
     }
     runtime = composed.start()
     try:
-        assert isinstance(runtime.servers["pna1"], HiSLIPServer)
-        assert runtime.servers["pna1"].running is True
+        assert isinstance(runtime.servers["vna1"], HiSLIPServer)
+        assert runtime.servers["vna1"].running is True
     finally:
         runtime.stop()
 

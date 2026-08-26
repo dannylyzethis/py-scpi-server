@@ -14,7 +14,7 @@ from scpi_emulator.drivers import (
     DMMDriver,
     InstrumentRequest,
     ModelDescriptor,
-    PNADriver,
+    VNADriver,
     POWER_SUPPLY_DRIVER_ID,
     ScenarioInputDescriptor,
     SupportLevel,
@@ -71,7 +71,7 @@ class FakeEntryPoint:
         return FakeDriver
 
 
-def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
+def test_builtin_catalog_advertises_vna_models_without_ui_dependency() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
 
     assert [descriptor.id for descriptor in catalog.descriptors] == [
@@ -82,8 +82,24 @@ def test_builtin_catalog_advertises_pna_models_without_ui_dependency() -> None:
     driver = catalog.get("VIRTUAL-VNA")
     descriptor = driver.descriptor
     assert descriptor.maturity is DriverMaturity.ALPHA
-    assert {model.model for model in descriptor.models} == {"N5222B-EMU", "N5242B-EMU"}
-    assert descriptor.model("n5242b-emu").instrument_class == "VNA-EXTENDED"
+    assert {model.model for model in descriptor.models} == {"VNA-2PORT-EMU", "VNA-4PORT-EMU"}
+    fields = {
+        field.name: field
+        for field in descriptor.model("VNA-2PORT-EMU").configuration_fields
+    }
+    assert set(fields) == {
+        "source_count",
+        "hardware_features",
+        "applications",
+        "frequency_minimum_hz",
+        "frequency_maximum_hz",
+    }
+    assert fields["source_count"].default == 1
+    assert fields["hardware_features"].default == ("all",)
+    assert fields["applications"].default == ("all",)
+    assert fields["frequency_maximum_hz"].default == 50_000_000_000
+    assert fields["frequency_maximum_hz"].maximum is None
+    assert descriptor.model("vna-4port-emu").instrument_class == "VNA"
     assert {item.name: item.support for item in descriptor.transports} == {
         "raw-socket": SupportLevel.IMPLEMENTED,
         "vxi-11": SupportLevel.IMPLEMENTED,
@@ -167,28 +183,26 @@ def test_csv_driver_applies_a_per_instance_serial_number(tmp_path) -> None:
     assert POWER_SUPPLY_DRIVER_ID in {item.id for item in catalog.descriptors}
 
 
-def test_pna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:
-    matrix_resource = files("scpi_emulator").joinpath("profiles/pna_compatibility.v1.json")
-    matrix = json.loads(matrix_resource.read_text(encoding="utf-8"))
-    descriptor = PNADriver().descriptor
+def test_vna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:
+    profile_resource = files("scpi_emulator").joinpath("profiles/vna_capabilities.v1.json")
+    profile = json.loads(profile_resource.read_text(encoding="utf-8"))
+    descriptor = VNADriver().descriptor
 
     for model in descriptor.models:
-        source = matrix["models"][model.model]
-        assert model.firmware_snapshots == (matrix["snapshot"]["reference_firmware"],)
-        assert set(model.hardware_configurations) == set(source["hardware_configurations"])
-        assert set(model.hardware_options) == set(source["hardware_addons"])
-        expected_apps = {
-            option
-            for application in matrix["applications"].values()
-            if model.model in application["models"]
-            for option in application["options"]
-        }
-        assert set(model.application_options) == expected_apps
+        source = profile["models"][model.model]
+        assert model.firmware_snapshots == (profile["snapshot"]["reference_firmware"],)
+        assert set(model.available_hardware_features) == set(profile["hardware_features"])
+        assert model.configuration_fields[0].default == source["default_source_count"]
+        assert set(model.available_applications) <= set(profile["applications"])
+        if source["ports"] == 2:
+            assert "source_phase_control" not in model.available_applications
+        else:
+            assert "source_phase_control" in model.available_applications
 
 
-def test_pna_coverage_metadata_matches_checked_in_reports() -> None:
+def test_vna_coverage_metadata_matches_checked_in_reports() -> None:
     repository_root = files("scpi_emulator").joinpath("../..").resolve()
-    for coverage in PNADriver().descriptor.command_coverage:
+    for coverage in VNADriver().descriptor.command_coverage:
         report_path = repository_root.joinpath(coverage.report)
         report = json.loads(report_path.read_text(encoding="utf-8"))
         assert report["target"] == {"model": coverage.model, "firmware": coverage.firmware}
@@ -197,34 +211,33 @@ def test_pna_coverage_metadata_matches_checked_in_reports() -> None:
         assert report["summary"]["coverage_percent"] == coverage.percent
 
 
-def test_catalog_creates_a_configured_pna_through_the_driver_contract() -> None:
+def test_catalog_creates_a_configured_vna_through_the_driver_contract() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
     instrument = catalog.create(
         "virtual-vna",
         InstrumentRequest(
-            instrument_id="bench_pna",
-            model="N5242B-EMU",
+            instrument_id="bench_vna",
+            model="VNA-4PORT-EMU",
             serial_number="VNA-001",
             configuration={
-                "mode": "model-faithful",
-                "hardware_configuration": "425",
-                "application_options": ["E93080B", "E93029B"],
+                "source_count": 2,
+                "applications": ["frequency_offset", "noise_figure"],
             },
         ),
     )
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,N5242B-EMU,VNA-001,E.1.0"
+        "SCPI Emulator,VNA-4PORT-EMU,VNA-001,E.1.0"
     )
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
 
 
-def test_pna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None:
-    instrument = PNADriver().create_instrument(
+def test_vna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None:
+    instrument = VNADriver().create_instrument(
         InstrumentRequest(
             instrument_id="limited_vna",
-            model="N5222B-EMU",
+            model="VNA-2PORT-EMU",
             configuration={"frequency_maximum_hz": 20_000_000_000},
         )
     )
@@ -233,8 +246,8 @@ def test_pna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None
     assert instrument.process_command("SYST:CAP:FREQ:MAX?") == "20000000000"
     assert instrument.process_command("SENS:FREQ:STAR?") == "10000000"
     assert instrument.process_command("SENS:FREQ:STOP?") == "20000000000"
-    assert instrument.pna_measurements.selected(1).stimulus[0] == 10_000_000
-    assert instrument.pna_measurements.selected(1).stimulus[-1] == 20_000_000_000
+    assert instrument.vna_measurements.selected(1).stimulus[0] == 10_000_000
+    assert instrument.vna_measurements.selected(1).stimulus[-1] == 20_000_000_000
 
     assert instrument.process_command("SENS:FREQ:STOP 21GHz") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
@@ -282,12 +295,12 @@ def test_descriptors_are_immutable_and_validate_inconsistent_metadata() -> None:
         )
 
 
-def test_pna_factory_rejects_unverified_firmware_and_unknown_configuration() -> None:
-    driver = PNADriver()
+def test_vna_factory_rejects_unverified_firmware_and_unknown_configuration() -> None:
+    driver = VNADriver()
 
     with pytest.raises(CatalogError, match="no verified"):
-        driver.create_instrument(InstrumentRequest("pna", "N5222B-EMU", firmware="A.99.00.00"))
+        driver.create_instrument(InstrumentRequest("vna", "VNA-2PORT-EMU", firmware="A.99.00.00"))
     with pytest.raises(CatalogError, match="unsupported VNA configuration"):
         driver.create_instrument(
-            InstrumentRequest("pna", "N5222B-EMU", configuration={"imaginary_option": True})
+            InstrumentRequest("vna", "VNA-2PORT-EMU", configuration={"imaginary_option": True})
         )

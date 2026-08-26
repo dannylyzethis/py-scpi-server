@@ -1,6 +1,6 @@
 """SCPI instrument emulator package."""
 
-__version__ = "2.4.0"
+__version__ = "3.0.0"
 
 # Public firmware identity for emulator instruments. This is intentionally
 # independent from the Python package release version.

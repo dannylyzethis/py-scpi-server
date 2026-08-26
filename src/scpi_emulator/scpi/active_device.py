@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
 
-from .measurements import PNAMeasurementSystem
+from .measurements import VNAMeasurementSystem
 from .output import DataFormat
 from .parser import NumericValue
 from .registry import (
@@ -42,10 +42,10 @@ class NoiseFigureState:
     temperature: float = 290.0
 
 
-class PNAActiveDeviceSystem:
+class VNAActiveDeviceSystem:
     """Provide trace and scalar application results from shared DUT scenarios."""
 
-    def __init__(self, measurements: PNAMeasurementSystem, data_format: DataFormat) -> None:
+    def __init__(self, measurements: VNAMeasurementSystem, data_format: DataFormat) -> None:
         self.measurements = measurements
         self.data_format = data_format
         self.gain_channels: dict[int, GainCompressionState] = {}
@@ -208,7 +208,7 @@ class PNAActiveDeviceSystem:
 
 
 def register_active_device_commands(
-    registry: CommandRegistry, state: PNAActiveDeviceSystem
+    registry: CommandRegistry, state: VNAActiveDeviceSystem
 ) -> None:
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     calc = HeaderNode("CALCulate", index="channel", index_default=1)

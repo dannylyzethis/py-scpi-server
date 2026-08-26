@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
 
-from .measurements import PNAMeasurementSystem
+from .measurements import VNAMeasurementSystem
 from .output import DataFormat
 from .parser import NumericValue
 from .registry import (
@@ -56,7 +56,7 @@ class AdvancedChannel:
     markers: dict[tuple[str, int], AdvancedMarker] = field(default_factory=dict)
 
 
-class PNAAdvancedSystem:
+class VNAAdvancedSystem:
     """Apply advanced measurement classes over the shared DUT scenario player."""
 
     STREAMS = {
@@ -76,7 +76,7 @@ class PNAAdvancedSystem:
         "wideband_iq": "wideband_iq",
     }
 
-    def __init__(self, measurements: PNAMeasurementSystem, data_format: DataFormat) -> None:
+    def __init__(self, measurements: VNAMeasurementSystem, data_format: DataFormat) -> None:
         self.measurements = measurements
         self.data_format = data_format
         self.channels: dict[int, AdvancedChannel] = {}
@@ -223,7 +223,7 @@ class PNAAdvancedSystem:
         return tuple(complex(value) for value in magnitudes)
 
 
-def register_advanced_commands(registry: CommandRegistry, state: PNAAdvancedSystem) -> None:
+def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSystem) -> None:
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     boolean = ParameterSpec(ParameterType.BOOLEAN)
@@ -243,10 +243,10 @@ def register_advanced_commands(registry: CommandRegistry, state: PNAAdvancedSyst
         return lambda inv: bool(set(names) & inv.capabilities)
 
     licenses = {
-        "spectrum": licensed("spectrum_analysis_26_5_ghz", "spectrum-analysis-26-5-ghz"),
+        "spectrum": licensed("spectrum_analysis", "spectrum-analysis"),
         "imd": licensed("intermodulation_distortion", "intermodulation-distortion"),
         "distortion": licensed(
-            "modulation_distortion_26_5_ghz", "modulation-distortion-26-5-ghz"
+            "modulation_distortion", "modulation-distortion"
         ),
         "phase_noise": licensed("phase_noise", "phase-noise"),
         "diq": licensed("differential_iq", "differential-iq"),
@@ -427,10 +427,10 @@ def _custom_define(state, invocation, name: str, measurement_class: str, paramet
     if application is None:
         raise SCPICommandError(-224, "Illegal parameter value; measurement class")
     required = {
-        "spectrum": {"spectrum_analysis_26_5_ghz", "spectrum-analysis-26-5-ghz"},
+        "spectrum": {"spectrum_analysis", "spectrum-analysis"},
         "imd": {"intermodulation_distortion", "intermodulation-distortion"},
         "distortion": {
-            "modulation_distortion_26_5_ghz", "modulation-distortion-26-5-ghz"
+            "modulation_distortion", "modulation-distortion"
         },
         "phase_noise": {"phase_noise", "phase-noise"},
         "diq": {"differential_iq", "differential-iq"},

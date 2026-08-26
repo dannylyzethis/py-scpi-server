@@ -1,4 +1,4 @@
-"""Built-in Virtual VNA/VNA-EXTENDED instrument driver."""
+"""Built-in generic VNA instrument driver."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from scpi_emulator import __version__
 from .catalog import (
     CatalogError,
     CommandCoverage,
+    ConfigurationFieldDescriptor,
+    ConfigurationFieldType,
     DriverDescriptor,
     DriverMaturity,
     InstrumentRequest,
@@ -21,32 +23,32 @@ from .catalog import (
 )
 
 
-PNA_DRIVER_ID = "virtual-vna"
-PNA_MANIFEST_RESOURCE = "profiles/pna_commands.v1.json"
+VNA_DRIVER_ID = "virtual-vna"
+VNA_MANIFEST_RESOURCE = "profiles/vna_commands.v1.json"
+VNA_CAPABILITY_RESOURCE = "profiles/vna_capabilities.v1.json"
 
 
-class PNADriver:
-    """Create VNA instruments and advertise the pinned compatibility snapshot."""
+class VNADriver:
+    """Create generic VNA instruments from project-owned capability metadata."""
 
     def __init__(self) -> None:
-        self._matrix = _load_json("profiles/pna_compatibility.v1.json")
-        self.descriptor = _build_descriptor(self._matrix)
+        self._profile = _load_json(VNA_CAPABILITY_RESOURCE)
+        self.descriptor = _build_descriptor(self._profile)
 
     def create_instrument(self, request: InstrumentRequest) -> object:
         from scpi_emulator.emulator import SCPIInstrument
-        from scpi_emulator.scpi import PNACapabilities
+        from scpi_emulator.scpi import VNACapabilities
 
         model = self.descriptor.model(request.model)
         firmware = request.firmware or model.firmware_snapshots[0]
         if firmware not in model.firmware_snapshots:
             raise CatalogError(
-                f"driver {PNA_DRIVER_ID!r} has no verified {request.model} firmware {firmware!r}"
+                f"driver {VNA_DRIVER_ID!r} has no verified {request.model} firmware {firmware!r}"
             )
         allowed = {
-            "mode",
-            "hardware_configuration",
-            "hardware_addons",
-            "application_options",
+            "source_count",
+            "hardware_features",
+            "applications",
             "frequency_minimum_hz",
             "frequency_maximum_hz",
             "serial",
@@ -66,39 +68,36 @@ class PNADriver:
             )
         if request.serial_number is not None:
             configuration["serial"] = request.serial_number
-        for sequence_name in ("hardware_addons", "application_options"):
-            if sequence_name in configuration:
-                configuration[sequence_name] = tuple(configuration[sequence_name])
-        capabilities = PNACapabilities.create(
+        capabilities = VNACapabilities.create(
             request.model,
             firmware=firmware,
             **configuration,
         )
         name = request.name or f"Virtual {request.model}"
-        return SCPIInstrument(name, request.instrument_id, pna_capabilities=capabilities)
+        return SCPIInstrument(name, request.instrument_id, vna_capabilities=capabilities)
 
 
-def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
-    firmware = matrix["snapshot"]["reference_firmware"]
-    documented_commands = len(_load_json(PNA_MANIFEST_RESOURCE)["commands"])
+def _build_descriptor(profile: dict[str, Any]) -> DriverDescriptor:
+    firmware = profile["snapshot"]["reference_firmware"]
+    documented_commands = len(_load_json(VNA_MANIFEST_RESOURCE)["commands"])
     models = tuple(
-        _model_descriptor(model, model_data, matrix["applications"], firmware)
-        for model, model_data in sorted(matrix["models"].items())
+        _model_descriptor(model, model_data, profile, firmware)
+        for model, model_data in sorted(profile["models"].items())
     )
     coverage = tuple(
         CommandCoverage(
             model=model.model,
             firmware=firmware,
-            manifest=PNA_MANIFEST_RESOURCE,
-            report=f"reports/pna-coverage-{model.model}-{firmware}.json",
+            manifest=VNA_MANIFEST_RESOURCE,
+            report=f"reports/vna-coverage-{model.model}-{firmware}.json",
             documented=documented_commands,
             implemented=documented_commands,
         )
         for model in models
     )
     return DriverDescriptor(
-        id=PNA_DRIVER_ID,
-        display_name="Virtual VNA/VNA-EXTENDED",
+        id=VNA_DRIVER_ID,
+        display_name="Virtual Vector Network Analyzer",
         version=__version__,
         maturity=DriverMaturity.ALPHA,
         models=models,
@@ -139,25 +138,61 @@ def _build_descriptor(matrix: dict[str, Any]) -> DriverDescriptor:
 def _model_descriptor(
     model: str,
     model_data: dict[str, Any],
-    applications: dict[str, Any],
+    profile: dict[str, Any],
     firmware: str,
 ) -> ModelDescriptor:
-    application_options = sorted(
-        {
-            option
-            for application in applications.values()
-            if model in application["models"]
-            for option in application["options"]
-        }
+    hardware_features = tuple(sorted(profile["hardware_features"]))
+    applications = tuple(
+        application
+        for application, requirements in sorted(profile["applications"].items())
+        if requirements.get("requires_ports", 0) <= model_data["ports"]
+        and requirements.get("requires_sources", 0) <= 2
     )
     return ModelDescriptor(
         model=model,
-        display_name=f"Virtual {model} {model_data['instrument_class']}",
-        instrument_class=model_data["instrument_class"],
+        display_name=f"Virtual {model}",
+        instrument_class="VNA",
         firmware_snapshots=(firmware,),
-        hardware_configurations=tuple(sorted(model_data["hardware_configurations"])),
-        hardware_options=tuple(sorted(model_data["hardware_addons"])),
-        application_options=tuple(application_options),
+        available_hardware_features=hardware_features,
+        available_applications=applications,
+        configuration_fields=(
+            ConfigurationFieldDescriptor(
+                "source_count",
+                ConfigurationFieldType.INTEGER,
+                "Number of independent stimulus sources.",
+                default=model_data["default_source_count"],
+                minimum=1,
+                maximum=2,
+            ),
+            ConfigurationFieldDescriptor(
+                "hardware_features",
+                ConfigurationFieldType.STRING_LIST,
+                "Project-owned simulated hardware capabilities.",
+                default=("all",),
+                choices=("all", *hardware_features),
+            ),
+            ConfigurationFieldDescriptor(
+                "applications",
+                ConfigurationFieldType.STRING_LIST,
+                "Project-owned functional application capabilities.",
+                default=("all",),
+                choices=("all", *applications),
+            ),
+            ConfigurationFieldDescriptor(
+                "frequency_minimum_hz",
+                ConfigurationFieldType.NUMBER,
+                "Emulated instrument minimum frequency in hertz.",
+                default=10_000_000,
+                minimum=1e-12,
+            ),
+            ConfigurationFieldDescriptor(
+                "frequency_maximum_hz",
+                ConfigurationFieldType.NUMBER,
+                "Emulated instrument maximum frequency in hertz.",
+                default=50_000_000_000,
+                minimum=1e-12,
+            ),
+        ),
     )
 
 

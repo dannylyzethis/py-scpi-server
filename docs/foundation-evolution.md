@@ -90,7 +90,7 @@ status behavior.
 
 ### VNA identity was only a label
 
-The original VNA catalog could identify itself as an N5222B-EMU while advertising a 50 GHz range and
+The original VNA catalog could identify itself as an VNA-2PORT-EMU while advertising a 50 GHz range and
 placeholder firmware. Port count, source count, hardware options, application licenses, and command
 availability did not come from a single model definition. This made internally contradictory
 instruments possible.
@@ -241,12 +241,12 @@ until the response has been fully consumed. The core also models:
 Why this is better: clients can exercise the same read loops, binary decoding, MAV polling, and query
 error handling they use against physical instruments.
 
-### 9. Versioned VNA and VNA-EXTENDED capabilities
+### 9. Versioned VNA and VNA capabilities
 
-The initial compatibility baseline pins Virtual N5222B-EMU VNA and N5242B-EMU VNA-EXTENDED behavior to an
-internal profile with E.1.0 as its firmware token. Machine-readable profiles
-describe physical frequency limits, hardware configurations, ports, sources, hardware features,
-add-ons, application options, and prerequisites.
+The generic capability baseline provides `VNA-2PORT-EMU` and `VNA-4PORT-EMU` with E.1.0 as the
+firmware token. A machine-readable project-owned profile describes fixed port counts, configurable
+source counts and frequency limits, semantic hardware features, semantic applications, and
+prerequisites.
 
 An immutable runtime profile drives all related queries, including:
 
@@ -256,15 +256,14 @@ An immutable runtime profile drives all related queries, including:
 - receiver access, low-frequency extension, and attenuator capabilities;
 - installed-license and enabled-feature catalogs.
 
-Impossible combinations are rejected when the profile is created. For example, a VNA cannot be
-given the VNA-EXTENDED noise receiver, a four-port application cannot be installed on a two-port profile,
-and software prerequisites cannot be omitted.
+Impossible combinations are rejected when the profile is created. For example, a four-port
+application cannot be installed on a two-port model, a two-source application requires two sources,
+and a hardware-gated application requires its semantic hardware feature.
 
-The default model-faithful mode enables only explicitly installed application licenses. The
-all-applications developer mode selects a capable physical configuration when one is not supplied
-and enables every application compatible with that model and hardware. Both modes feed the same
-typed command-availability gates, so a disabled application command is unavailable in strict
-mode without making hardware or option queries contradictory in developer mode.
+Omitted hardware and application fields enable every compatible capability. Explicit arrays let a
+test bench remove hardware or applications deliberately. Both forms feed the same typed
+command-availability gates, so a disabled application command is unavailable without making
+hardware, option, or license queries contradictory.
 
 Option queries and internal application identifiers are modeled separately. Individual application
 identifiers are intentionally not explained in this documentation.
@@ -378,7 +377,7 @@ firmware-facing protocols. Keeping these as separate systems prevents either cor
 to one DUT or one bench, while still allowing future orchestration to start both systems with a
 shared scenario and timeline.
 
-For VNA and VNA-EXTENDED profiles, completion means:
+For VNA profiles, completion means:
 
 - identity, options, licenses, ports, sources, receivers, and command availability agree;
 - sweeps and applications produce deterministic but physically meaningful data;
@@ -386,8 +385,8 @@ For VNA and VNA-EXTENDED profiles, completion means:
 - ASCII and binary transfers exercise production parsing and read logic;
 - calibration and file workflows retain state across realistic command sequences;
 - unsupported commands fail exactly because of model, firmware, hardware, or license constraints;
-- model-faithful mode exposes only valid capabilities;
-- all-applications mode gives developers a deliberate superset for testing software branches;
+- explicit application subsets expose only requested capabilities and their dependencies;
+- omitted selections provide the all-compatible development default;
 - compatibility reports state exactly what has been implemented and validated;
 - optional fault injection can reproduce timeouts, unlocks, overloads, bad calibrations, and other
   conditions that are difficult or expensive to create on real hardware.
@@ -419,7 +418,7 @@ As of 2026-08-22:
 
 - 295 automated tests pass, with 2 expected failures documenting legacy CSV parser limitations.
 - Two known legacy-parser limitations are retained as explicit expected failures.
-- The N5222B-EMU and N5242B-EMU manifests each report 393/393 documented commands in the current snapshot.
+- The VNA-2PORT-EMU and VNA-4PORT-EMU manifests each report 393/393 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned VNA capability milestone is complete.
 - The first VNA measurement lifecycle is stateful: channels own uniquely named measurements,
@@ -455,5 +454,5 @@ As of 2026-08-22:
   playback per instrument; injected faults flow through the normal SCPI error/status registers. A
   runnable remote bench/client example reproduces the complete workflow over TCP and HTTP.
 
-See [VNA compatibility baseline](pna-compatibility.md) for model and firmware details, and
+See [VNA compatibility baseline](vna-compatibility.md) for model and firmware details, and
 [TODO.md](../TODO.md) or `bd ready` for the live implementation backlog.
