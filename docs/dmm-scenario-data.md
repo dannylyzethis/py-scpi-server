@@ -34,3 +34,14 @@ the shared player and deterministic seed.
 
 This supports sequences such as nominal, drift, limit failure, and recovery through ordinary DMM
 commands, allowing ATE logic to exercise its normal error handling before hardware is available.
+
+Without an attached scenario, a built-in DMM reading intentionally falls back to `0.0`. Load the
+copyable example while the bench is running with:
+
+```text
+SCPI-MGR> scenario load dmm1 examples/remote_ate/dut-cycle.json
+SCPI-MGR> scenario start dmm1
+```
+
+Successive `READ?` calls then return `3.3`, `3.1`, and `4.8` before holding the last value. The same
+file can be selected from the instrument's **Scenario JSON** panel in the dashboard.

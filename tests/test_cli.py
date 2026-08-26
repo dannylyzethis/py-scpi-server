@@ -248,6 +248,26 @@ def _interactive_bench(path, port: int) -> None:
     )
 
 
+def _interactive_scenario(path) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "name": "interactive-dut-cycle",
+                "streams": {
+                    "voltage.dc": {
+                        "kind": "scalar",
+                        "advance": "read",
+                        "end": "hold-last",
+                        "samples": [{"value": 3.3}, {"value": 4.8}],
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_interactive_loads_quoted_bench_lists_resources_and_controls_runtime(
     tmp_path, monkeypatch, capsys
 ) -> None:
@@ -280,6 +300,50 @@ def test_interactive_loads_quoted_bench_lists_resources_and_controls_runtime(
     assert "Active instruments started" in output
     assert "Server state: running" in output
     assert manager.active_running is False
+
+
+def test_interactive_controls_scenario_while_server_is_running(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    bench = tmp_path / "bench.json"
+    scenario_folder = tmp_path / "DUT scenarios"
+    scenario_folder.mkdir()
+    scenario = scenario_folder / "voltage cycle.json"
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    _interactive_bench(bench, port)
+    _interactive_scenario(scenario)
+    commands = iter(
+        [
+            f'load bench "{bench}"',
+            "start",
+            f'scenario load meter1 "{scenario}"',
+            "scenario status meter1",
+            "scenario start meter1",
+            "scenario pause meter1",
+            "scenario step meter1 voltage.dc",
+            "scenario reset meter1",
+            "stop",
+            "quit",
+        ]
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(commands))
+
+    manager = SCPIEmulatorManager()
+    manager.interactive_mode()
+
+    output = capsys.readouterr().out
+    assert "Scenario 'interactive-dut-cycle' loaded for meter1 (paused)" in output
+    assert "Scenario meter1: paused | interactive-dut-cycle | seed 0" in output
+    assert "Scenario start applied to meter1" in output
+    assert "Scenario pause applied to meter1" in output
+    assert "Stepped voltage.dc for meter1" in output
+    assert "Scenario reset applied to meter1" in output
+    instrument = manager.active_instruments["meter1"]["instrument"]
+    status = instrument.scenario_control.inspect()
+    assert status["state"] == "paused"
+    assert status["streams"][0]["index"] == 0
 
 
 def test_failed_interactive_bench_load_preserves_previous_composition(tmp_path) -> None:

@@ -62,7 +62,13 @@ from .scpi import (
     register_time_domain_commands,
 )
 from .socket_transport import MessageTooLarge, SocketMessageFramer, SocketTransportConfig
-from .scenario import ScenarioControlError, ScenarioController, ScenarioError, loads_scenario
+from .scenario import (
+    ScenarioControlError,
+    ScenarioController,
+    ScenarioError,
+    load_scenario,
+    loads_scenario,
+)
 
 # Flask imports
 try:
@@ -1592,6 +1598,10 @@ class SCPIEmulatorManager:
         print("  create bench <file>      - Guided create, validate, save, and load")
         print("  start             - Start the active instruments")
         print("  web               - Start dashboard for the active instruments")
+        print("  scenario load <instrument> <file> - Select scenario JSON (paused)")
+        print("  scenario status <instrument>      - Show scenario and stream positions")
+        print("  scenario start|pause|reset <instrument>")
+        print("  scenario step <instrument> [stream]")
         print("  status            - Show active configuration and server status")
         print("  stop              - Stop the active instruments")
         print("  help              - Show these commands")
@@ -1702,6 +1712,9 @@ class SCPIEmulatorManager:
                         print("[ERROR] Failed to start web dashboard")
                     else:
                         print("[OK] Web dashboard started at http://127.0.0.1:8081")
+
+                elif command == 'scenario':
+                    self._interactive_scenario(parts[1] if len(parts) > 1 else "")
                 
                 elif command == 'status':
                     source = self._active_source or "none"
@@ -1715,7 +1728,10 @@ class SCPIEmulatorManager:
                     print("[OK] Active instruments stopped")
 
                 elif command == 'help':
-                    print("Use load, load bench, create bench, instruments, catalog, start, web, status, stop, or quit.")
+                    print(
+                        "Use load, load bench, create bench, instruments, catalog, start, "
+                        "web, scenario, status, stop, or quit."
+                    )
                 
                 else:
                     print(f"[ERROR] Unknown command: {command}")
@@ -1730,6 +1746,112 @@ class SCPIEmulatorManager:
                 if self.active_running:
                     self.stop_active_servers()
                 break
+
+    def _interactive_scenario(self, argument):
+        """Execute one live scenario-control command for a configured instrument."""
+        tokens = argument.split(maxsplit=2)
+        action = tokens[0].casefold() if tokens else ""
+        if action == "load":
+            if len(tokens) < 3:
+                print("Usage: scenario load <instrument> <file>")
+                return
+            instrument_id = tokens[1]
+            scenario_path = Path(_interactive_path(tokens[2])).resolve()
+            try:
+                definition = load_scenario(scenario_path)
+                result = self._execute_interactive_scenario(
+                    instrument_id,
+                    lambda instrument: instrument.scenario_control.select(definition),
+                )
+                print(
+                    f"[OK] Scenario {result['scenario']!r} loaded for {instrument_id} "
+                    "(paused)"
+                )
+            except (KeyError, OSError, ScenarioError, RuntimeError, TypeError, ValueError) as error:
+                print(f"[ERROR] Could not load scenario {str(scenario_path)!r}: {error}")
+            return
+
+        if action not in {"status", "start", "pause", "reset", "step"}:
+            self._print_scenario_usage()
+            return
+        if len(tokens) < 2:
+            self._print_scenario_usage()
+            return
+        instrument_id = tokens[1]
+        stream = tokens[2].strip() if action == "step" and len(tokens) == 3 else None
+        try:
+            if action == "status":
+                result = self._scenario_instrument(instrument_id).scenario_control.inspect()
+            elif action == "start":
+                result = self._execute_interactive_scenario(
+                    instrument_id, lambda instrument: instrument.scenario_control.start()
+                )
+            elif action == "pause":
+                result = self._execute_interactive_scenario(
+                    instrument_id, lambda instrument: instrument.scenario_control.pause()
+                )
+            elif action == "reset":
+                result = self._execute_interactive_scenario(
+                    instrument_id, lambda instrument: instrument.scenario_control.reset()
+                )
+            else:
+                positions = self._execute_interactive_scenario(
+                    instrument_id,
+                    lambda instrument: instrument.scenario_control.step(stream),
+                )
+                result = self._scenario_instrument(instrument_id).scenario_control.inspect()
+                print(f"[OK] Stepped {stream or 'all streams'} for {instrument_id}")
+                self._print_scenario_status(instrument_id, result, positions=positions)
+                return
+            if action != "status":
+                print(f"[OK] Scenario {action} applied to {instrument_id}")
+            self._print_scenario_status(instrument_id, result)
+        except (KeyError, ScenarioError, RuntimeError, TypeError, ValueError) as error:
+            print(f"[ERROR] Scenario {action} failed for {instrument_id!r}: {error}")
+
+    def _scenario_instrument(self, instrument_id):
+        entry = self.active_instruments.get(instrument_id)
+        if entry is None:
+            raise KeyError(f"instrument {instrument_id!r} is not configured")
+        instrument = entry.get('instrument') if isinstance(entry, dict) else None
+        if instrument is None:
+            instrument = getattr(entry, 'instrument', None)
+        if instrument is None:
+            raise KeyError(f"instrument {instrument_id!r} is not configured")
+        return instrument
+
+    def _execute_interactive_scenario(self, instrument_id, action):
+        instrument = self._scenario_instrument(instrument_id)
+        server = self.active_runtime.servers.get(instrument_id)
+        if server is not None and hasattr(server, 'execute_control_action'):
+            result = server.execute_control_action(action)
+        else:
+            result = action(instrument)
+        dashboard = getattr(self.active_runtime, 'web_dashboard', None)
+        if dashboard is not None:
+            dashboard.emit_state_changed('scenario-interactive', instrument_id)
+        return result
+
+    @staticmethod
+    def _print_scenario_status(instrument_id, scenario, *, positions=None):
+        print(
+            f"Scenario {instrument_id}: {scenario['state']} | "
+            f"{scenario['scenario'] or 'none'} | seed {scenario['seed']}"
+        )
+        displayed = positions if positions is not None else scenario['streams']
+        for position in displayed:
+            print(
+                f"  {position['stream']}: sample {position['index'] + 1}/"
+                f"{position['sample_count']} | reads {position['reads']} | "
+                f"advances {position['advances']}"
+            )
+
+    @staticmethod
+    def _print_scenario_usage():
+        print("Usage: scenario load <instrument> <file>")
+        print("       scenario status <instrument>")
+        print("       scenario start|pause|reset <instrument>")
+        print("       scenario step <instrument> [stream]")
 
     def _print_configured_instruments(self):
         rows = self.configured_instruments()

@@ -7,6 +7,11 @@ to reproduce a run, and inject a SCPI-visible fault without restarting an instru
 
 The complete runnable example is in `examples/remote_ate`.
 
+For ordinary local use, no control script is required: load `dut-cycle.json` from the dashboard's
+**Scenario JSON** panel, or use `scenario load dmm1 examples/remote_ate/dut-cycle.json` followed by
+`scenario start dmm1` in the interactive manager. The API workflow below remains useful for CI and
+remote orchestration.
+
 ## Start the bench host
 
 Install the project with the web extra, then run:

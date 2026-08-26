@@ -199,6 +199,12 @@ def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> 
     assert "message.textContent" in html
     assert "SCPI Control Room" in html
     assert "noise-apply" in html
+    assert "scenario-file" in html
+    assert "scenario-load" in html
+    assert "Start immediately" in html
+    assert "Select loaded stream for noise" in html
+    assert "JSON.parse(await file.text())" in html
+    assert ",'PUT');" in html
     assert "fault-inject" in html
     assert "Channels, measurements, and traces" in html
     assert "snapshot.identity.reported_model" in html

@@ -109,6 +109,21 @@ def test_remote_scenario_select_start_pause_step_reset_and_inspect() -> None:
     }
 
 
+def test_dashboard_can_load_and_start_scenario_in_one_request() -> None:
+    instrument, dashboard, client = controlled_dashboard()
+
+    selected = client.put(
+        "/api/scenario/dmm1",
+        headers=headers(dashboard),
+        json={"scenario": dmm_scenario(), "start": True},
+    )
+
+    assert selected.status_code == 200
+    assert selected.get_json()["scenario"]["state"] == "running"
+    assert float(instrument.process_command("READ?")) == 3.3
+    assert float(instrument.process_command("READ?")) == 4.8
+
+
 def test_fault_injection_uses_the_scpi_error_and_status_system() -> None:
     instrument, dashboard, client = controlled_dashboard()
     instrument.process_command("*SRE 4")

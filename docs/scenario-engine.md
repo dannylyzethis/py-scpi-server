@@ -8,6 +8,26 @@ The engine does not implement SCPI commands itself. Instrument drivers map their
 triggering, status, and errors onto named scenario streams. This prevents each instrument family
 from inventing a separate playback system.
 
+## Load a scenario without writing code
+
+With a bench loaded in the no-flag interactive manager, scenarios can be changed while its servers
+remain running:
+
+```text
+SCPI-MGR> scenario load dmm1 examples/remote_ate/dut-cycle.json
+SCPI-MGR> scenario status dmm1
+SCPI-MGR> scenario start dmm1
+SCPI-MGR> scenario pause dmm1
+SCPI-MGR> scenario step dmm1 voltage.dc
+SCPI-MGR> scenario reset dmm1
+```
+
+`scenario load` validates the complete file before replacing the selected scenario and initially
+pauses it. Quote a path only when it contains spaces. The dashboard provides the same operation in
+each instrument card: choose a schema-1 JSON file, choose whether to start immediately, and select
+**Load JSON**. The stream dropdown below it is specifically for adding deterministic noise to a
+stream that is already loaded; it does not select or load a scenario file.
+
 ## Human-readable JSON format
 
 Scenario documents use schema version 1:

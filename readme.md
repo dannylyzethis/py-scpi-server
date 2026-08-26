@@ -248,6 +248,8 @@ SCPI-MGR> catalog virtual-vna vna-2-port
 SCPI-MGR> create bench "C:\ATE Projects\benches\new bench.json"
 SCPI-MGR> start
 SCPI-MGR> status
+SCPI-MGR> scenario load dmm1 examples/remote_ate/dut-cycle.json
+SCPI-MGR> scenario start dmm1
 SCPI-MGR> web
 SCPI-MGR> stop
 ```
@@ -266,6 +268,11 @@ add one or more instruments, preview their VISA resources, and confirm the save.
 is validated before an atomic write and is loaded immediately. Put any CSV definitions beside the
 target JSON so their models are included automatically. Type `cancel` at any prompt to leave without
 creating or replacing a file.
+
+Scenario files can be selected while servers remain running. `scenario load <instrument> <file>`
+validates and selects a scenario in the paused state; `scenario start`, `pause`, `reset`, `status`,
+and `step` control playback. The dashboard provides a per-instrument **Load JSON** control for the
+same workflow. Its stream dropdown applies deterministic noise to an already-loaded stream.
 
 Container quick start:
 

@@ -226,3 +226,14 @@ compositions and one bench can run many scenarios without restarting its sockets
 `BenchRuntime` can start the secure web/control API with `start_web_dashboard()`. The API selects,
 starts, pauses, steps, resets, and inspects scenarios per instrument. See
 [Remote ATE development workflow](remote-ate-workflow.md).
+
+The interactive manager exposes those controls directly while the instrument servers are running:
+
+```text
+SCPI-MGR> scenario load dmm1 examples/remote_ate/dut-cycle.json
+SCPI-MGR> scenario status dmm1
+SCPI-MGR> scenario start dmm1
+```
+
+The dashboard instrument card also accepts the scenario JSON file directly. Its stream selector is
+only for deterministic-noise configuration after a scenario has been loaded.
