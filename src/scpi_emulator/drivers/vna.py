@@ -73,8 +73,10 @@ class VNADriver:
             firmware=firmware,
             **configuration,
         )
-        name = request.name or f"Virtual {request.model}"
-        return SCPIInstrument(name, request.instrument_id, vna_capabilities=capabilities)
+        name = request.name or model.display_name
+        instrument = SCPIInstrument(name, request.instrument_id, vna_capabilities=capabilities)
+        instrument.set_reported_model(request.reported_model or model.display_name)
+        return instrument
 
 
 def _build_descriptor(profile: dict[str, Any]) -> DriverDescriptor:
@@ -150,7 +152,7 @@ def _model_descriptor(
     )
     return ModelDescriptor(
         model=model,
-        display_name=f"Virtual {model}",
+        display_name=f"Virtual VNA {model_data['ports']} Port",
         instrument_class="VNA",
         firmware_snapshots=(firmware,),
         available_hardware_features=hardware_features,

@@ -5,10 +5,10 @@ from scpi_emulator.scpi import CapabilityError, CommandSpec, HeaderNode, VNACapa
 
 
 def test_default_generic_identity_topology_and_frequency_are_consistent() -> None:
-    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "vna")
+    instrument = SCPIInstrument("Virtual VNA 2 Port", "vna")
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,VNA-2PORT-EMU,EMU00000001,E.1.0"
+        "SCPI Emulator,vna-2-port,EMU00000001,E.1.0"
     )
     options = instrument.process_command("*OPT?").split(",")
     assert options[:2] == ["PORTS-2", "SOURCES-1"]
@@ -25,7 +25,7 @@ def test_default_generic_identity_topology_and_frequency_are_consistent() -> Non
 
 def test_frequency_limits_can_widen_or_narrow_without_model_ceiling() -> None:
     profile = VNACapabilities.create(
-        "VNA-4PORT-EMU",
+        "vna-4-port",
         frequency_minimum_hz=100_000,
         frequency_maximum_hz=110_000_000_000,
     )
@@ -50,12 +50,12 @@ def test_frequency_limits_can_widen_or_narrow_without_model_ceiling() -> None:
 )
 def test_invalid_frequency_limits_are_rejected(kwargs: dict, message: str) -> None:
     with pytest.raises(CapabilityError, match=message):
-        VNACapabilities.create("VNA-2PORT-EMU", **kwargs)
+        VNACapabilities.create("vna-2-port", **kwargs)
 
 
 def test_semantic_hardware_application_option_and_license_reporting() -> None:
     profile = VNACapabilities.create(
-        "VNA-4PORT-EMU",
+        "vna-4-port",
         source_count=2,
         hardware_features=(
             "direct_receiver_access",
@@ -86,12 +86,12 @@ def test_semantic_hardware_application_option_and_license_reporting() -> None:
 @pytest.mark.parametrize(
     ("model", "kwargs", "message"),
     [
-        ("VNA-2PORT-EMU", {"source_count": 3}, "must be 1 or 2"),
-        ("VNA-2PORT-EMU", {"hardware_features": ("unknown",)}, "unknown"),
-        ("VNA-2PORT-EMU", {"hardware_features": ("all", "bias_tees")}, "cannot be combined"),
-        ("VNA-2PORT-EMU", {"applications": ("source_phase_control",)}, "requires 4 ports"),
+        ("vna-2-port", {"source_count": 3}, "must be 1 or 2"),
+        ("vna-2-port", {"hardware_features": ("unknown",)}, "unknown"),
+        ("vna-2-port", {"hardware_features": ("all", "bias_tees")}, "cannot be combined"),
+        ("vna-2-port", {"applications": ("source_phase_control",)}, "requires 4 ports"),
         (
-            "VNA-4PORT-EMU",
+            "vna-4-port",
             {"hardware_features": (), "applications": ("noise_figure",)},
             "requires hardware features",
         ),
@@ -103,8 +103,8 @@ def test_impossible_generic_profiles_are_rejected(model: str, kwargs: dict, mess
 
 
 def test_omitted_applications_enable_every_compatible_application() -> None:
-    two_port = VNACapabilities.create("VNA-2PORT-EMU")
-    four_port = VNACapabilities.create("VNA-4PORT-EMU")
+    two_port = VNACapabilities.create("vna-2-port")
+    four_port = VNACapabilities.create("vna-4-port")
 
     assert two_port.feature_enabled("APP-NOISE-FIGURE") is True
     assert two_port.feature_enabled("source-phase-control") is False
@@ -113,7 +113,7 @@ def test_omitted_applications_enable_every_compatible_application() -> None:
 
 
 def test_capability_query_validates_port_and_license_selection() -> None:
-    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "vna")
+    instrument = SCPIInstrument("Virtual VNA 2 Port", "vna")
 
     assert instrument.process_command("SYST:CAP:HARD:ATT:REC:EXIS? 3") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
@@ -125,9 +125,9 @@ def test_vna_application_capabilities_gate_typed_commands() -> None:
     base = SCPIInstrument(
         "Base VNA",
         "base",
-        vna_capabilities=VNACapabilities.create("VNA-4PORT-EMU", applications=()),
+        vna_capabilities=VNACapabilities.create("vna-4-port", applications=()),
     )
-    full = SCPIInstrument("Full VNA-4PORT-EMU", "full")
+    full = SCPIInstrument("Full vna-4-port", "full")
     specification = CommandSpec(
         path=(HeaderNode("CALCulate"), HeaderNode("NOISe")),
         handler=lambda invocation: "1",
@@ -143,5 +143,5 @@ def test_vna_application_capabilities_gate_typed_commands() -> None:
 
 
 def test_unknown_model_lists_the_generic_choices() -> None:
-    with pytest.raises(CapabilityError, match="VNA-2PORT-EMU, VNA-4PORT-EMU"):
+    with pytest.raises(CapabilityError, match="vna-2-port, vna-4-port"):
         VNACapabilities.create("unknown-vna")

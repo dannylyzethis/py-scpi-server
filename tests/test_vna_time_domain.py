@@ -11,10 +11,10 @@ from scpi_emulator.scpi import VNACapabilities
 
 def licensed_vna() -> SCPIInstrument:
     capabilities = VNACapabilities.create(
-        "VNA-2PORT-EMU", applications=("time_domain", "fixture_removal")
+        "vna-2-port", applications=("time_domain", "fixture_removal")
     )
     instrument = SCPIInstrument(
-        "Virtual VNA-2PORT-EMU", "time-domain", vna_capabilities=capabilities
+        "Virtual VNA 2 Port", "time-domain", vna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     stream = ScenarioStream(
@@ -110,9 +110,9 @@ def test_application_state_survives_cls_and_resets_with_rst() -> None:
 
 def test_unlicensed_and_nonexistent_application_commands_are_rejected() -> None:
     strict = SCPIInstrument(
-        "Virtual VNA-2PORT-EMU",
+        "Virtual VNA 2 Port",
         "strict",
-        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
+        vna_capabilities=VNACapabilities.create("vna-2-port", applications=()),
     )
     assert strict.process_command("CALC:TRAN:TIME:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')

@@ -24,8 +24,8 @@ def test_generic_models_fix_port_count_and_choose_source_defaults() -> None:
     models = load_profile()["models"]
 
     assert models == {
-        "VNA-2PORT-EMU": {"ports": 2, "default_source_count": 1},
-        "VNA-4PORT-EMU": {"ports": 4, "default_source_count": 2},
+        "vna-2-port": {"ports": 2, "default_source_count": 1},
+        "vna-4-port": {"ports": 4, "default_source_count": 2},
     }
 
 

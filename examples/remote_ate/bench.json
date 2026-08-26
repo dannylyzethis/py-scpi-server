@@ -1,13 +1,13 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "remote-ate-development",
   "description": "A DMM bench controlled independently from its DUT scenario.",
   "instruments": [
     {
       "id": "dmm1",
       "name": "DUT supply monitor",
-      "driver": "virtual-3446x",
-      "model": "34461A-EMU",
+      "driver": "virtual-dmm",
+      "model": "dmm",
       "configuration": {},
       "resource": {
         "transport": "raw-socket",

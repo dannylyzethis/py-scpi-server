@@ -8,7 +8,7 @@ For the complete list of driver IDs, model IDs, configuration fields, defaults, 
 tokens, application-option tokens, and copyable instrument objects, start with the
 [Instrument catalog and bench configuration reference](instrument-catalog.md).
 
-The catalog always includes the built-in VNA, DMM, and triple-output PSU drivers. Legacy five-column
+The catalog always includes the built-in VNA, DMM, and one-through-four-output PSU drivers. Five-column
 CSV instruments can be added as another driver family by passing their directory when building the
 catalog:
 
@@ -55,13 +55,13 @@ To create a bench without writing JSON, start the no-flag interactive manager an
 SCPI-MGR> create bench "C:\ATE Projects\benches\new bench.json"
 ```
 
-The builder lists numbered drivers and models, then asks for an instance ID, display name, serial,
-implemented transport, host, and port. Press Enter to accept the displayed defaults. VNA models ask
+The builder lists numbered drivers and profiles, then asks for an instance ID, display name, serial,
+optional reported model, implemented transport, host, and port. Press Enter to accept defaults. VNA profiles ask
 one simple question to enable every compatible modeled application; advanced configuration remains
 optional. Enter `cancel` at any prompt to stop without creating or replacing a file.
 
 Add as many instruments as needed. The builder rejects duplicate IDs/resources, validates the whole
-bench through the normal composer, previews every VISA resource, saves schema-version-1 JSON
+bench through the normal composer, previews every VISA resource, saves schema-version-2 JSON
 atomically, and loads the result into the current session. To include CSV-defined instruments, put
 their CSV files beside the target JSON before starting the builder; they appear automatically under
 the `csv-instruments` driver.
@@ -82,11 +82,11 @@ attempt are stopped and the runtime returns to a clean state.
 
 ## Bench JSON schema
 
-Schema version 1 uses one entry per instrument instance:
+Schema version 2 uses one entry per instrument instance:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "two-vna-development-bench",
   "description": "Generic two-port and four-port vector network analyzers.",
   "metadata": {"team": "ATE"},
@@ -95,9 +95,10 @@ Schema version 1 uses one entry per instrument instance:
       "id": "vna1",
       "name": "Input VNA",
       "driver": "virtual-vna",
-      "model": "VNA-2PORT-EMU",
+      "model": "vna-2-port",
       "firmware": "E.1.0",
       "serial_number": "VNA-001",
+      "reported_model": "Development Input VNA",
       "configuration": {
         "frequency_maximum_hz": 67000000000,
         "applications": ["time_domain"]
@@ -111,7 +112,7 @@ Schema version 1 uses one entry per instrument instance:
     {
       "id": "vnax1",
       "driver": "virtual-vna",
-      "model": "VNA-4PORT-EMU",
+      "model": "vna-4-port",
       "configuration": {
         "source_count": 2,
         "hardware_features": ["all"],
@@ -127,9 +128,8 @@ Schema version 1 uses one entry per instrument instance:
 }
 ```
 
-Instrument IDs and resource endpoints must be unique. The optional `serial_number` is the per-instance
-serial returned in the third field of `*IDN?`; use it when a bench contains two instances of one
-model. Ports must be in the range 1–65535. A selected
+Instrument IDs and resource endpoints must be unique. `reported_model` optionally controls only the
+second `*IDN?` field, while `serial_number` controls the third. Ports must be in the range 1–65535. A selected
 transport must be advertised as implemented by the selected driver; catalog entries marked planned
 or partial cannot accidentally be started.
 
@@ -158,7 +158,7 @@ engine as the VNA and DMM drivers.
 
 ## Mixed built-in and CSV example
 
-`examples/mixed-bench.json` composes two instances of the built-in `virtual-triple-psu` driver and
+`examples/mixed-bench.json` composes two instances of the built-in `virtual-ps` driver and
 one `csv-instruments` model declared by `examples/mixed-bench.csv`. The two supplies share the same
 model but have unique `id`, `serial_number`, and `resource.port` values. Because the CSV is beside
 the JSON, the CLI catalogs its `Fixture Controller` equipment block as model `fixture_controller`.
@@ -170,7 +170,7 @@ scpi-emulator --bench .\examples\mixed-bench.json
 scpi-emulator --bench .\examples\mixed-bench.json --start
 ```
 
-See [Triple-output power-supply emulator](power-supply.md) for its independent-output state and
+See [Generic power-supply emulator](power-supply.md) for its independent-output state and
 selected-channel commands.
 
 ## Loading, composing, and starting

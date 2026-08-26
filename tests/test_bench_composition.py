@@ -51,7 +51,7 @@ def receive_line(port: int, command: str) -> str:
 
 def bench_json(first_port: int, second_port: int) -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "name": "rf-bench",
         "description": "Two generic vector network analyzers.",
         "metadata": {"site": "remote-lab"},
@@ -60,7 +60,7 @@ def bench_json(first_port: int, second_port: int) -> dict:
                 "id": "vna1",
                 "name": "Input VNA",
                 "driver": "virtual-vna",
-                "model": "VNA-2PORT-EMU",
+                "model": "vna-2-port",
                 "firmware": "E.1.0",
                 "serial_number": "VNA-001",
                 "configuration": {"applications": ["time_domain"]},
@@ -73,7 +73,7 @@ def bench_json(first_port: int, second_port: int) -> dict:
             {
                 "id": "vnax1",
                 "driver": "virtual-vna",
-                "model": "VNA-4PORT-EMU",
+                "model": "vna-4-port",
                 "configuration": {
                     "source_count": 2,
                     "applications": ["frequency_offset", "noise_figure"],
@@ -89,11 +89,14 @@ def bench_json(first_port: int, second_port: int) -> dict:
 
 
 def test_versioned_bench_file_round_trips_and_preserves_configuration(tmp_path) -> None:
-    definition = loads_bench(json.dumps(bench_json(5101, 5102)))
+    raw = bench_json(5101, 5102)
+    raw["instruments"][0]["reported_model"] = "Development Analyzer"
+    definition = loads_bench(json.dumps(raw))
 
     assert definition.name == "rf-bench"
     assert definition.metadata == {"site": "remote-lab"}
     assert definition.instrument("VNA1").serial_number == "VNA-001"
+    assert definition.instrument("VNA1").reported_model == "Development Analyzer"
     assert definition.instrument("VNA1").configuration["applications"] == ("time_domain",)
     assert loads_bench(dumps_bench(definition)) == definition
 
@@ -102,14 +105,32 @@ def test_versioned_bench_file_round_trips_and_preserves_configuration(tmp_path) 
     assert load_bench(path) == definition
 
 
+def test_schema_version_one_and_invalid_reported_models_fail_clearly() -> None:
+    old = bench_json(5101, 5102)
+    old["schema_version"] = 1
+    with pytest.raises(BenchFormatError, match="schema_version must be 2"):
+        loads_bench(json.dumps(old))
+
+    for value in ("", "bad,model", "bad\nmodel"):
+        raw = bench_json(5101, 5102)
+        raw["instruments"][0]["reported_model"] = value
+        with pytest.raises(BenchFormatError, match="reported_model"):
+            loads_bench(json.dumps(raw))
+
+
 def test_catalog_composition_creates_each_selected_model_and_resource() -> None:
-    definition = loads_bench(json.dumps(bench_json(5201, 5202)))
+    raw = bench_json(5201, 5202)
+    raw["instruments"][0]["reported_model"] = "Bench VNA"
+    definition = loads_bench(json.dumps(raw))
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
 
     assert "PORTS-2" in composed.instrument("vna1").instrument.process_command("*OPT?")
     assert "APP-TIME-DOMAIN" in composed.instrument("vna1").instrument.process_command("*OPT?")
     assert "PORTS-4" in composed.instrument("vnax1").instrument.process_command("*OPT?")
     assert "APP-NOISE-FIGURE" in composed.instrument("vnax1").instrument.process_command("*OPT?")
+    assert composed.instrument("vna1").instrument.process_command("*IDN?").split(",")[1] == (
+        "Bench VNA"
+    )
     assert composed.resources() == {
         "vna1": "TCPIP::127.0.0.1::5201::SOCKET",
         "vnax1": "TCPIP::127.0.0.1::5202::SOCKET",
@@ -161,6 +182,7 @@ def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> 
                 driver="csv-instruments",
                 model="bench_relay",
                 serial_number="RELAY-001",
+                reported_model="User Relay Model",
                 resource=ResourceAddress("raw-socket", "127.0.0.1", 6201),
             ),
         ),
@@ -172,7 +194,7 @@ def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> 
 
     assert composed.instrument("relay1").instrument.process_command("STATE?") == "OPEN"
     assert composed.instrument("relay1").instrument.process_command("*IDN?") == (
-        "SCPI Emulator,Bench Relay,RELAY-001,E.1.0"
+        "SCPI Emulator,User Relay Model,RELAY-001,E.1.0"
     )
     assert composed.resources() == {"relay1": "TCPIP::127.0.0.1::6201::SOCKET"}
 
@@ -234,10 +256,10 @@ def test_same_definition_starts_two_real_socket_instruments_with_bind_override()
     try:
         assert runtime.running is True
         assert receive_line(first_port, "*IDN?").startswith(
-            "SCPI Emulator,VNA-2PORT-EMU,"
+            "SCPI Emulator,Virtual VNA 2 Port,"
         )
         assert receive_line(second_port, "*IDN?").startswith(
-            "SCPI Emulator,VNA-4PORT-EMU,"
+            "SCPI Emulator,Virtual VNA 4 Port,"
         )
     finally:
         runtime.stop()
@@ -254,13 +276,13 @@ def test_bind_override_conflicts_are_rejected_before_any_server_starts() -> None
             BenchInstrument(
                 "vna1",
                 "virtual-vna",
-                "VNA-2PORT-EMU",
+                "vna-2-port",
                 ResourceAddress("raw-socket", "127.0.0.1", port),
             ),
             BenchInstrument(
                 "vna2",
                 "virtual-vna",
-                "VNA-2PORT-EMU",
+                "vna-2-port",
                 ResourceAddress("raw-socket", "localhost", port),
             ),
         ),
@@ -298,7 +320,7 @@ def test_composed_vxi11_resource_starts_transactionally() -> None:
             BenchInstrument(
                 "vna1",
                 "virtual-vna",
-                "VNA-2PORT-EMU",
+                "vna-2-port",
                 ResourceAddress("vxi-11", "127.0.0.1", portmapper_port),
             ),
         ),
@@ -324,7 +346,7 @@ def test_composed_hislip_resource_starts_transactionally() -> None:
             BenchInstrument(
                 "vna1",
                 "virtual-vna",
-                "VNA-2PORT-EMU",
+                "vna-2-port",
                 ResourceAddress("hislip", "127.0.0.1", port),
             ),
         ),

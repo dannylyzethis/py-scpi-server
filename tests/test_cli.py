@@ -11,7 +11,7 @@ from scpi_emulator.emulator import SCPIEmulatorManager, build_parser, main
 
 
 def test_package_version_is_exposed() -> None:
-    assert __version__ == "3.0.0"
+    assert __version__ == "4.0.0"
 
 
 def test_parser_accepts_create_example() -> None:
@@ -147,13 +147,13 @@ def test_bench_starts_unchanged_and_prints_precise_resource_and_dashboard(
     bench.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "name": "cli-bench",
                 "instruments": [
                     {
                         "id": "meter1",
-                        "driver": "virtual-3446x",
-                        "model": "34461A-EMU",
+                        "driver": "virtual-dmm",
+                        "model": "dmm",
                         "resource": {
                             "transport": "raw-socket",
                             "host": "127.0.0.1",
@@ -227,13 +227,13 @@ def _interactive_bench(path, port: int) -> None:
     path.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "name": "interactive-bench",
                 "instruments": [
                     {
                         "id": "meter1",
-                        "driver": "virtual-3446x",
-                        "model": "34461A-EMU",
+                        "driver": "virtual-dmm",
+                        "model": "dmm",
                         "serial_number": "DMM-INTERACTIVE-1",
                         "resource": {
                             "transport": "raw-socket",
@@ -275,7 +275,7 @@ def test_interactive_loads_quoted_bench_lists_resources_and_controls_runtime(
 
     output = capsys.readouterr().out
     assert f"Bench loaded: {bench}" in output
-    assert "meter1: 34461A-EMU | serial DMM-INTERACTIVE-1" in output
+    assert "meter1: dmm | reports Virtual DMM | serial DMM-INTERACTIVE-1" in output
     assert f"TCPIP::127.0.0.1::{port}::SOCKET" in output
     assert "Active instruments started" in output
     assert "Server state: running" in output
@@ -337,7 +337,7 @@ def test_interactive_catalog_lists_drivers_and_describes_model_contract(
         [
             "catalog",
             "catalog virtual-vna",
-            "catalog virtual-vna VNA-2PORT-EMU",
+            "catalog virtual-vna vna-2-port",
             "quit",
         ]
     )
@@ -349,7 +349,7 @@ def test_interactive_catalog_lists_drivers_and_describes_model_contract(
     assert "Driver catalog:" in output
     assert "virtual-vna: Virtual Vector Network Analyzer" in output
     assert "Driver virtual-vna:" in output
-    assert "Model VNA-2PORT-EMU:" in output
+    assert "Model vna-2-port:" in output
     assert "frequency_maximum_hz: number, default 50000000000" in output
     assert "Hardware features: 8" in output
     assert "Command coverage: 393/393 (100.0%)" in output
@@ -384,9 +384,10 @@ def test_interactive_create_bench_saves_and_loads_active_composition(
         [
             f'create bench "{target}"',
             "",
-            "virtual-3446x",
-            "34461A-EMU",
+            "virtual-dmm",
+            "dmm",
             "meter1",
+            "",
             "",
             "",
             "",
@@ -406,5 +407,5 @@ def test_interactive_create_bench_saves_and_loads_active_composition(
     output = capsys.readouterr().out
     assert target.exists()
     assert f"Bench saved and loaded: {target}" in output
-    assert "meter1: 34461A-EMU | serial EMU-METER1" in output
+    assert "meter1: dmm | reports Virtual DMM | serial EMU-METER1" in output
     assert manager.configured_instruments()[0]["id"] == "meter1"

@@ -17,7 +17,7 @@ def scalar_stream(values, *, advance=AdvancePolicy.READ, end=EndPolicy.ERROR):
 
 
 def dmm_with(stream) -> SCPIInstrument:
-    instrument = SCPIInstrument("Virtual 34461A-EMU DMM", "dmm")
+    instrument = SCPIInstrument("Virtual DMM", "dmm")
     instrument.attach_scenario(ScenarioDefinition("dut", (stream,), seed=23))
     return instrument
 

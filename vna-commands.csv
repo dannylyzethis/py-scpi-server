@@ -1,5 +1,5 @@
 Equipment,Port,Command,Response,Validation
-Virtual VNA-2PORT-EMU CSV Static,5560,*IDN?,"SCPI Emulator,VNA-2PORT-EMU,EMU00000001,E.1.0",
+Virtual VNA 2 Port CSV Static,5560,*IDN?,"SCPI Emulator,Virtual VNA 2 Port,EMU00000001,E.1.0",
 ,,*OPC?,1,
 ,,*RST,OK,
 ,,*CLS,OK,

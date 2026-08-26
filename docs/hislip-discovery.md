@@ -51,7 +51,7 @@ TCPIP0::<host>::hislip0,<port>::INSTR
 ```
 
 Reusable bench definitions select `"transport": "hislip"`; their `resource.port` is the HiSLIP
-listener port. Both the built-in VNA and reference DMM drivers advertise this transport as
+listener port. Both the built-in VNA and DMM drivers advertise this transport as
 implemented.
 
 ## Optional mDNS/DNS-SD advertisement

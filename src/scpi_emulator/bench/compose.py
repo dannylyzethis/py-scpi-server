@@ -71,6 +71,7 @@ class BenchComposer:
                     model=item.model,
                     firmware=item.firmware,
                     serial_number=item.serial_number,
+                    reported_model=item.reported_model,
                     configuration=thaw(item.configuration),
                 )
                 created.append(

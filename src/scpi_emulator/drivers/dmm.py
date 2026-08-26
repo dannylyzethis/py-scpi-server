@@ -14,7 +14,7 @@ from .catalog import (
 )
 
 
-DMM_DRIVER_ID = "virtual-3446x"
+DMM_DRIVER_ID = "virtual-dmm"
 
 
 class DMMDriver:
@@ -25,8 +25,8 @@ class DMMDriver:
         maturity=DriverMaturity.ALPHA,
         models=(
             ModelDescriptor(
-                model="34461A-EMU",
-                display_name="Virtual 34461A-EMU DMM",
+                model="dmm",
+                display_name="Virtual DMM",
                 instrument_class="DMM",
                 firmware_snapshots=(EMULATOR_FIRMWARE,),
             ),
@@ -62,10 +62,12 @@ class DMMDriver:
                 f"driver {DMM_DRIVER_ID!r} has no verified {request.model} firmware {firmware!r}"
             )
         if request.configuration:
-            raise CatalogError("the reference DMM driver has no configurable hardware options")
-        name = request.name or f"Virtual {model.model} DMM"
-        return SCPIInstrument(
+            raise CatalogError("the virtual DMM driver has no configurable hardware options")
+        name = request.name or model.display_name
+        instrument = SCPIInstrument(
             name,
             request.instrument_id,
             serial_number=request.serial_number,
         )
+        instrument.set_reported_model(request.reported_model or model.display_name)
+        return instrument

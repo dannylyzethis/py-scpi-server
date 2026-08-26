@@ -410,7 +410,7 @@
   },
   "target": {
     "firmware": "E.1.0",
-    "model": "VNA-2PORT-EMU"
+    "model": "vna-4-port"
   },
   "undocumented_implementation_keys": [
     "CALCULATE<CHANNEL>:DIQ:DATA?",

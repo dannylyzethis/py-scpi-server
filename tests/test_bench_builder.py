@@ -28,9 +28,10 @@ def test_guided_builder_creates_atomic_mixed_bench_with_safe_defaults(tmp_path) 
         catalog,
         input_fn=answers(
             "",
-            "virtual-triple-psu",
-            "E36312A-EMU",
+            "virtual-ps",
+            "ps-3-output",
             "psu1",
+            "",
             "",
             "",
             "",
@@ -40,6 +41,7 @@ def test_guided_builder_creates_atomic_mixed_bench_with_safe_defaults(tmp_path) 
             "csv-instruments",
             "bench_relay",
             "relay1",
+            "",
             "",
             "",
             "",
@@ -75,8 +77,9 @@ def test_guided_builder_makes_all_applications_a_single_choice(tmp_path) -> None
         input_fn=answers(
             "development-vna",
             "virtual-vna",
-            "VNA-2PORT-EMU",
+            "vna-2-port",
             "vna1",
+            "",
             "",
             "",
             "",
@@ -111,8 +114,9 @@ def test_advanced_frequency_prompts_accept_scientific_notation_and_retry_ranges(
         input_fn=answers(
             "limited-vna",
             "virtual-vna",
-            "VNA-2PORT-EMU",
+            "vna-2-port",
             "vna1",
+            "",
             "",
             "",
             "",
@@ -153,15 +157,16 @@ def test_cancel_never_creates_or_replaces_a_partial_bench(tmp_path) -> None:
     assert not target.exists()
 
 
-def test_saved_bench_json_is_schema_version_one(tmp_path) -> None:
+def test_saved_bench_json_is_schema_version_two(tmp_path) -> None:
     target = tmp_path / "meter.json"
     builder = GuidedBenchBuilder(
         build_driver_catalog(discover_plugins=False),
         input_fn=answers(
             "meter-bench",
-            "virtual-3446x",
-            "34461A-EMU",
+            "virtual-dmm",
+            "dmm",
             "meter1",
+            "",
             "",
             "",
             "",
@@ -175,4 +180,4 @@ def test_saved_bench_json_is_schema_version_one(tmp_path) -> None:
 
     builder.build_and_save(target)
 
-    assert json.loads(target.read_text(encoding="utf-8"))["schema_version"] == 1
+    assert json.loads(target.read_text(encoding="utf-8"))["schema_version"] == 2

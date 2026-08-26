@@ -1,4 +1,4 @@
-"""Stateful generic triple-output power-supply subsystem."""
+"""Stateful generic one-through-four-output power-supply subsystem."""
 
 from __future__ import annotations
 
@@ -29,10 +29,15 @@ class PowerSupplyOutput:
     protection_tripped: bool = False
 
 
-class TripleOutputPowerSupply:
-    """Own three independent outputs addressed through a selected-output context."""
+class PowerSupplySystem:
+    """Own a configured number of independently addressable outputs."""
 
-    def __init__(self) -> None:
+    def __init__(self, output_count: int) -> None:
+        if isinstance(output_count, bool) or not isinstance(output_count, int):
+            raise TypeError("output count must be an integer")
+        if not 1 <= output_count <= 4:
+            raise ValueError("output count must be between 1 and 4")
+        self.output_count = output_count
         self.selected_output = 1
         self.outputs: dict[int, PowerSupplyOutput] = {}
         self.reset()
@@ -43,11 +48,16 @@ class TripleOutputPowerSupply:
 
     def reset(self) -> None:
         self.selected_output = 1
-        self.outputs = {number: PowerSupplyOutput() for number in range(1, 4)}
+        self.outputs = {
+            number: PowerSupplyOutput() for number in range(1, self.output_count + 1)
+        }
 
     def select(self, output: int) -> str:
         if output not in self.outputs:
-            raise SCPICommandError(-222, "Data out of range; output must be 1, 2, or 3")
+            raise SCPICommandError(
+                -222,
+                f"Data out of range; output must be between 1 and {self.output_count}",
+            )
         self.selected_output = output
         return ""
 
@@ -113,7 +123,7 @@ class TripleOutputPowerSupply:
 
 def register_power_supply_commands(
     registry: CommandRegistry,
-    state: TripleOutputPowerSupply,
+    state: PowerSupplySystem,
 ) -> None:
     """Register generic selected-output commands over independent channel state."""
 
@@ -128,12 +138,12 @@ def register_power_supply_commands(
         ParameterType.INTEGER,
         name="output",
         minimum=1,
-        maximum=3,
+        maximum=state.output_count,
     )
     output_name = ParameterSpec(
         ParameterType.ENUM,
         name="output",
-        choices=("OUT1", "OUT2", "OUT3"),
+        choices=tuple(f"OUT{number}" for number in range(1, state.output_count + 1)),
     )
     range_name = ParameterSpec(
         ParameterType.ENUM,
@@ -163,12 +173,12 @@ def register_power_supply_commands(
     ))
     registry.register(CommandSpec(
         (HeaderNode("INSTrument"), HeaderNode("CATalog")),
-        lambda inv: "OUT1,OUT2,OUT3",
+        lambda inv: ",".join(f"OUT{number}" for number in state.outputs),
         query=True,
     ))
     registry.register(CommandSpec(
         (HeaderNode("SYSTem"), HeaderNode("CHANnel"), HeaderNode("COUNt")),
-        lambda inv: "3",
+        lambda inv: str(state.output_count),
         query=True,
     ))
 

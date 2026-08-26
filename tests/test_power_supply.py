@@ -7,15 +7,16 @@ from scpi_emulator.bench import (
 from scpi_emulator.drivers import POWER_SUPPLY_DRIVER_ID, build_driver_catalog
 
 
-def _instrument(serial: str = "PSU-001"):
+def _instrument(serial: str = "PSU-001", model: str = "ps-3-output", reported_model=None):
     definition = BenchDefinition(
         "psu-bench",
         (
             BenchInstrument(
                 id="supply",
                 driver=POWER_SUPPLY_DRIVER_ID,
-                model="E36312A-EMU",
+                model=model,
                 serial_number=serial,
+                reported_model=reported_model,
                 resource=ResourceAddress("raw-socket", "127.0.0.1", 5025),
             ),
         ),
@@ -63,6 +64,19 @@ def test_triple_output_supply_retains_independent_selected_output_state() -> Non
     assert instrument.process_command("MEAS:VOLT?") == "0.000000E+00"
 
 
+def test_each_generic_supply_profile_exposes_exactly_its_output_count() -> None:
+    for output_count in range(1, 5):
+        instrument = _instrument(model=f"ps-{output_count}-output")
+        assert instrument.process_command("SYST:CHAN:COUN?") == str(output_count)
+        assert instrument.process_command("INST:CAT?") == ",".join(
+            f"OUT{number}" for number in range(1, output_count + 1)
+        )
+        assert instrument.process_command(f"INST:NSEL {output_count}") == ""
+        assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+        assert instrument.process_command(f"INST:NSEL {output_count + 1}") == ""
+        assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+
+
 def test_cls_preserves_supply_state_and_rst_resets_every_output() -> None:
     instrument = _instrument()
     instrument.process_command("INST:NSEL 2")
@@ -87,11 +101,14 @@ def test_supply_serial_is_unique_per_bench_instance_and_bad_output_queues_error(
     first = _instrument("PSU-001")
     second = _instrument("PSU-002")
 
-    assert first.process_command("*IDN?") == "SCPI Emulator,E36312A-EMU,PSU-001,E.1.0"
-    assert second.process_command("*IDN?") == "SCPI Emulator,E36312A-EMU,PSU-002,E.1.0"
+    assert first.process_command("*IDN?") == "SCPI Emulator,Virtual PS 3 Output,PSU-001,E.1.0"
+    assert second.process_command("*IDN?") == "SCPI Emulator,Virtual PS 3 Output,PSU-002,E.1.0"
 
     assert first.process_command("INST:NSEL 4") == ""
     assert first.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+
+    renamed = _instrument(reported_model="User Supply Model")
+    assert renamed.process_command("*IDN?").split(",")[1] == "User Supply Model"
 
 
 def test_one_bench_composes_two_same_model_supplies_with_unique_identity_and_ports() -> None:
@@ -101,7 +118,7 @@ def test_one_bench_composes_two_same_model_supplies_with_unique_identity_and_por
             BenchInstrument(
                 id=f"supply{number}",
                 driver=POWER_SUPPLY_DRIVER_ID,
-                model="E36312A-EMU",
+                model="ps-3-output",
                 serial_number=f"PSU-00{number}",
                 resource=ResourceAddress(
                     "raw-socket",

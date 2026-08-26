@@ -22,7 +22,7 @@ class FakeServer:
 
 
 def controlled_dashboard():
-    instrument = SCPIInstrument("Virtual 34461A-EMU", "34461A-EMU")
+    instrument = SCPIInstrument("Virtual DMM", "dmm")
     server = FakeServer(instrument)
     manager = SimpleNamespace(
         instruments={"dmm1": {"instrument": instrument, "port": 5025}},
@@ -219,7 +219,7 @@ def test_invalid_control_requests_do_not_replace_or_mutate_the_scenario() -> Non
 
 
 def test_remote_scenario_api_requires_bearer_and_csrf_tokens() -> None:
-    instrument = SCPIInstrument("Virtual 34461A-EMU", "34461A-EMU")
+    instrument = SCPIInstrument("Virtual DMM", "dmm")
     manager = SimpleNamespace(
         instruments={"dmm1": {"instrument": instrument, "port": 5025}},
         servers={"dmm1": FakeServer(instrument)},

@@ -1,6 +1,6 @@
 # DMM scenario data
 
-The built-in `virtual-3446x` driver provides a reference Virtual 34461A-EMU DMM for scalar DUT
+The built-in `virtual-dmm` driver provides a reference Virtual DMM for scalar DUT
 scenarios. It uses the same `ScenarioPlayer` as VNA traces; there is no DMM-specific queue or random
 generator.
 

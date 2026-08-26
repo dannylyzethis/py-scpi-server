@@ -1,51 +1,40 @@
-# Triple-output power-supply emulator
+# Generic power-supply emulator
 
-The built-in `virtual-triple-psu` driver provides the `E36312A-EMU` model as a stateful generic
-triple-output supply. It is separate from the legacy single-context PSU block in
-`detailed_instruments.csv`; adding channel-selection rows to that CSV would not create independent
-channel state.
+The built-in `virtual-ps` driver provides four stateful profiles: `ps-1-output`, `ps-2-output`,
+`ps-3-output`, and `ps-4-output`. The selector determines how many independent outputs exist.
 
 ## Bench definition
 
-Two instances of the same model use different bench IDs, serial numbers, and resource ports:
-
 ```json
 {
-  "schema_version": 1,
-  "name": "two-supply-bench",
+  "schema_version": 2,
+  "name": "mixed-supply-bench",
   "instruments": [
     {
-      "id": "supply1",
-      "driver": "virtual-triple-psu",
-      "model": "E36312A-EMU",
-      "serial_number": "PSU-001",
-      "resource": {
-        "transport": "raw-socket",
-        "host": "127.0.0.1",
-        "port": 5025
-      }
+      "id": "single_supply",
+      "driver": "virtual-ps",
+      "model": "ps-1-output",
+      "serial_number": "PS-001",
+      "resource": {"transport": "raw-socket", "host": "127.0.0.1", "port": 5025}
     },
     {
-      "id": "supply2",
-      "driver": "virtual-triple-psu",
-      "model": "E36312A-EMU",
-      "serial_number": "PSU-002",
-      "resource": {
-        "transport": "raw-socket",
-        "host": "127.0.0.1",
-        "port": 5026
-      }
+      "id": "four_output_supply",
+      "driver": "virtual-ps",
+      "model": "ps-4-output",
+      "reported_model": "Development Rack Supply",
+      "serial_number": "PS-002",
+      "resource": {"transport": "raw-socket", "host": "127.0.0.1", "port": 5026}
     }
   ]
 }
 ```
 
-`serial_number` changes the third field returned by `*IDN?`; it is independent of the bench `id`
-and network port. This lets client software distinguish two instances of the same model.
+`reported_model` changes only the second `*IDN?` field. `serial_number` changes only the third.
+Neither changes the selected output-count profile.
 
 ## Independent outputs
 
-The selected-output context controls which of the three state objects subsequent commands address:
+The selected-output context controls subsequent commands:
 
 ```text
 INST:NSEL 1
@@ -57,27 +46,14 @@ INST:NSEL 2
 VOLT 12
 CURR 1
 OUTP ON
-
-INST:NSEL 1
-VOLT?                 -> 5.000000E+00
-INST:NSEL 2
-VOLT?                 -> 1.200000E+01
 ```
 
-`INST:SEL OUT1`, `OUT2`, or `OUT3` is an equivalent named selector. `INST:CAT?` lists those names,
-and `SYST:CHAN:COUN?` returns `3`.
+`INST:SEL OUT<n>` is the named form. `INST:CAT?` lists exactly the outputs available in the profile,
+and `SYST:CHAN:COUN?` reports their count. Selecting an unavailable output queues SCPI error `-222`.
 
-The selected output owns independent values for:
+Every output independently owns voltage/current settings, enable state, protection thresholds,
+range selections, trip state, and voltage/current/power measurements. `*CLS` clears status and
+errors without changing configured outputs. `*RST` resets all available outputs and selects output 1.
 
-- voltage and current settings;
-- output enable;
-- voltage and current protection thresholds;
-- voltage and current range selection;
-- protection-trip state;
-- voltage, current, and power measurement queries.
-
-`*CLS` clears status and errors without changing any output configuration. `*RST` disables and
-resets all three outputs and selects output 1. The implementation is an emulator-defined generic
-behavioral contract; this document does not reproduce any equipment-manufacturer manual text.
-
-See `examples/mixed-bench.json` for two built-in supplies combined with a CSV-defined fixture.
+The `Virtual PS 1 Output` block in `detailed_instruments.csv` is a static compatibility profile; it
+does not provide the independent state implemented by the built-in driver.

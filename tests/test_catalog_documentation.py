@@ -55,6 +55,7 @@ def test_user_catalog_explains_all_bench_and_generic_vna_fields() -> None:
         "model",
         "resource",
         "name",
+        "reported_model",
         "serial_number",
         "firmware",
         "configuration",
@@ -65,8 +66,8 @@ def test_user_catalog_explains_all_bench_and_generic_vna_fields() -> None:
         "frequency_maximum_hz",
     ):
         assert f"`{field}`" in document
-    assert "`VNA-2PORT-EMU`" in document
-    assert "`VNA-4PORT-EMU`" in document
+    assert "`vna-2-port`" in document
+    assert "`vna-4-port`" in document
     assert "no fixed upper ceiling" in document
 
 
@@ -98,6 +99,6 @@ def test_user_catalog_inventories_every_bundled_root_csv_equipment_model() -> No
                 assert f"`{equipment}`" in document
                 assert f"`{model_id}`" in document
 
-    assert equipment_blocks == 11
-    assert len(model_ids) == 10
-    assert "4 built-in models plus 10 bundled CSV model" in document
+    assert equipment_blocks == 12
+    assert len(model_ids) == 12
+    assert "7 built-in models plus 12 bundled CSV model" in document

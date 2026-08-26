@@ -35,7 +35,7 @@ instrument = catalog.create(
     "virtual-vna",
     InstrumentRequest(
         instrument_id="vna1",
-        model="VNA-4PORT-EMU",
+        model="vna-4-port",
         serial_number="VNA-001",
         configuration={
             "source_count": 2,

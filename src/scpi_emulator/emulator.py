@@ -259,7 +259,7 @@ class ExcelReader:
 
 def _is_dmm(name, instrument_id) -> bool:
     identity = f"{name} {instrument_id}".upper()
-    return "DMM" in identity or any(model in identity for model in ("34460", "34461", "34465", "34470"))
+    return "DMM" in identity
 
 
 class SCPIInstrument:
@@ -375,6 +375,18 @@ class SCPIInstrument:
             raise ValueError("instrument identification must contain four comma-separated fields")
         fields[2] = serial_number.strip()
         self.identification = ",".join(fields)
+
+    def set_reported_model(self, reported_model):
+        """Override the second field of the instrument's four-field identity response."""
+        if not isinstance(reported_model, str) or not reported_model.strip():
+            raise ValueError("reported model must be a non-empty string")
+        if any(character in reported_model for character in ",\r\n"):
+            raise ValueError("reported model cannot contain commas or line breaks")
+        fields = self.identification.split(",", 3)
+        if len(fields) != 4:
+            raise ValueError("instrument identification must contain four comma-separated fields")
+        fields[1] = reported_model.strip()
+        self.identification = ",".join(fields)
         
 
     def visa_device_clear(self):
@@ -441,6 +453,8 @@ class SCPIInstrument:
 
     def inspect_state(self):
         """Return a non-destructive snapshot of instrument-owned runtime state."""
+        identity = self.identification.split(",", 3)
+        identity.extend("" for _ in range(4 - len(identity)))
         capabilities = None
         if self.vna_capabilities is not None:
             profile = self.vna_capabilities
@@ -456,6 +470,12 @@ class SCPIInstrument:
                 'frequency_maximum': profile.frequency_maximum,
             }
         return {
+            'identity': {
+                'manufacturer': identity[0],
+                'reported_model': identity[1],
+                'serial_number': identity[2],
+                'firmware': identity[3],
+            },
             'status': self.status.inspect(),
             'operations': self.operation_manager.inspect(),
             'acquisition': self.acquisition.inspect(),
@@ -1293,7 +1313,7 @@ def load_compatibility_instruments(file_path, port_start=5025, *, reserved_ports
                     f"row {row_num}: validation requires a parameterized command"
                 )
             validate_compatibility_rule(validation, row_num)
-            if command_key == "*IDN?" and current_instrument.vna_capabilities is None:
+            if command_key == "*IDN?":
                 current_instrument.identification = response
             if command_key not in {"*IDN?", "*RST", "*TST?", "SYST:VERS?"}:
                 current_instrument.csv_compatibility.add_command(command, response, validation)
@@ -1499,6 +1519,7 @@ class SCPIEmulatorManager:
                         bool(getattr(server, 'running', False)),
                         model=definition.model,
                         serial=definition.serial_number,
+                        reported_model=definition.reported_model,
                     )
                 )
             return tuple(rows)
@@ -1718,7 +1739,8 @@ class SCPIEmulatorManager:
         print(f"Configured instruments ({len(rows)}):")
         for row in rows:
             print(
-                f"  {row['id']}: {row['model']} | serial {row['serial']} | "
+                f"  {row['id']}: {row['model']} | reports {row['reported_model']} | "
+                f"serial {row['serial']} | "
                 f"{row['state']} | {row['resource']}"
             )
 
@@ -1804,16 +1826,27 @@ def _interactive_path(value):
 
 
 def _interactive_instrument_row(
-    instrument_id, instrument, resource, running, *, model=None, serial=None
+    instrument_id,
+    instrument,
+    resource,
+    running,
+    *,
+    model=None,
+    serial=None,
+    reported_model=None,
 ):
     identity = str(getattr(instrument, 'identification', '')).split(',', 3)
     model = model or (
         identity[1] if len(identity) == 4 else getattr(instrument, 'name', instrument_id)
     )
     serial = serial or (identity[2] if len(identity) == 4 else instrument_id)
+    reported_model = reported_model or (
+        identity[1] if len(identity) == 4 else getattr(instrument, 'name', instrument_id)
+    )
     return {
         'id': instrument_id,
         'model': model,
+        'reported_model': reported_model,
         'serial': serial,
         'state': 'running' if running else 'stopped',
         'resource': resource,
@@ -1824,7 +1857,7 @@ def create_example_csv():
     """Create example CSV with validation examples"""
     data = [
         ['Equipment', 'Port', 'Command', 'Response', 'Validation'],
-        ['Virtual 34461A-EMU DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
+        ['Virtual DMM', '5555', 'MEAS:VOLT:DC?', '1.234567E+00', ''],
         ['', '', 'VOLT (.+)', 'OK', 'range:0,10'],
         ['', '', 'VOLT?', '5.0', ''],
         ['Debug Test Instrument', '5559', 'TEST_RANGE (.+)', 'Range OK: {value}', 'range:1,10'],

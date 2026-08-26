@@ -85,7 +85,7 @@ def test_configuration_rejects_missing_required_columns(tmp_path: Path) -> None:
     ("filename", "instrument_count"),
     [
         ("scpi_instruments_example.csv", 2),
-        ("detailed_instruments.csv", 8),
+        ("detailed_instruments.csv", 9),
         ("vna-commands.csv", 1),
     ],
 )
@@ -109,9 +109,9 @@ def test_vna_identity_response_is_not_truncated() -> None:
     manager = SCPIEmulatorManager()
     assert manager.load_from_file(REPOSITORY_ROOT / "vna-commands.csv")
 
-    vna = manager.instruments["virtual_vna_2port_emu_csv_static"]["instrument"]
+    vna = manager.instruments["virtual_vna_2_port_csv_static"]["instrument"]
     assert vna.process_command("*IDN?") == (
-        "SCPI Emulator,VNA-2PORT-EMU,EMU00000001,E.1.0"
+        "SCPI Emulator,Virtual VNA 2 Port,EMU00000001,E.1.0"
     )
     assert vna.process_command("SYST:CAP:FREQ:MAX?") == "50000000000"
     assert vna.process_command("SENS1:FREQ:STOP?") == "50000000000"

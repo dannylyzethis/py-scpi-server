@@ -15,10 +15,10 @@ from scpi_emulator.scpi import CapabilityError, VNACapabilities
 def pulse_vna(*streams: ScenarioStream, integrated=True) -> SCPIInstrument:
     options = ("basic_pulsed_rf", "integrated_pulsed_rf") if integrated else ("basic_pulsed_rf",)
     capabilities = VNACapabilities.create(
-        "VNA-2PORT-EMU", hardware_features=("pulse_control",), applications=options
+        "vna-2-port", hardware_features=("pulse_control",), applications=options
     )
     instrument = SCPIInstrument(
-        "Virtual VNA-2PORT-EMU", "pulse", vna_capabilities=capabilities
+        "Virtual VNA 2 Port", "pulse", vna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
@@ -159,7 +159,7 @@ def test_pulse_timing_and_scenario_shape_errors_are_scpi_errors() -> None:
 def test_pulse_license_hardware_address_and_reset_semantics() -> None:
     with pytest.raises(CapabilityError, match="requires hardware features"):
         VNACapabilities.create(
-            "VNA-2PORT-EMU",
+            "vna-2-port",
             hardware_features=(),
             applications=("integrated_pulsed_rf",),
         )

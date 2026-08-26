@@ -11,9 +11,9 @@ from scpi_emulator.scpi import VNACapabilities
 
 
 def active_device_vna(*streams: ScenarioStream) -> SCPIInstrument:
-    capabilities = VNACapabilities.create("VNA-4PORT-EMU")
+    capabilities = VNACapabilities.create("vna-4-port")
     instrument = SCPIInstrument(
-        "Virtual VNA-4PORT-EMU", "active-device", vna_capabilities=capabilities
+        "Virtual VNA 4 Port", "active-device", vna_capabilities=capabilities
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
@@ -118,9 +118,9 @@ def test_active_device_state_survives_cls_and_resets_with_rst() -> None:
 
 def test_application_commands_enforce_license_and_address_existence() -> None:
     strict = SCPIInstrument(
-        "Virtual VNA-2PORT-EMU",
+        "Virtual VNA 2 Port",
         "strict",
-        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
+        vna_capabilities=VNACapabilities.create("vna-2-port", applications=()),
     )
     assert strict.process_command("SENS:GC:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')

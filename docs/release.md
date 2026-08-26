@@ -12,8 +12,8 @@ python -m pip install -e ".[all,dev]"
 python -m ruff check src tests tools
 python tools/check_licenses.py
 python -m pytest --cov --cov-report=term-missing --cov-fail-under=82
-python tools/vna_manifest.py --model VNA-2PORT-EMU --firmware E.1.0
-python tools/vna_manifest.py --model VNA-4PORT-EMU --firmware E.1.0
+python tools/vna_manifest.py --model vna-2-port --firmware E.1.0
+python tools/vna_manifest.py --model vna-4-port --firmware E.1.0
 python -m build
 python -m pip install --force-reinstall dist/*.whl
 scpi-emulator --version

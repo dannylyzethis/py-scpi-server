@@ -31,8 +31,8 @@ def fake_descriptor(driver_id: str = "example-dmm") -> DriverDescriptor:
         maturity=DriverMaturity.EXPERIMENTAL,
         models=(
             ModelDescriptor(
-                model="DMM1000",
-                display_name="Example DMM1000",
+                model="test-dmm-profile",
+                display_name="Example test-dmm-profile",
                 instrument_class="DMM",
                 firmware_snapshots=("1.0",),
             ),
@@ -75,17 +75,17 @@ def test_builtin_catalog_advertises_vna_models_without_ui_dependency() -> None:
     catalog = build_driver_catalog(discover_plugins=False)
 
     assert [descriptor.id for descriptor in catalog.descriptors] == [
-        "virtual-3446x",
-        "virtual-triple-psu",
+        "virtual-dmm",
+        "virtual-ps",
         "virtual-vna",
     ]
     driver = catalog.get("VIRTUAL-VNA")
     descriptor = driver.descriptor
     assert descriptor.maturity is DriverMaturity.ALPHA
-    assert {model.model for model in descriptor.models} == {"VNA-2PORT-EMU", "VNA-4PORT-EMU"}
+    assert {model.model for model in descriptor.models} == {"vna-2-port", "vna-4-port"}
     fields = {
         field.name: field
-        for field in descriptor.model("VNA-2PORT-EMU").configuration_fields
+        for field in descriptor.model("vna-2-port").configuration_fields
     }
     assert set(fields) == {
         "source_count",
@@ -99,7 +99,7 @@ def test_builtin_catalog_advertises_vna_models_without_ui_dependency() -> None:
     assert fields["applications"].default == ("all",)
     assert fields["frequency_maximum_hz"].default == 50_000_000_000
     assert fields["frequency_maximum_hz"].maximum is None
-    assert descriptor.model("vna-4port-emu").instrument_class == "VNA"
+    assert descriptor.model("vna-4-port").instrument_class == "VNA"
     assert {item.name: item.support for item in descriptor.transports} == {
         "raw-socket": SupportLevel.IMPLEMENTED,
         "vxi-11": SupportLevel.IMPLEMENTED,
@@ -114,18 +114,22 @@ def test_builtin_catalog_advertises_vna_models_without_ui_dependency() -> None:
 
 def test_builtin_dmm_driver_advertises_and_creates_scalar_scenario_instrument() -> None:
     driver = DMMDriver()
-    assert driver.descriptor.model("34461a-emu").instrument_class == "DMM"
+    assert driver.descriptor.model("dmm").instrument_class == "DMM"
     assert driver.descriptor.scenario_inputs[0].support is SupportLevel.IMPLEMENTED
 
-    instrument = driver.create_instrument(InstrumentRequest("meter", "34461A-EMU"))
+    instrument = driver.create_instrument(InstrumentRequest("meter", "dmm"))
     assert instrument.scalar_data is not None
     serialled = driver.create_instrument(
-        InstrumentRequest("meter2", "34461A-EMU", serial_number="DMM-002")
+        InstrumentRequest("meter2", "dmm", serial_number="DMM-002")
     )
     assert serialled.process_command("*IDN?").split(",")[2] == "DMM-002"
+    identified = driver.create_instrument(
+        InstrumentRequest("meter3", "dmm", reported_model="User DMM Model")
+    )
+    assert identified.process_command("*IDN?").split(",")[1] == "User DMM Model"
     with pytest.raises(CatalogError, match="no configurable"):
         driver.create_instrument(
-            InstrumentRequest("meter", "34461A-EMU", configuration={"option": "imaginary"})
+            InstrumentRequest("meter", "dmm", configuration={"option": "imaginary"})
         )
 
 
@@ -182,6 +186,16 @@ def test_csv_driver_applies_a_per_instance_serial_number(tmp_path) -> None:
     assert second.process_command("*IDN?") == "SCPI Emulator,Power Supply,PSU-002,E.1.0"
     assert POWER_SUPPLY_DRIVER_ID in {item.id for item in catalog.descriptors}
 
+    renamed = catalog.create(
+        CSV_DRIVER_ID,
+        InstrumentRequest(
+            "supply3",
+            "power_supply",
+            reported_model="User CSV Supply",
+        ),
+    )
+    assert renamed.process_command("*IDN?").split(",")[1] == "User CSV Supply"
+
 
 def test_vna_metadata_derives_models_options_and_firmware_from_snapshot() -> None:
     profile_resource = files("scpi_emulator").joinpath("profiles/vna_capabilities.v1.json")
@@ -217,8 +231,9 @@ def test_catalog_creates_a_configured_vna_through_the_driver_contract() -> None:
         "virtual-vna",
         InstrumentRequest(
             instrument_id="bench_vna",
-            model="VNA-4PORT-EMU",
+            model="vna-4-port",
             serial_number="VNA-001",
+            reported_model="User Four Port VNA",
             configuration={
                 "source_count": 2,
                 "applications": ["frequency_offset", "noise_figure"],
@@ -227,7 +242,7 @@ def test_catalog_creates_a_configured_vna_through_the_driver_contract() -> None:
     )
 
     assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,VNA-4PORT-EMU,VNA-001,E.1.0"
+        "SCPI Emulator,User Four Port VNA,VNA-001,E.1.0"
     )
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
@@ -237,7 +252,7 @@ def test_vna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None
     instrument = VNADriver().create_instrument(
         InstrumentRequest(
             instrument_id="limited_vna",
-            model="VNA-2PORT-EMU",
+            model="vna-2-port",
             configuration={"frequency_maximum_hz": 20_000_000_000},
         )
     )
@@ -253,12 +268,23 @@ def test_vna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
 
 
+def test_builtin_power_supply_driver_exposes_exactly_four_generic_profiles() -> None:
+    descriptor = build_driver_catalog(discover_plugins=False).get("virtual-ps").descriptor
+
+    assert [(model.model, model.display_name) for model in descriptor.models] == [
+        ("ps-1-output", "Virtual PS 1 Output"),
+        ("ps-2-output", "Virtual PS 2 Output"),
+        ("ps-3-output", "Virtual PS 3 Output"),
+        ("ps-4-output", "Virtual PS 4 Output"),
+    ]
+
+
 def test_catalog_registration_and_entry_points_require_no_core_changes() -> None:
     catalog = DriverCatalog()
 
     catalog.register(FakeDriver())
-    assert catalog.find_model("dmm1000")[0].driver.id == "example-dmm"
-    request = InstrumentRequest("meter", "DMM1000")
+    assert catalog.find_model("test-dmm-profile")[0].driver.id == "example-dmm"
+    request = InstrumentRequest("meter", "test-dmm-profile")
     assert catalog.create("example-dmm", request) is request
 
     discovered = DriverCatalog()
@@ -299,8 +325,8 @@ def test_vna_factory_rejects_unverified_firmware_and_unknown_configuration() -> 
     driver = VNADriver()
 
     with pytest.raises(CatalogError, match="no verified"):
-        driver.create_instrument(InstrumentRequest("vna", "VNA-2PORT-EMU", firmware="A.99.00.00"))
+        driver.create_instrument(InstrumentRequest("vna", "vna-2-port", firmware="A.99.00.00"))
     with pytest.raises(CatalogError, match="unsupported VNA configuration"):
         driver.create_instrument(
-            InstrumentRequest("vna", "VNA-2PORT-EMU", configuration={"imaginary_option": True})
+            InstrumentRequest("vna", "vna-2-port", configuration={"imaginary_option": True})
         )

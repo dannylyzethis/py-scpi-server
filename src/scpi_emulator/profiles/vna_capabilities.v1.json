@@ -47,11 +47,11 @@
     "wideband_iq": {}
   },
   "models": {
-    "VNA-2PORT-EMU": {
+    "vna-2-port": {
       "ports": 2,
       "default_source_count": 1
     },
-    "VNA-4PORT-EMU": {
+    "vna-4-port": {
       "ports": 4,
       "default_source_count": 2
     }

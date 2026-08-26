@@ -201,6 +201,7 @@ def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> 
     assert "noise-apply" in html
     assert "fault-inject" in html
     assert "Channels, measurements, and traces" in html
+    assert "snapshot.identity.reported_model" in html
     assert "socket.on('state_changed',scheduleRefresh)" in html
     assert "setInterval(refreshStatus,30000)" in html
     assert "captureInstrumentUi" in html
@@ -223,13 +224,14 @@ def test_status_snapshot_is_detailed_and_non_destructive() -> None:
     assert snapshot["status"]["errors"][0]["code"] == -113
     assert snapshot["operations"]["pending_count"] == 0
     assert snapshot["scenario"]["state"] == "empty"
+    assert snapshot["identity"]["reported_model"] == "<img src=x onerror=alert(1)>"
     assert response.get_json()["system"]["running_servers"] == 1
     assert instrument.process_command("*ESR?") == "32"
     assert instrument.process_command("SYST:ERR?").startswith('-113,"Undefined header')
 
 
 def test_vna_snapshot_exposes_capabilities_channels_measurements_and_traces() -> None:
-    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "VNA-2PORT-EMU")
+    instrument = SCPIInstrument("Virtual VNA 2 Port", "vna-2-port")
     server = FakeServer(instrument)
     manager = SimpleNamespace(
         instruments={"vna1": {"instrument": instrument, "port": 5025}},
@@ -243,7 +245,7 @@ def test_vna_snapshot_exposes_capabilities_channels_measurements_and_traces() ->
         "snapshot"
     ]
 
-    assert snapshot["capabilities"]["model"] == "VNA-2PORT-EMU"
+    assert snapshot["capabilities"]["model"] == "vna-2-port"
     assert snapshot["measurements"]["channels"][0]["selected"] == "CH1_S11_1"
     assert snapshot["measurements"]["channels"][0]["measurements"][0]["parameter"] == "S11"
     assert snapshot["measurements"]["windows"][0]["traces"][0] == {

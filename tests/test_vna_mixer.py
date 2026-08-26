@@ -13,8 +13,8 @@ def mixer_vna(*, scalar_only=False) -> SCPIInstrument:
     options = ("time_domain", "frequency_offset", "scalar_mixer") if scalar_only else (
         "time_domain", "frequency_offset", "scalar_mixer", "frequency_converter", "embedded_lo"
     )
-    capabilities = VNACapabilities.create("VNA-2PORT-EMU", applications=options)
-    instrument = SCPIInstrument("Virtual VNA-2PORT-EMU", "mixer", vna_capabilities=capabilities)
+    capabilities = VNACapabilities.create("vna-2-port", applications=options)
+    instrument = SCPIInstrument("Virtual VNA 2 Port", "mixer", vna_capabilities=capabilities)
     instrument.process_command("SENS:SWE:POIN 4")
     stream = ScenarioStream(
         "S11",
@@ -118,9 +118,9 @@ def test_correction_status_is_static_zero_and_reset_semantics_are_preserved() ->
 
 def test_licenses_ranges_and_sources_report_correct_errors() -> None:
     strict = SCPIInstrument(
-        "Virtual VNA-2PORT-EMU",
+        "Virtual VNA 2 Port",
         "strict",
-        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
+        vna_capabilities=VNACapabilities.create("vna-2-port", applications=()),
     )
     assert strict.process_command("SENS:MIX:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')

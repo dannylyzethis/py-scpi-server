@@ -65,6 +65,7 @@ class BenchInstrument:
     name: str | None = None
     firmware: str | None = None
     serial_number: str | None = None
+    reported_model: str | None = None
     configuration: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -79,6 +80,8 @@ class BenchInstrument:
             _text(self.firmware, "instrument firmware")
         if self.serial_number is not None:
             _text(self.serial_number, "instrument serial number")
+        if self.reported_model is not None:
+            _identity_field(self.reported_model, "instrument reported_model")
         if not isinstance(self.configuration, Mapping):
             raise BenchFormatError(f"instrument {self.id!r} configuration must be an object")
         object.__setattr__(self, "configuration", _freeze(self.configuration))
@@ -92,11 +95,11 @@ class BenchDefinition:
     instruments: tuple[BenchInstrument, ...]
     description: str = ""
     metadata: Mapping[str, Any] = field(default_factory=dict)
-    schema_version: int = 1
+    schema_version: int = 2
 
     def __post_init__(self) -> None:
         _text(self.name, "bench name")
-        if self.schema_version != 1:
+        if self.schema_version != 2:
             raise BenchFormatError(f"unsupported bench schema version {self.schema_version!r}")
         try:
             instruments = tuple(self.instruments)
@@ -150,3 +153,9 @@ def _identifier(value: str, field_name: str) -> None:
     _text(value, field_name)
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", value) is None:
         raise BenchFormatError(f"{field_name} contains unsupported characters: {value!r}")
+
+
+def _identity_field(value: str, field_name: str) -> None:
+    _text(value, field_name)
+    if any(character in value for character in ",\r\n"):
+        raise BenchFormatError(f"{field_name} cannot contain commas or line breaks")

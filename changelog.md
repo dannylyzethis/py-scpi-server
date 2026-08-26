@@ -5,6 +5,22 @@ All notable changes to the SCPI Equipment Emulator project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-08-26
+
+### Added
+
+- Bench schema version 2 with an optional validated `reported_model` identity override.
+- Stateful one-, two-, three-, and four-output generic power-supply profiles.
+- Generic static CSV identities for DMM Type A/B, Oscilloscope Type A/B, a one-output supply,
+  a signal generator, and topology-described VNA profiles.
+
+### Changed
+
+- Replaced all repository-owned instrument model identifiers with project-owned generic profile
+  selectors and readable virtual identities.
+- Separated catalog behavior selection from the model text returned by `*IDN?`.
+- Removed prior built-in selector aliases; version-1 bench files must be rewritten as schema 2.
+
 ## [3.0.0] - 2026-08-25
 
 ### Added
@@ -20,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   schema-version-1 JSON saving.
 - A common per-instance `serial_number` bench field applied consistently to built-in and CSV
   instrument identity responses.
-- A catalog-visible `virtual-triple-psu` driver with three independent selected-output state
+- A catalog-visible `virtual-ps` driver with three independent selected-output state
   objects, protection/range settings, measurements, and correct `*CLS`/`*RST` separation.
 - A mixed bench example containing two same-model supplies with unique serials and one CSV-defined
   fixture controller.
@@ -31,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Replaced vendor-derived VNA family identities with `VNA-2PORT-EMU` and `VNA-4PORT-EMU`.
+- Replaced vendor-derived VNA family identities with `vna-2-port` and `vna-4-port`.
 - Replaced numbered hardware configurations and coded options with `source_count`, semantic
   `hardware_features`, and semantic `applications`; omitted selections enable all compatible
   capabilities.
@@ -40,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive and long-running CLI status output now uses console-safe text so redirected Windows
   processes do not terminate with a code-page `UnicodeEncodeError`.
 - The legacy single-context PSU block in `detailed_instruments.csv` is now labeled generically
-  instead of claiming to be the stateful triple-output model.
+  instead of claiming to be a stateful built-in power-supply profile.
 - ZIP installation documentation now explains environment activation and stale executable detection.
 
 ## [2.4.0] - 2026-08-25
@@ -56,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   axes, source power, receiver attenuation, IF bandwidth, dwell, and acquisition-derived timing.
 - VNA adapters over the shared deterministic scenario engine for SDATA, FDATA, RDATA, receiver,
   SNP, and X-axis queries with ASCII/binary encoding and trigger/operation playback policies.
-- A built-in Virtual 34461A-EMU reference DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
+- A built-in Virtual DMM driver and shared scalar adapter for READ, FETCH, MEASURE,
   function/range configuration, queued values, trigger/operation policies, errors, and reset.
 - VXI-11 Revision 1.0 `INSTR` transport with bounded ONC RPC/XDR framing, TCP portmapping, link and
   lock ownership, chunked writes/reads, Device Clear, bus trigger, abort, serial poll, and

@@ -24,7 +24,7 @@ class BenchBuildCancelled(Exception):
 
 
 class GuidedBenchBuilder:
-    """Collect one validated schema-version-1 bench with low-knowledge defaults."""
+    """Collect one validated schema-version-2 bench with low-knowledge defaults."""
 
     def __init__(
         self,
@@ -102,6 +102,9 @@ class GuidedBenchBuilder:
             if serial.casefold() not in existing_serials:
                 break
             self.output(f"[ERROR] Serial number {serial!r} is already used.")
+        reported_model = self._ask(
+            f"Reported model [driver default: {model.display_name}]: "
+        ) or None
         transports = tuple(
             item for item in driver.transports if item.support is SupportLevel.IMPLEMENTED
         )
@@ -134,6 +137,7 @@ class GuidedBenchBuilder:
                 driver=driver.id,
                 model=model.model,
                 serial_number=serial,
+                reported_model=reported_model,
                 configuration=configuration,
                 resource=resource,
             ),

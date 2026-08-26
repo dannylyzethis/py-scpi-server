@@ -15,7 +15,7 @@ Install the project with the web extra, then run:
 python examples/remote_ate/run_bench.py
 ```
 
-This starts a 34461A-EMU-compatible DMM on raw TCP port 15025 and the control API on port 18081. To
+This starts a dmm-compatible DMM on raw TCP port 15025 and the control API on port 18081. To
 serve a remote network, bind explicitly and supply an authentication token:
 
 ```powershell

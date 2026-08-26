@@ -24,10 +24,10 @@ def trace(name, *values, advance=AdvancePolicy.READ):
 
 def advanced_vna(*streams) -> SCPIInstrument:
     instrument = SCPIInstrument(
-        "Virtual VNA-4PORT-EMU",
+        "Virtual VNA 4 Port",
         "advanced",
         vna_capabilities=VNACapabilities.create(
-            "VNA-4PORT-EMU"
+            "vna-4-port"
         ),
     )
     instrument.process_command("SENS:SWE:POIN 4")
@@ -173,9 +173,9 @@ def test_wideband_iq_capture_uses_time_axis() -> None:
 
 def test_advanced_license_address_cls_and_reset_semantics() -> None:
     strict = SCPIInstrument(
-        "Virtual VNA-2PORT-EMU",
+        "Virtual VNA 2 Port",
         "strict",
-        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU", applications=()),
+        vna_capabilities=VNACapabilities.create("vna-2-port", applications=()),
     )
     assert strict.process_command("SENS:SA:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')

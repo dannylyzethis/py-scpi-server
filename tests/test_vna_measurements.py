@@ -6,9 +6,9 @@ from scpi_emulator.scpi import VNACapabilities, SCPICommandError
 
 def vna() -> SCPIInstrument:
     return SCPIInstrument(
-        "Virtual VNA-2PORT-EMU",
+        "Virtual VNA 2 Port",
         "vna",
-        vna_capabilities=VNACapabilities.create("VNA-2PORT-EMU"),
+        vna_capabilities=VNACapabilities.create("vna-2-port"),
     )
 
 

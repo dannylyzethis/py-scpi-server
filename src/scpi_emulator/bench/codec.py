@@ -47,8 +47,8 @@ def save_bench(definition: BenchDefinition, path: str | Path) -> None:
 def _parse_bench(raw: Any) -> BenchDefinition:
     if not isinstance(raw, dict):
         raise BenchFormatError("bench root must be an object")
-    if raw.get("schema_version") != 1:
-        raise BenchFormatError("bench schema_version must be 1")
+    if raw.get("schema_version") != 2:
+        raise BenchFormatError("bench schema_version must be 2")
     name = _required_text(raw, "name", "bench")
     instruments_raw = raw.get("instruments")
     if not isinstance(instruments_raw, list) or not instruments_raw:
@@ -81,6 +81,7 @@ def _parse_instrument(raw: Any, index: int) -> BenchInstrument:
         name=raw.get("name"),
         firmware=raw.get("firmware"),
         serial_number=raw.get("serial_number"),
+        reported_model=raw.get("reported_model"),
         configuration=configuration,
         resource=ResourceAddress(
             transport=_required_text(resource, "transport", f"{context} resource"),
@@ -104,6 +105,7 @@ def _encode_bench(definition: BenchDefinition) -> dict[str, Any]:
                 "model": instrument.model,
                 "firmware": instrument.firmware,
                 "serial_number": instrument.serial_number,
+                "reported_model": instrument.reported_model,
                 "configuration": thaw(instrument.configuration),
                 "resource": {
                     "transport": instrument.resource.transport,

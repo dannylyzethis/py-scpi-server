@@ -14,7 +14,7 @@ from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, P
 
 DEFAULT_FREQUENCY_MINIMUM_HZ = 10_000_000
 DEFAULT_FREQUENCY_MAXIMUM_HZ = 50_000_000_000
-GENERIC_VNA_MODELS = ("VNA-2PORT-EMU", "VNA-4PORT-EMU")
+GENERIC_VNA_MODELS = ("vna-2-port", "vna-4-port")
 ALL_HARDWARE_FEATURES = (
     "bias_tees",
     "direct_receiver_access",
@@ -58,7 +58,7 @@ class VNACapabilities:
         firmware: str = "E.1.0",
     ) -> "VNACapabilities":
         profile = _load_capability_profile()
-        model = model.upper()
+        model = model.casefold()
         models = profile["models"]
         if model not in models:
             valid = ", ".join(sorted(models))
@@ -291,9 +291,12 @@ def _frequency_value(value: int | float, field_name: str) -> int | float:
 
 
 def detect_vna_model(*values: str) -> str | None:
-    combined = " ".join(values).upper()
-    match = re.search(r"\b(VNA-(?:2|4)PORT-EMU)\b", combined)
-    return match.group(1) if match else None
+    combined = " ".join(values).casefold()
+    match = re.search(r"\b(vna-(?:2|4)-port)\b", combined)
+    if match:
+        return match.group(1)
+    display_match = re.search(r"\bvirtual\s+vna\s+([24])\s+port\b", combined)
+    return f"vna-{display_match.group(1)}-port" if display_match else None
 
 
 def register_capability_commands(

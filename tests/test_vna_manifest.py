@@ -27,7 +27,7 @@ def test_packaged_manifest_has_required_metadata_and_unique_commands() -> None:
     assert manifest.snapshot["contract_revision"] == "1.0"
     assert len(manifest.commands) >= 35
     assert {command.models for command in manifest.commands} == {
-        frozenset({"VNA-2PORT-EMU", "VNA-4PORT-EMU"})
+        frozenset({"vna-2-port", "vna-4-port"})
     }
     assert all(command.parameters is not None for command in manifest.commands)
     assert all("type" in command.response for command in manifest.commands)
@@ -52,7 +52,7 @@ def test_command_spec_key_is_stable_across_abbreviations() -> None:
     assert registry.specifications == (specification,)
 
 
-@pytest.mark.parametrize("model", ["VNA-2PORT-EMU", "VNA-4PORT-EMU"])
+@pytest.mark.parametrize("model", ["vna-2-port", "vna-4-port"])
 def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None:
     manifest = load_command_manifest()
     instrument = SCPIInstrument(f"Virtual {model}", model)
@@ -70,7 +70,7 @@ def test_coverage_report_closes_the_initial_option_query_gap(model: str) -> None
     assert report["summary"]["coverage_percent"] == 100
 
 
-@pytest.mark.parametrize("model", ["VNA-2PORT-EMU", "VNA-4PORT-EMU"])
+@pytest.mark.parametrize("model", ["vna-2-port", "vna-4-port"])
 def test_checked_in_coverage_report_is_current(model: str) -> None:
     manifest = load_command_manifest()
     instrument = SCPIInstrument(f"Virtual {model}", model)

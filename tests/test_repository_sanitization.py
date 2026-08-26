@@ -84,7 +84,7 @@ def test_documentation_does_not_explain_individual_application_ids() -> None:
     assert found == []
 
 
-def test_public_model_labels_use_emulator_suffix() -> None:
+def test_tracked_text_has_no_manufacturer_shaped_model_identifiers() -> None:
     legacy_models = (
         "N5222" + "B",
         "N5242" + "B",
@@ -96,15 +96,9 @@ def test_public_model_labels_use_emulator_suffix() -> None:
         "E5071" + "C",
         "8753" + "D",
     )
-    pattern = re.compile(
-        rf"\b(?:{'|'.join(re.escape(model) for model in legacy_models)})\b(?!-EMU)"
-    )
+    pattern = re.compile(rf"\b(?:{'|'.join(re.escape(model) for model in legacy_models)})\b")
     found: list[str] = []
     for path in _repository_files():
-        if ".beads" in path.parts:
-            # Tracker exports and interaction logs are historical records, not
-            # shipped instrument identities.
-            continue
         if path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         if pattern.search(path.read_text(encoding="utf-8", errors="replace")):
@@ -116,8 +110,8 @@ def test_public_vna_profile_uses_project_owned_identity() -> None:
     profile_path = REPOSITORY_ROOT / "src/scpi_emulator/profiles/vna_capabilities.v1.json"
     text = profile_path.read_text(encoding="utf-8")
     assert '"reference_firmware": "E.1.0"' in text
-    assert '"VNA-2PORT-EMU"' in text
-    assert '"VNA-4PORT-EMU"' in text
+    assert '"vna-2-port"' in text
+    assert '"vna-4-port"' in text
     assert '"hardware_features"' in text
     assert '"applications"' in text
 
@@ -139,5 +133,23 @@ def test_tracked_text_has_no_legacy_vna_identity_or_coded_options() -> None:
         if path.suffix.lower() not in TEXT_SUFFIXES:
             continue
         if prohibited.search(path.read_text(encoding="utf-8", errors="replace")):
+            found.append(str(path.relative_to(REPOSITORY_ROOT)))
+    assert found == []
+
+
+def test_tracked_text_has_no_replaced_builtin_selectors() -> None:
+    replaced_selectors = (
+        "reference-" + "dmm",
+        "triple-output-" + "power-supply",
+        "reference-" + "power-supply",
+        "n5222" + "b-emu",
+        "n5242" + "b-emu",
+    )
+    pattern = re.compile("|".join(re.escape(value) for value in replaced_selectors), re.I)
+    found: list[str] = []
+    for path in _repository_files():
+        if path.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        if pattern.search(path.read_text(encoding="utf-8", errors="replace")):
             found.append(str(path.relative_to(REPOSITORY_ROOT)))
     assert found == []

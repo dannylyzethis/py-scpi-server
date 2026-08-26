@@ -1,13 +1,13 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "mixed-ate-bench",
   "description": "Two identical stateful supplies plus one CSV-defined fixture controller.",
   "instruments": [
     {
       "id": "supply1",
       "name": "Primary Power Supply",
-      "driver": "virtual-triple-psu",
-      "model": "E36312A-EMU",
+      "driver": "virtual-ps",
+      "model": "ps-3-output",
       "serial_number": "PSU-001",
       "resource": {
         "transport": "raw-socket",
@@ -18,8 +18,8 @@
     {
       "id": "supply2",
       "name": "Secondary Power Supply",
-      "driver": "virtual-triple-psu",
-      "model": "E36312A-EMU",
+      "driver": "virtual-ps",
+      "model": "ps-3-output",
       "serial_number": "PSU-002",
       "resource": {
         "transport": "raw-socket",

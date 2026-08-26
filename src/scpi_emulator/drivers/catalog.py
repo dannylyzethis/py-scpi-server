@@ -217,6 +217,7 @@ class InstrumentRequest:
     name: str | None = None
     firmware: str | None = None
     serial_number: str | None = None
+    reported_model: str | None = None
     configuration: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -228,6 +229,8 @@ class InstrumentRequest:
             _require_text(self.firmware, "instrument firmware")
         if self.serial_number is not None:
             _require_text(self.serial_number, "instrument serial number")
+        if self.reported_model is not None:
+            _require_identity_field(self.reported_model, "instrument reported_model")
         if not isinstance(self.configuration, Mapping):
             raise CatalogError("instrument configuration must be a mapping")
 
@@ -326,6 +329,12 @@ def _require_identifier(value: str, field_name: str) -> None:
     _require_text(value, field_name)
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", value) is None:
         raise CatalogError(f"{field_name} contains unsupported characters: {value!r}")
+
+
+def _require_identity_field(value: str, field_name: str) -> None:
+    _require_text(value, field_name)
+    if any(character in value for character in ",\r\n"):
+        raise CatalogError(f"{field_name} cannot contain commas or line breaks")
 
 
 def _require_unique(values: tuple[str, ...], field_name: str) -> None:

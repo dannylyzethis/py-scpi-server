@@ -1,4 +1,4 @@
-"""Built-in generic triple-output virtual power-supply driver."""
+"""Built-in generic one-through-four-output virtual power-supply driver."""
 
 from scpi_emulator import EMULATOR_FIRMWARE, __version__
 
@@ -13,22 +13,26 @@ from .catalog import (
 )
 
 
-POWER_SUPPLY_DRIVER_ID = "virtual-triple-psu"
+POWER_SUPPLY_DRIVER_ID = "virtual-ps"
+POWER_SUPPLY_MODELS = {
+    f"ps-{output_count}-output": output_count for output_count in range(1, 5)
+}
 
 
-class TripleOutputPowerSupplyDriver:
+class PowerSupplyDriver:
     descriptor = DriverDescriptor(
         id=POWER_SUPPLY_DRIVER_ID,
-        display_name="Virtual triple-output power supply",
+        display_name="Virtual power supply",
         version=__version__,
         maturity=DriverMaturity.ALPHA,
-        models=(
+        models=tuple(
             ModelDescriptor(
-                model="E36312A-EMU",
-                display_name="Virtual E36312A-EMU triple-output power supply",
+                model=model,
+                display_name=f"Virtual PS {output_count} Output",
                 instrument_class="PSU",
                 firmware_snapshots=(EMULATOR_FIRMWARE,),
-            ),
+            )
+            for model, output_count in POWER_SUPPLY_MODELS.items()
         ),
         transports=(
             TransportDescriptor(
@@ -50,7 +54,7 @@ class TripleOutputPowerSupplyDriver:
     def create_instrument(self, request: InstrumentRequest) -> object:
         from scpi_emulator.emulator import SCPIInstrument
         from scpi_emulator.scpi.power_supply import (
-            TripleOutputPowerSupply,
+            PowerSupplySystem,
             register_power_supply_commands,
         )
 
@@ -62,16 +66,17 @@ class TripleOutputPowerSupplyDriver:
                 f"{request.model} firmware {firmware!r}"
             )
         if request.configuration:
-            raise CatalogError("the triple-output PSU driver has no hardware configuration options")
-        name = request.name or f"Virtual {model.model} power supply"
+            raise CatalogError("the virtual PSU driver has no hardware configuration options")
+        name = request.name or model.display_name
         instrument = SCPIInstrument(
             name,
             request.instrument_id,
             serial_number=request.serial_number,
         )
         instrument.identification = (
-            f"SCPI Emulator,{model.model},{request.serial_number or request.instrument_id},{firmware}"
+            f"SCPI Emulator,{request.reported_model or model.display_name},"
+            f"{request.serial_number or request.instrument_id},{firmware}"
         )
-        instrument.power_supply = TripleOutputPowerSupply()
+        instrument.power_supply = PowerSupplySystem(POWER_SUPPLY_MODELS[model.model])
         register_power_supply_commands(instrument.core_registry, instrument.power_supply)
         return instrument

@@ -4,7 +4,7 @@ from scpi_emulator.emulator import SCPIInstrument
 
 
 def vna() -> SCPIInstrument:
-    return SCPIInstrument("Virtual VNA-2PORT-EMU", "VNA-2PORT-EMU")
+    return SCPIInstrument("Virtual VNA 2 Port", "vna-2-port")
 
 
 def test_frequency_forms_generate_one_coherent_measurement_axis() -> None:

@@ -1,7 +1,20 @@
 {
   "schema_version": 2,
-  "description": "Project-owned generic VNA topology, hardware feature, and application identifiers.",
+  "description": "Project-owned generic instrument profile, topology, hardware feature, and application identifiers.",
   "drivers": {
+    "virtual-dmm": {
+      "models": {
+        "dmm": {"reported_model": "Virtual DMM"}
+      }
+    },
+    "virtual-ps": {
+      "models": {
+        "ps-1-output": {"outputs": 1, "reported_model": "Virtual PS 1 Output"},
+        "ps-2-output": {"outputs": 2, "reported_model": "Virtual PS 2 Output"},
+        "ps-3-output": {"outputs": 3, "reported_model": "Virtual PS 3 Output"},
+        "ps-4-output": {"outputs": 4, "reported_model": "Virtual PS 4 Output"}
+      }
+    },
     "virtual-vna": {
       "defaults": {
         "frequency_minimum_hz": 10000000,
@@ -20,7 +33,7 @@
         "source_attenuators"
       ],
       "models": {
-        "VNA-2PORT-EMU": {
+        "vna-2-port": {
           "ports": 2,
           "default_source_count": 1,
           "applications": [
@@ -47,7 +60,7 @@
             "wideband_iq"
           ]
         },
-        "VNA-4PORT-EMU": {
+        "vna-4-port": {
           "ports": 4,
           "default_source_count": 2,
           "applications": [

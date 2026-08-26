@@ -8,8 +8,8 @@ It models observable automation behavior rather than a commercial product config
 
 | Model | Ports | Default sources | Default frequency limits |
 |---|---:|---:|---:|
-| `VNA-2PORT-EMU` | 2 | 1 | 10 MHz to 50 GHz |
-| `VNA-4PORT-EMU` | 4 | 2 | 10 MHz to 50 GHz |
+| `vna-2-port` | 2 | 1 | 10 MHz to 50 GHz |
+| `vna-4-port` | 4 | 2 | 10 MHz to 50 GHz |
 
 Both models use firmware identity `E.1.0`. Bench JSON may choose one or two sources and may replace
 either frequency endpoint with any positive finite value, including ranges above 50 GHz. The
@@ -34,7 +34,7 @@ For this bench entry:
 {
   "id": "vna1",
   "driver": "virtual-vna",
-  "model": "VNA-4PORT-EMU",
+  "model": "vna-4-port",
   "serial_number": "EMU-VNA-001",
   "configuration": {
     "frequency_minimum_hz": 100000,
@@ -47,7 +47,8 @@ For this bench entry:
 }
 ```
 
-`*IDN?` returns `SCPI Emulator,VNA-4PORT-EMU,EMU-VNA-001,E.1.0`. `*OPT?` and the
+`*IDN?` returns `SCPI Emulator,Virtual VNA 4 Port,EMU-VNA-001,E.1.0` by default. An optional
+bench `reported_model` changes only the second identity field. `*OPT?` and the
 capability/license catalogs return readable semantic tokens derived from the same immutable profile.
 The dashboard reports the same model, source count, hardware features, applications, and range.
 
@@ -58,8 +59,8 @@ The project-owned command manifest is
 model reports with:
 
 ```powershell
-python tools/vna_manifest.py --model VNA-2PORT-EMU --firmware E.1.0
-python tools/vna_manifest.py --model VNA-4PORT-EMU --firmware E.1.0
+python tools/vna_manifest.py --model vna-2-port --firmware E.1.0
+python tools/vna_manifest.py --model vna-4-port --firmware E.1.0
 ```
 
 Coverage describes implemented emulator behavior. It is not a claim of physical-product fidelity.

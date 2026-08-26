@@ -1,5 +1,5 @@
 Equipment,Port,Command,Response,Validation
-Virtual 34461A-EMU DMM,5555,MEAS:VOLT:DC?,1.234567E+00,
+Virtual DMM Type A,5555,MEAS:VOLT:DC?,1.234567E+00,
 ,,MEAS:VOLT:AC?,0.987654E+00,
 ,,MEAS:CURR:DC?,1.234567E-03,
 ,,MEAS:CURR:AC?,9.876543E-04,
@@ -25,7 +25,7 @@ Virtual 34461A-EMU DMM,5555,MEAS:VOLT:DC?,1.234567E+00,
 ,,ABOR,OK,
 ,,CAL:SEC:STAT?,ON,
 ,,SYST:BEEP,OK,
-Virtual Generic Single-Output PSU-EMU,5556,OUTP (.+),OK,bool
+Virtual PS 1 Output,5556,OUTP (.+),OK,bool
 ,,OUTP?,1,
 ,,VOLT (.+),OK,"range:0,30"
 ,,VOLT?,5.000000E+00,
@@ -46,7 +46,7 @@ Virtual Generic Single-Output PSU-EMU,5556,OUTP (.+),OK,bool
 ,,VOLT:RANG?,HIGH,
 ,,CURR:RANG (.+),OK,"enum:LOW,HIGH"
 ,,CURR:RANG?,HIGH,
-Virtual TDS2024B-EMU Scope,5557,ACQ:MODE (.+),OK,"enum:SAMPLE,PEAKDETECT,HIRES,AVERAGE"
+Virtual Oscilloscope Type A,5557,ACQ:MODE (.+),OK,"enum:SAMPLE,PEAKDETECT,HIRES,AVERAGE"
 ,,ACQ:MODE?,SAMPLE,
 ,,ACQ:STOPA (.+),OK,"enum:RUNST,STOP"
 ,,ACQ:STOPA?,RUNST,
@@ -92,7 +92,53 @@ Virtual TDS2024B-EMU Scope,5557,ACQ:MODE (.+),OK,"enum:SAMPLE,PEAKDETECT,HIRES,A
 ,,WFMP:XOFF?,0.0E+0,
 ,,WFMP:YMU?,2.0E-2,
 ,,WFMP:YOFF?,0.0E+0,
-Virtual 33220A-EMU Generator,5558,FREQ (.+),OK,"range:1e-6,50e6"
+Virtual Oscilloscope Type B,5564,ACQ:MODE (.+),OK,"enum:SAMPLE,PEAKDETECT,HIRES,AVERAGE"
+,,ACQ:MODE?,SAMPLE,
+,,ACQ:STOPA (.+),OK,"enum:RUNST,STOP"
+,,ACQ:STOPA?,RUNST,
+,,ACQ:STATE (.+),OK,bool
+,,ACQ:STATE?,1,
+,,CH1:SCAL (.+),OK,"range:0.002,10"
+,,CH1:SCAL?,1.0E+0,
+,,CH1:POS (.+),OK,"range:-5,5"
+,,CH1:POS?,0.0E+0,
+,,CH1:COUP (.+),OK,"enum:AC,DC,GND"
+,,CH1:COUP?,DC,
+,,CH1:IMP (.+),OK,"enum:1E6,50"
+,,CH1:IMP?,1.0E+6,
+,,CH2:SCAL (.+),OK,"range:0.002,10"
+,,CH2:SCAL?,1.0E+0,
+,,CH2:POS (.+),OK,"range:-5,5"
+,,CH2:POS?,0.0E+0,
+,,CH2:COUP (.+),OK,"enum:AC,DC,GND"
+,,CH2:COUP?,DC,
+,,TRIG:MAIN:EDGE:SOUR (.+),OK,"enum:CH1,CH2,CH3,CH4,EXT,EXT5,LINE"
+,,TRIG:MAIN:EDGE:SOUR?,CH1,
+,,TRIG:MAIN:EDGE:SLO (.+),OK,"enum:RIS,FALL"
+,,TRIG:MAIN:EDGE:SLO?,RIS,
+,,TRIG:MAIN:LEV (.+),OK,"range:-5.0,5.0"
+,,TRIG:MAIN:LEV?,0.0E+0,
+,,HOR:MAIN:SCAL (.+),OK,"range:1e-9,10"
+,,HOR:MAIN:SCAL?,1.0E-3,
+,,HOR:MAIN:POS (.+),OK,"range:-100,100"
+,,HOR:MAIN:POS?,0.0E+0,
+,,MEAS:FREQ? (.+),1.000000E+03,
+,,MEAS:AMPL? (.+),2.500000E+00,
+,,MEAS:MEAN? (.+),1.250000E+00,
+,,MEAS:PK2PK? (.+),5.000000E+00,
+,,MEAS:RMS? (.+),1.767767E+00,
+,,CURV?,"#42000-127,-126,-125,-124,-123,-122,-121,-120",
+,,DAT:SOUR (.+),OK,"enum:CH1,CH2,CH3,CH4,MATH,REF1,REF2"
+,,DAT:SOUR?,CH1,
+,,DAT:START (.+),OK,"range:1,10000"
+,,DAT:START?,1,
+,,DAT:STOP (.+),OK,"range:1,10000"
+,,DAT:STOP?,2500,
+,,WFMP:XIN?,1.0E-5,
+,,WFMP:XOFF?,0.0E+0,
+,,WFMP:YMU?,2.0E-2,
+,,WFMP:YOFF?,0.0E+0,
+Virtual Signal Generator Type A,5558,FREQ (.+),OK,"range:1e-6,50e6"
 ,,FREQ?,1.000000E+03,
 ,,VOLT (.+),OK,"range:0.001,10.0"
 ,,VOLT?,1.000000E+00,
@@ -137,7 +183,7 @@ Virtual 33220A-EMU Generator,5558,FREQ (.+),OK,"range:1e-6,50e6"
 ,,TRIG:SOUR (.+),OK,"enum:IMM,EXT,BUS"
 ,,TRIG:SOUR?,IMM,
 ,,SYST:BEEP,OK,
-Virtual VNA-2PORT-EMU CSV Basic,5559,SENS:FREQ:START (.+),OK,"range:10e6,26.5e9"
+Virtual VNA 2 Port CSV Basic,5559,SENS:FREQ:START (.+),OK,"range:10e6,26.5e9"
 ,,SENS:FREQ:START?,1.0E+9,
 ,,SENS:FREQ:STOP (.+),OK,"range:10e6,26.5e9"
 ,,SENS:FREQ:STOP?,2.0E+9,
@@ -171,7 +217,7 @@ Virtual VNA-2PORT-EMU CSV Basic,5559,SENS:FREQ:START (.+),OK,"range:10e6,26.5e9"
 ,,TRIG:SOUR?,INT,
 ,,MMEM:STOR (.+),OK,
 ,,MMEM:LOAD (.+),OK,
-Virtual 8846A-EMU DMM,5561,MEAS? (.+),1.234567890E+00,
+Virtual DMM Type B,5561,MEAS? (.+),1.234567890E+00,
 ,,CONF (.+),OK,
 ,,CONF?,"VOLT:DC 10,0.001",
 ,,SENS:VOLT:DC:RANG (.+),OK,"range:0.1,1000"
@@ -201,7 +247,7 @@ Virtual 8846A-EMU DMM,5561,MEAS? (.+),1.234567890E+00,
 ,,MEM:STAT:NAME? (.+),TEST_STATE,
 ,,MEM:STAT:REC (.+),OK,
 ,,MEM:STAT:DEL (.+),OK,
-Virtual VNA-4PORT-EMU CSV Full,5562,SENS1:FREQ:START (.+),OK,"range:9e3,8.5e9"
+Virtual VNA 4 Port CSV Full,5562,SENS1:FREQ:START (.+),OK,"range:9e3,8.5e9"
 ,,SENS1:FREQ:START?,1.0E+6,
 ,,SENS1:FREQ:STOP (.+),OK,"range:9e3,8.5e9"
 ,,SENS1:FREQ:STOP?,8.5E+9,
@@ -228,7 +274,7 @@ Virtual VNA-4PORT-EMU CSV Full,5562,SENS1:FREQ:START (.+),OK,"range:9e3,8.5e9"
 ,,MMEM:LOAD:FDAT (.+),OK,
 ,,DISP:WIND1:STAT (.+),OK,bool
 ,,DISP:WIND1:STAT?,1,
-Virtual VNA-2PORT-EMU CSV Minimal,5563,FREQ (.+),OK,"range:30e3,6e9"
+Virtual VNA 2 Port CSV Minimal,5563,FREQ (.+),OK,"range:30e3,6e9"
 ,,FREQ?,1.0E+9,
 ,,STAR (.+),OK,"range:30e3,6e9"
 ,,STAR?,3.0E+5,

@@ -31,7 +31,7 @@ Dashboard state visibility and scenario/fault controls are documented in
 - A bounded FIFO error queue connected to IEEE 488.2 event and status registers.
 - Active `*CLS`, `*OPC`, `*OPC?`, `*WAI`, ESE/SRE/status-byte, trigger, and acquisition behavior.
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
-- Project-owned `VNA-2PORT-EMU` and `VNA-4PORT-EMU` models with semantic source, hardware,
+- Project-owned `vna-2-port` and `vna-4-port` profiles with semantic source, hardware,
   application, identity, option, and license reporting. Defaults enable every compatible capability.
 - Bench-defined VNA minimum/maximum frequency limits defaulting to 10 MHz–50 GHz, with explicit
   wider ranges supported because no physical product ceiling is imposed.
@@ -51,7 +51,7 @@ Dashboard state visibility and scenario/fault controls are documented in
   filters/gates, and shared deterministic trigger playback.
 - Application-gated spectrum, swept IMD, modulation distortion, phase noise, differential I/Q, and
   wideband-I/Q workflows with scenario results, application axes, and markers.
-- A catalog-visible Virtual 34461A-EMU reference DMM whose READ, FETCH, and MEASURE workflows consume
+- A catalog-visible Virtual DMM whose READ, FETCH, and MEASURE workflows consume
   queued scalar scenarios with function/range configuration and deterministic reset behavior.
 - A UI-independent, plug-in-extensible instrument driver catalog with explicit model, firmware,
   transport, command-coverage, maturity, and scenario-input metadata.
@@ -224,8 +224,8 @@ scpi-emulator --bench examples/virtual-bench.json --start --web
 
 After startup, the CLI prints every instrument ID and its VISA resource string. With `--web`, it
 also prints the dashboard URL. CSV files used by a `--bench` definition are kept beside its JSON
-file; this lets the bench mix `csv-instruments` models with built-in VNA, DMM, and triple-output PSU
-models without a
+file; this lets the bench mix `csv-instruments` profiles with built-in VNA, DMM, and one-through-four-output PSU
+profiles without a
 second CSV-directory flag.
 
 Other useful entry forms:
@@ -244,7 +244,7 @@ and show every configured instrument before it is started:
 SCPI-MGR> load bench "C:\ATE Projects\benches\development bench.json"
 SCPI-MGR> instruments
 SCPI-MGR> catalog
-SCPI-MGR> catalog virtual-vna VNA-2PORT-EMU
+SCPI-MGR> catalog virtual-vna vna-2-port
 SCPI-MGR> create bench "C:\ATE Projects\benches\new bench.json"
 SCPI-MGR> start
 SCPI-MGR> status
@@ -323,7 +323,7 @@ Quote every response or validation value containing commas:
 
 ```csv
 Equipment,Port,Command,Response,Validation
-Example DMM,5555,*IDN?,"Example Corp,DMM1000,SN123,1.0",
+Example DMM,5555,*IDN?,"Example Corp,test-dmm-profile,SN123,1.0",
 ,,VOLT (.+),OK,"range:0,10"
 ,,VOLT?,5,
 ```
@@ -336,8 +336,8 @@ the active configuration unchanged.
 The repository includes:
 
 - `scpi_instruments_example.csv` — two small development instruments.
-- `detailed_instruments.csv` — eight legacy instrument command catalogs, including a generic
-  single-output PSU compatibility block rather than the stateful triple-output model.
+- `detailed_instruments.csv` — nine generic static instrument command profiles, including DMM,
+  one-output PSU, Oscilloscope Type A/B, signal-generator, and VNA examples.
 - `vna-commands.csv` — a static generic two-port VNA CSV catalog.
 
 ## CLI reference

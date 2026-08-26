@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "generic-vna-development-bench",
   "description": "A four-port generic VNA with a 67 GHz emulated range.",
   "metadata": {},
@@ -8,7 +8,8 @@
       "id": "vna1",
       "name": "Development VNA",
       "driver": "virtual-vna",
-      "model": "VNA-4PORT-EMU",
+      "model": "vna-4-port",
+      "reported_model": "Development Wideband VNA",
       "serial_number": "EMU-VNA-001",
       "configuration": {
         "frequency_minimum_hz": 100000,

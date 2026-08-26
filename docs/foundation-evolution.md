@@ -90,7 +90,7 @@ status behavior.
 
 ### VNA identity was only a label
 
-The original VNA catalog could identify itself as an VNA-2PORT-EMU while advertising a 50 GHz range and
+The original VNA catalog could select a two-port profile while advertising a 50 GHz range and
 placeholder firmware. Port count, source count, hardware options, application licenses, and command
 availability did not come from a single model definition. This made internally contradictory
 instruments possible.
@@ -243,7 +243,7 @@ error handling they use against physical instruments.
 
 ### 9. Versioned VNA and VNA capabilities
 
-The generic capability baseline provides `VNA-2PORT-EMU` and `VNA-4PORT-EMU` with E.1.0 as the
+The generic capability baseline provides `vna-2-port` and `vna-4-port` with E.1.0 as the
 firmware token. A machine-readable project-owned profile describes fixed port counts, configurable
 source counts and frequency limits, semantic hardware features, semantic applications, and
 prerequisites.
@@ -418,7 +418,7 @@ As of 2026-08-22:
 
 - 295 automated tests pass, with 2 expected failures documenting legacy CSV parser limitations.
 - Two known legacy-parser limitations are retained as explicit expected failures.
-- The VNA-2PORT-EMU and VNA-4PORT-EMU manifests each report 393/393 documented commands in the current snapshot.
+- The vna-2-port and vna-4-port manifests each report 393/393 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned VNA capability milestone is complete.
 - The first VNA measurement lifecycle is stateful: channels own uniquely named measurements,
@@ -439,7 +439,7 @@ As of 2026-08-22:
   streams with license, address-existence, trigger-policy, and malformed-data enforcement.
 - Basic and Integrated Pulse applications model five generators, point/profile operation, IF
   filters and gate routing, time axes, timing constraints, and shared scenario trigger policies.
-- The catalog-visible 34461A-EMU reference DMM consumes scalar streams through the same player, proving
+- The catalog-visible Virtual DMM consumes scalar streams through the same player, proving
   nominal, drift, range-failure, recovery, exhaustion, trigger/operation, fetch, and reset behavior
   on a second instrument shape.
 - The instrument-driver/catalog contract can enumerate built-in and third-party emulator families
