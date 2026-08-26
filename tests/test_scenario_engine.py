@@ -335,6 +335,14 @@ def test_compressed_binary_container_is_deterministic_and_round_trips(tmp_path) 
     assert load_scenario(json_path) == definition
 
 
+def test_utf8_json_scenario_can_use_txt_extension(tmp_path) -> None:
+    definition = scenario(stream("reading", (1.0, 2.0)))
+    text_path = tmp_path / "readings.txt"
+    text_path.write_text(dumps_scenario(definition), encoding="utf-8")
+
+    assert load_scenario(text_path) == definition
+
+
 @pytest.mark.parametrize(
     ("raw", "message"),
     [

@@ -202,6 +202,8 @@ def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> 
     assert "scenario-file" in html
     assert "scenario-load" in html
     assert "Start immediately" in html
+    assert 'accept=".json,.txt,application/json,text/plain"' in html
+    assert "Load file" in html
     assert "Select loaded stream for noise" in html
     assert "JSON.parse(await file.text())" in html
     assert ",'PUT');" in html

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "name": "starter-vna-s11",
+  "description": "Two five-point complex S11 traces for a simple DUT state change.",
+  "seed": 1003,
+  "streams": {
+    "S11": {
+      "kind": "trace",
+      "advance": "read",
+      "end": "hold-last",
+      "samples": [
+        {
+          "label": "state-a",
+          "value": [
+            {"$complex": [0.10, -0.02]},
+            {"$complex": [0.14, -0.04]},
+            {"$complex": [0.18, -0.06]},
+            {"$complex": [0.15, -0.03]},
+            {"$complex": [0.11, -0.01]}
+          ]
+        },
+        {
+          "label": "state-b",
+          "value": [
+            {"$complex": [0.22, -0.08]},
+            {"$complex": [0.27, -0.10]},
+            {"$complex": [0.31, -0.12]},
+            {"$complex": [0.26, -0.09]},
+            {"$complex": [0.20, -0.06]}
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -44,4 +44,5 @@ SCPI-MGR> scenario start dmm1
 ```
 
 Successive `READ?` calls then return `3.3`, `3.1`, and `4.8` before holding the last value. The same
-file can be selected from the instrument's **Scenario JSON** panel in the dashboard.
+file can be selected from the instrument's **Scenario file** panel in the dashboard. Scenario JSON
+may be saved with either a `.json` or `.txt` extension.

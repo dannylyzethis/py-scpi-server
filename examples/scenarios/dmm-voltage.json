@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "starter-dmm-voltage",
+  "description": "Three DC voltage readings representing nominal, drift, and overvoltage states.",
+  "seed": 1001,
+  "streams": {
+    "voltage.dc": {
+      "kind": "scalar",
+      "advance": "read",
+      "end": "hold-last",
+      "samples": [
+        {"value": 3.3, "label": "nominal"},
+        {"value": 3.1, "label": "drift"},
+        {"value": 4.8, "label": "overvoltage"}
+      ]
+    }
+  }
+}

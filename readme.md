@@ -271,8 +271,10 @@ creating or replacing a file.
 
 Scenario files can be selected while servers remain running. `scenario load <instrument> <file>`
 validates and selects a scenario in the paused state; `scenario start`, `pause`, `reset`, `status`,
-and `step` control playback. The dashboard provides a per-instrument **Load JSON** control for the
-same workflow. Its stream dropdown applies deterministic noise to an already-loaded stream.
+and `step` control playback. The file may end in `.json` or `.txt`; either way, its contents use the
+same schema-1 JSON structure. Starter DMM and VNA files are in `examples/scenarios/`. The dashboard
+provides the same per-instrument **Load file** control. Its stream dropdown applies deterministic
+noise to an already-loaded stream.
 
 Container quick start:
 

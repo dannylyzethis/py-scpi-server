@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "starter-generic-readings",
+  "description": "A generic scalar queue that works with the DMM's currently selected function.",
+  "seed": 1002,
+  "streams": {
+    "reading": {
+      "kind": "scalar",
+      "advance": "read",
+      "end": "loop",
+      "samples": [
+        {"value": 1.0, "label": "low"},
+        {"value": 2.5, "label": "middle"},
+        {"value": 4.0, "label": "high"}
+      ]
+    }
+  }
+}

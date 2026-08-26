@@ -23,10 +23,14 @@ SCPI-MGR> scenario reset dmm1
 ```
 
 `scenario load` validates the complete file before replacing the selected scenario and initially
-pauses it. Quote a path only when it contains spaces. The dashboard provides the same operation in
-each instrument card: choose a schema-1 JSON file, choose whether to start immediately, and select
-**Load JSON**. The stream dropdown below it is specifically for adding deterministic noise to a
+pauses it. Quote a path only when it contains spaces. A `.json` or `.txt` filename works because the
+loader detects the UTF-8 JSON content rather than using the extension. The dashboard provides the
+same operation in each instrument card: choose either file type, choose whether to start
+immediately, and select **Load file**. The stream dropdown below it adds deterministic noise to a
 stream that is already loaded; it does not select or load a scenario file.
+
+Ready-to-run starter files are in `examples/scenarios/`, including scalar DMM readings and a
+five-point complex VNA trace. See that folder's README for the shortest commands.
 
 ## Human-readable JSON format
 

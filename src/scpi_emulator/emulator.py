@@ -1598,7 +1598,7 @@ class SCPIEmulatorManager:
         print("  create bench <file>      - Guided create, validate, save, and load")
         print("  start             - Start the active instruments")
         print("  web               - Start dashboard for the active instruments")
-        print("  scenario load <instrument> <file> - Select scenario JSON (paused)")
+        print("  scenario load <instrument> <file> - Select scenario JSON/.txt (paused)")
         print("  scenario status <instrument>      - Show scenario and stream positions")
         print("  scenario start|pause|reset <instrument>")
         print("  scenario step <instrument> [stream]")
