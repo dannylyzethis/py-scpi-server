@@ -9,7 +9,15 @@ from scpi_emulator.scpi import (
     SCPIParseError,
     mnemonic_matches,
     parse_program_message,
+    split_program_message_units,
 )
+
+
+def test_raw_program_units_preserve_case_quotes_and_embedded_semicolons() -> None:
+    assert split_program_message_units('LABEL "A;MixedCase";VALUE?') == (
+        'LABEL "A;MixedCase"',
+        "VALUE?",
+    )
 
 
 def test_common_query_and_message_terminator() -> None:

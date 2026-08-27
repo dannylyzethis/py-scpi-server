@@ -89,6 +89,7 @@ from .parser import (
     SCPIParseError,
     mnemonic_matches,
     parse_program_message,
+    split_program_message_units,
 )
 from .registry import (
     CommandRegistry,
@@ -199,6 +200,7 @@ __all__ = [
     "load_command_manifest",
     "mnemonic_matches",
     "parse_program_message",
+    "split_program_message_units",
     "register_status_commands",
     "registry_implementation_keys",
     "register_operation_commands",

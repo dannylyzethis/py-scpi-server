@@ -75,8 +75,8 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
   transports bridge Device Clear, bus trigger, locking, serial poll, and asynchronous SRQ.
 - HiSLIP 2.0 TLS/SASL features and automatic discovery from the packaged CLI are not implemented;
   library users can enable standards-shaped `_hislip._tcp` and `_vxi-11._tcp` advertisements.
-- Two legacy CSV dispatch paths still uppercase quoted string parameters and split semicolons inside
-  quoted strings; typed core commands use the replacement parser.
+- CSV compatibility commands use the same quote- and binary-safe program-message boundaries as the
+  typed core while preserving the original case of free-form parameters.
 - VNA configuration, sweep/stimulus, base trace-data workflows, and the selected profile-gated
   application families are stateful, but complete behavioral coverage of every command in those
   large applications remains iterative. The current command manifest is a growing verified

@@ -85,6 +85,7 @@ class CSVCommandAdapter:
             except UnicodeDecodeError:
                 self.error_queue.push(-102, "binary data is not valid for a CSV command")
                 return True, ""
+        command = command.strip()
         normalized = command.upper()
         handler = self.commands.get(normalized)
         if handler is not None:
@@ -93,7 +94,7 @@ class CSVCommandAdapter:
             if "(" not in pattern:
                 continue
             regex = "(.+)".join(re.escape(part) for part in pattern.split("(.+)"))
-            match = re.fullmatch(regex, normalized)
+            match = re.fullmatch(regex, command, flags=re.IGNORECASE)
             if match:
                 return True, handler(*match.groups())
         return False, ""
@@ -130,7 +131,12 @@ class CSVCommandAdapter:
                 if error:
                     self.error_queue.push(error[0], error[1])
                     return ""
-            self.state[f"{base_name}_VALUE"] = args[0]
+            value = args[0]
+            if validation and (
+                validation.startswith("enum:") or validation == "bool"
+            ):
+                value = value.upper()
+            self.state[f"{base_name}_VALUE"] = value
             return "OK"
 
         return set_value

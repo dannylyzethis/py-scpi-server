@@ -153,6 +153,24 @@ def parse_program_message(message: str | bytes) -> ProgramMessage:
     return ProgramMessage(tuple(commands))
 
 
+def split_program_message_units(message: str | bytes) -> tuple[str | bytes, ...]:
+    """Split outside quoted strings and binary blocks while preserving raw data."""
+    text_input = isinstance(message, str)
+    data = message.encode("utf-8") if text_input else bytes(message)
+    data = _remove_terminator(data)
+    if not _trim(data):
+        raise SCPIParseError("program message is empty")
+    units = tuple(_trim(unit) for unit in _split_outside_data(data, ord(";")))
+    if any(not unit for unit in units):
+        raise SCPIParseError("empty command unit")
+    if not text_input:
+        return units
+    try:
+        return tuple(unit.decode("utf-8") for unit in units)
+    except UnicodeDecodeError as error:
+        raise SCPIParseError("program message is not valid UTF-8", error.start) from error
+
+
 def _remove_terminator(data: bytes) -> bytes:
     if data.endswith(b"\r\n"):
         return data[:-2]

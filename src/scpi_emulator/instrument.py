@@ -31,6 +31,7 @@ from .scpi import (
     VNATimeDomainSystem,
     detect_vna_model,
     parse_program_message,
+    split_program_message_units,
     register_acquisition_commands,
     register_active_device_commands,
     register_advanced_commands,
@@ -342,16 +343,19 @@ class SCPIInstrument:
 
     def _process_program_message(self, command):
         """Dispatch one complete byte or text program message."""
-        if isinstance(command, bytes):
-            return self._process_single_command(command)
-        if ";" in command:
-            responses = []
-            for item in command.split(";"):
-                response = self._process_single_command(item.strip())
-                if response:
-                    responses.append(response)
-            return ";".join(responses) if responses else ""
-        return self._process_single_command(command)
+        try:
+            units = split_program_message_units(command)
+        except SCPIParseError as error:
+            self.error_queue.push(-102, str(error))
+            return ""
+        if len(units) == 1:
+            return self._process_single_command(units[0])
+        responses = []
+        for unit in units:
+            response = self._process_single_command(unit)
+            if response:
+                responses.append(response)
+        return ";".join(responses) if responses else ""
 
     def _process_single_command(self, command):
         """Process one command through the typed registry, then CSV compatibility."""

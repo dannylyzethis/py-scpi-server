@@ -115,6 +115,11 @@ The columns mean:
 Commands cannot appear before the first equipment declaration. A port is valid only on an equipment
 declaration row. A validation rule is valid only on a parameterized command.
 
+Command headers are matched without regard to case, but free-form parameter text retains the exact
+case supplied by the client. Enum and boolean values are normalized to their canonical uppercase
+forms when stored. A semicolon inside a quoted parameter remains data; only a semicolon outside a
+quoted string or binary block separates chained SCPI commands.
+
 ## Do CSV values need quotes?
 
 This is separate from quoting the path on the command line. Inside the CSV file, surround a field

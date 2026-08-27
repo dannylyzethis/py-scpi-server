@@ -161,21 +161,14 @@ def test_output_capacity_failure_reports_query_deadlock(
     assert instrument.process_command("SYST:ERR?") == '-430,"Query DEADLOCKED"'
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Legacy command processing uppercases string parameters before dispatch",
-)
 def test_string_parameter_case_is_preserved() -> None:
     instrument = SCPIInstrument("Test", "test")
     instrument.add_command("LABEL (.+)", "{value}")
     assert instrument.process_command("LABEL MixedCase") == "MixedCase"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Legacy chaining splits semicolons that occur inside quoted strings",
-)
 def test_semicolon_inside_quoted_parameter_is_not_a_command_separator() -> None:
     instrument = SCPIInstrument("Test", "test")
     instrument.add_command("LABEL (.+)", "{value}")
     assert instrument.process_command('LABEL "A;B"') == '"A;B"'
+    assert instrument.process_command('LABEL "A;B";LABEL MixedCase') == '"A;B";MixedCase'
