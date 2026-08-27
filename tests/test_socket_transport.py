@@ -5,7 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from scpi_emulator.emulator import SCPIInstrument, SCPIServer
+from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.raw_server import SCPIServer
 from scpi_emulator.scpi import (
     BinaryResponse,
     CommandSpec,

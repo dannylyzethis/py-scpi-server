@@ -20,6 +20,8 @@ from scpi_emulator.emulator import SCPIEmulatorManager
 from scpi_emulator.emulator import build_parser as FacadeBuildParser
 from scpi_emulator.emulator import main as FacadeMain
 from scpi_emulator.instrument import SCPIInstrument
+from scpi_emulator.raw_server import SCPIServer as DirectSCPIServer
+from scpi_emulator.emulator import SCPIServer as FacadeSCPIServer
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +33,7 @@ def test_emulator_facade_preserves_instrument_and_configuration_imports() -> Non
     assert FacadeExcelReader is ExcelReader
     assert FacadeBuildParser is DirectBuildParser
     assert FacadeMain is DirectMain
+    assert FacadeSCPIServer is DirectSCPIServer
 
 
 def test_configuration_module_loads_compatibility_instruments_directly() -> None:

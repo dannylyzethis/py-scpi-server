@@ -105,8 +105,10 @@ under `legacy/` for reference instead of competing with the active package.
 
 The transport-neutral instrument implementation now lives in `instrument.py`. CSV/XLSX reading,
 validation, identifier normalization, and compatibility-instrument construction live in
-`configuration.py`. Drivers import those focused modules directly; `emulator.py` temporarily
-re-exports their public names so existing library imports continue to work during modularization.
+`configuration.py`. Raw TCP session lifecycle and framing integration live in `raw_server.py`, and
+the executable process lifecycle lives in `cli.py`. Drivers and bench composition import these
+focused modules directly; `emulator.py` temporarily re-exports their public names so existing
+library imports continue to work during modularization.
 
 Configuration loading is transactional and strict. It rejects malformed headers, spilled CSV
 fields, invalid ports, duplicate instruments or commands, and unsupported validation rules. If a
