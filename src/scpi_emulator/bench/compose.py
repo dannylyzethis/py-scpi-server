@@ -219,6 +219,12 @@ class BenchRuntime:
     def stop_all_servers(self) -> None:
         self.stop()
 
+    def shutdown(self) -> None:
+        if self.web_dashboard is not None:
+            self.web_dashboard.stop()
+            self.web_dashboard = None
+        self.stop()
+
     def start_web_dashboard(
         self,
         host: str = "127.0.0.1",
@@ -226,7 +232,7 @@ class BenchRuntime:
         *,
         auth_token: str | None = None,
     ) -> bool:
-        from scpi_emulator.emulator import WebDashboard
+        from scpi_emulator.dashboard import WebDashboard
 
         self.web_dashboard = WebDashboard(self, host, port, auth_token=auth_token)
         return self.web_dashboard.start()

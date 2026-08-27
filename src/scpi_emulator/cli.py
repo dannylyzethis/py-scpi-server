@@ -78,7 +78,7 @@ def _install_signal_handlers(manager):
     """Install process-wide handlers only from the executable path."""
     def shutdown(signum, _frame):
         logger.info("Received shutdown signal %s, stopping servers...", signum)
-        manager.stop_active_servers()
+        manager.shutdown()
         raise SystemExit(0)
 
     signal.signal(signal.SIGINT, shutdown)
@@ -183,7 +183,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
-            runtime.stop_all_servers()
+            shutdown_runtime = getattr(runtime, "shutdown", runtime.stop_all_servers)
+            shutdown_runtime()
 
     return 0
 

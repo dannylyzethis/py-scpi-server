@@ -22,6 +22,8 @@ from scpi_emulator.emulator import main as FacadeMain
 from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.raw_server import SCPIServer as DirectSCPIServer
 from scpi_emulator.runtime import SCPIEmulatorManager as DirectManager
+from scpi_emulator.dashboard import WebDashboard as DirectDashboard
+from scpi_emulator.emulator import WebDashboard as FacadeDashboard
 from scpi_emulator.emulator import SCPIServer as FacadeSCPIServer
 from scpi_emulator.interactive import InteractiveShell
 
@@ -37,6 +39,7 @@ def test_emulator_facade_preserves_instrument_and_configuration_imports() -> Non
     assert FacadeMain is DirectMain
     assert FacadeSCPIServer is DirectSCPIServer
     assert SCPIEmulatorManager is DirectManager
+    assert FacadeDashboard is DirectDashboard
 
 
 def test_configuration_module_loads_compatibility_instruments_directly() -> None:

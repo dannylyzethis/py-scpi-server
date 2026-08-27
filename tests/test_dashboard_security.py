@@ -2,7 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from scpi_emulator.emulator import HAS_FLASK, SCPIInstrument, WebDashboard
+from scpi_emulator.dashboard import HAS_FLASK, WebDashboard
+from scpi_emulator.emulator import SCPIInstrument
 
 
 pytestmark = pytest.mark.skipif(not HAS_FLASK, reason="web extras are not installed")
@@ -191,29 +192,64 @@ def test_asynchronous_acquisition_completion_pushes_live_state() -> None:
 
 def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> None:
     dashboard, _ = make_dashboard()
-    html = dashboard.app.test_client().get("/").get_data(as_text=True)
+    client = dashboard.app.test_client()
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+    javascript = client.get("/static/dashboard.js").get_data(as_text=True)
+    stylesheet = client.get("/static/dashboard.css").get_data(as_text=True)
 
-    assert "escapeHtml(cmd.command)" in html
-    assert "escapeHtml(cmd.response)" in html
-    assert "newLine.innerHTML" not in html
-    assert "message.textContent" in html
+    assert "http://" not in html and "https://" not in html
+    assert "<style" not in html and "<script>" not in html
+    assert "dashboard.css" in html and "dashboard.js" in html
+    assert "escapeHtml(cmd.command)" in javascript
+    assert "escapeHtml(cmd.response)" in javascript
+    assert "newLine.innerHTML" not in javascript
+    assert "io(" not in javascript and "socket.on" not in javascript
+    assert "setInterval(refreshStatus,1000)" in javascript
+    assert ".instrument-card" in stylesheet
     assert "SCPI Control Room" in html
-    assert "noise-apply" in html
-    assert "scenario-file" in html
-    assert "scenario-load" in html
-    assert "Start immediately" in html
-    assert 'accept=".json,.txt,application/json,text/plain"' in html
-    assert "Load file" in html
-    assert "Select loaded stream for noise" in html
-    assert "JSON.parse(await file.text())" in html
-    assert ",'PUT');" in html
-    assert "fault-inject" in html
-    assert "Channels, measurements, and traces" in html
-    assert "snapshot.identity.reported_model" in html
-    assert "socket.on('state_changed',scheduleRefresh)" in html
-    assert "setInterval(refreshStatus,30000)" in html
-    assert "captureInstrumentUi" in html
-    assert "restoreInstrumentUi" in html
+    assert "noise-apply" in javascript
+    assert "scenario-file" in javascript
+    assert "JSON.parse(await file.text())" in javascript
+    assert "fault-inject" in javascript
+    assert "snapshot.identity.reported_model" in javascript
+    assert "captureInstrumentUi" in javascript
+    assert "restoreInstrumentUi" in javascript
+    assert response.headers["Content-Security-Policy"].startswith("default-src 'self'")
+    assert "script-src 'self'" in response.headers["Content-Security-Policy"]
+    assert "style-src 'self'" in response.headers["Content-Security-Policy"]
+
+
+def test_dashboards_have_isolated_command_history() -> None:
+    first, first_server = make_dashboard()
+    second, _ = make_dashboard()
+
+    first_server.instrument.process_command("*IDN?")
+
+    assert len(first.command_logger.get_recent_entries()) == 1
+    assert second.command_logger.get_recent_entries() == []
+
+
+def test_dashboard_start_is_ready_immediately_and_stop_is_clean() -> None:
+    import urllib.request
+
+    dashboard, server = make_dashboard()
+    dashboard.port = 0
+
+    assert dashboard.start() is True
+    assert dashboard.running is True
+    with urllib.request.urlopen(
+        f"http://127.0.0.1:{dashboard.port}/api/status", timeout=2
+    ) as response:
+        assert response.status == 200
+
+    logged = len(dashboard.command_logger.get_recent_entries())
+    dashboard.stop()
+
+    assert dashboard.running is False
+    server.instrument.process_command("*IDN?")
+    assert len(dashboard.command_logger.get_recent_entries()) == logged
+    dashboard.stop()
 
 
 def test_status_snapshot_is_detailed_and_non_destructive() -> None:

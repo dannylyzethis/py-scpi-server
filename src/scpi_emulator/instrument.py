@@ -285,6 +285,11 @@ class SCPIInstrument:
         if observer not in self._command_observers:
             self._command_observers.append(observer)
 
+    def remove_command_observer(self, observer):
+        """Stop observing completed commands."""
+        if observer in self._command_observers:
+            self._command_observers.remove(observer)
+
     def queue_command_response(self, command, *, termination=b"\n"):
         """Execute a program message and leave any response in the output queue."""
         if self.output_queue:

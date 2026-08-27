@@ -110,6 +110,14 @@ class SCPIEmulatorManager:
         else:
             self.stop_all_servers()
 
+    def shutdown(self):
+        """Stop the dashboard and every active instrument transport."""
+        dashboard = getattr(self.active_runtime, "web_dashboard", None)
+        if dashboard is not None:
+            dashboard.stop()
+            self.active_runtime.web_dashboard = None
+        self.stop_active_servers()
+
     def start_active_dashboard(self, host='127.0.0.1', port=8081, *, auth_token=None):
         return self.active_runtime.start_web_dashboard(
             host, port, auth_token=auth_token
@@ -182,7 +190,7 @@ class SCPIEmulatorManager:
 
     def start_web_dashboard(self, host='127.0.0.1', port=8081, *, auth_token=None):
         """Start the web dashboard"""
-        from .emulator import HAS_FLASK, WebDashboard
+        from .dashboard import HAS_FLASK, WebDashboard
         if not HAS_FLASK:
             logger.warning("Flask not available. Cannot start web dashboard.")
             return False

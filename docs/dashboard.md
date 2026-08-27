@@ -26,17 +26,25 @@ Each instrument card reports:
 
 The `/api/status` response contains this data under each instrument's `snapshot` field.
 
-## Live updates
+## Offline and live updates
+
+The dashboard does not download browser code, fonts, or styles from the internet. Its project-owned
+`dashboard.css` and `dashboard.js` assets are included in the Python package and served from the
+same local process. They introduce no additional third-party browser dependency or license.
 
 The dashboard observes completed commands at the instrument layer, so raw socket, VXI-11, HiSLIP,
 and dashboard-console commands all update the command stream, cards, status registers, counters,
 errors, measurements, and scenario position immediately. Server lifecycle, client-session, and
-scenario-control changes also publish update events.
+scenario-control changes are reflected through the same authoritative state API.
 
-Rapid events are coalesced into one authoritative `/api/status` refresh after 75 milliseconds. The
-browser retains open instrument details and unsent fault/noise control values while cards refresh.
-A 30-second poll remains only as a recovery fallback, and reconnecting the live socket immediately
-requests a complete snapshot.
+The browser polls `/api/status` and `/api/commands` once per second. It retains open instrument
+details and unsent fault/noise control values while cards refresh. This same-origin polling model
+works without a CDN or browser WebSocket library and reconnects automatically after a temporary
+server interruption.
+
+Dashboard startup binds the HTTP listener before reporting success. Runtime shutdown explicitly
+stops the listener, joins its thread, and detaches instrument observers, which makes repeated
+start/stop cycles deterministic in tests and local tools.
 
 ## Controls and invariants
 

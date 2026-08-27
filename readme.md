@@ -367,10 +367,10 @@ The repository includes:
 --version             Print the package version
 ```
 
-The dashboard is local-only by default. To bind it to a remote-facing address, set a strong
-`SCPI_EMULATOR_WEB_TOKEN` environment variable and pass `--web-host`; remote API and WebSocket access
-then requires that bearer token. Mutating API requests also use a per-process CSRF token rendered
-into the dashboard page.
+The dashboard is local-only by default and uses only CSS and JavaScript packaged with the emulator;
+it does not need a CDN or internet access. To bind it to a remote-facing address, set a strong
+`SCPI_EMULATOR_WEB_TOKEN` environment variable and pass `--web-host`; remote API access then requires
+that bearer token. Mutating API requests also use a per-process CSRF token rendered into the page.
 
 ## Development
 

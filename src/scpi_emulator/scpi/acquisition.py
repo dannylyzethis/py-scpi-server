@@ -123,6 +123,14 @@ class AcquisitionController:
     def add_completion_listener(self, listener) -> None:
         self._completion_listeners.append(listener)
 
+    def remove_trigger_listener(self, listener) -> None:
+        if listener in self._trigger_listeners:
+            self._trigger_listeners.remove(listener)
+
+    def remove_completion_listener(self, listener) -> None:
+        if listener in self._completion_listeners:
+            self._completion_listeners.remove(listener)
+
     def channel(self, number: int = 1) -> AcquisitionChannel:
         number = _channel_number(number)
         with self._lock:

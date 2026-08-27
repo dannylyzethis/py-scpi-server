@@ -4,93 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SCPI Emulator Control Room</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
-    <style>
-        :root { color-scheme: dark; --bg:#071017; --surface:#0d1821; --surface2:#121f29; --line:#263743; --text:#e6eef3; --muted:#8ea3b0; --accent:#43d6b5; --blue:#62a8ff; --amber:#f0bd67; --red:#ff7676; --shadow:0 18px 50px rgba(0,0,0,.28); }
-        * { box-sizing:border-box; }
-        body { margin:0; min-height:100vh; background:radial-gradient(circle at 85% -10%,rgba(67,214,181,.12),transparent 36rem),linear-gradient(180deg,#08131b 0%,var(--bg) 45%); color:var(--text); font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
-        button,input,select { font:inherit; }
-        button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
-        .shell { width:min(1500px,calc(100% - 32px)); margin:0 auto; padding:28px 0 52px; }
-        .masthead { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:24px; }
-        .eyebrow { color:var(--accent); font:700 11px/1.2 ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; }
-        h1 { margin:7px 0 5px; font-size:clamp(28px,4vw,46px); line-height:1; letter-spacing:-.04em; }
-        .subtitle { color:var(--muted); max-width:680px; }
-        .connection { display:flex; align-items:center; gap:9px; color:var(--muted); white-space:nowrap; }
-        .connection-dot { width:9px; height:9px; border-radius:50%; background:var(--amber); box-shadow:0 0 0 4px rgba(240,189,103,.12); }
-        .connection-dot.online { background:var(--accent); box-shadow:0 0 0 4px rgba(67,214,181,.12); }
-        .overview { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
-        .metric,.panel,.instrument-card { background:rgba(13,24,33,.94); border:1px solid var(--line); box-shadow:var(--shadow); }
-        .metric { padding:16px 18px; border-radius:12px; }
-        .metric-label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
-        .metric-value { margin-top:4px; font:700 25px/1.1 ui-monospace,monospace; }
-        .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:20px; }
-        .toolbar-group,.inline-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
-        .btn { border:1px solid var(--line); border-radius:8px; padding:8px 12px; background:#152531; color:var(--text); cursor:pointer; transition:border-color .15s,background .15s,transform .15s; }
-        .btn:hover { border-color:#426072; background:#1a2d3b; transform:translateY(-1px); }
-        .btn.primary { color:#04231c; border-color:var(--accent); background:var(--accent); font-weight:700; }
-        .btn.danger { color:#2c0707; border-color:var(--red); background:var(--red); font-weight:700; }
-        .btn.compact { padding:6px 9px; font-size:12px; }
-        .last-updated { color:var(--muted); font:12px ui-monospace,monospace; }
-        .instruments { display:grid; gap:18px; }
-        .instrument-card { border-radius:14px; overflow:hidden; }
-        .instrument-top { display:grid; grid-template-columns:minmax(220px,1.4fr) repeat(4,minmax(100px,.55fr)); gap:12px; align-items:center; padding:18px 20px; border-bottom:1px solid var(--line); }
-        .instrument-title { display:flex; align-items:center; gap:12px; min-width:0; }
-        .run-light { width:11px; height:11px; border-radius:50%; background:var(--red); box-shadow:0 0 12px rgba(255,118,118,.5); flex:0 0 auto; }
-        .run-light.running { background:var(--accent); box-shadow:0 0 12px rgba(67,214,181,.5); }
-        .instrument-name { font-size:18px; font-weight:750; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .instrument-address { color:var(--muted); font:12px ui-monospace,monospace; }
-        .mini-stat { border-left:1px solid var(--line); padding-left:13px; }
-        .mini-stat span { display:block; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.07em; }
-        .mini-stat strong { display:block; margin-top:2px; font:700 16px ui-monospace,monospace; }
-        .instrument-body { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr); }
-        .state-pane,.control-pane { padding:18px 20px 20px; }
-        .control-pane { border-left:1px solid var(--line); background:rgba(18,31,41,.55); }
-        .section-title { margin:0 0 10px; color:var(--muted); font-size:11px; letter-spacing:.12em; text-transform:uppercase; }
-        .registers { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:16px; }
-        .register { padding:10px; border:1px solid var(--line); border-radius:8px; background:#0a151d; }
-        .register span { color:var(--muted); font-size:10px; }
-        .register strong { display:block; margin-top:3px; color:var(--blue); font:700 15px ui-monospace,monospace; }
-        .register.alert strong { color:var(--red); }
-        .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:15px; }
-        .chip { padding:4px 8px; border:1px solid var(--line); border-radius:999px; color:#b9c9d2; background:#10202a; font-size:11px; }
-        .chip.good { color:var(--accent); border-color:rgba(67,214,181,.42); }
-        .chip.warn { color:var(--amber); border-color:rgba(240,189,103,.42); }
-        details { border-top:1px solid var(--line); padding-top:11px; margin-top:11px; }
-        summary { cursor:pointer; color:#c7d5dd; font-weight:650; }
-        .table-wrap { overflow-x:auto; margin-top:10px; }
-        table { width:100%; border-collapse:collapse; font-size:12px; }
-        th,td { padding:7px 8px; text-align:left; border-bottom:1px solid #20313d; }
-        th { color:var(--muted); font-weight:600; }
-        .empty { color:var(--muted); padding:10px 0; font-style:italic; }
-        .control-block { margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--line); }
-        .control-block:last-child { margin-bottom:0; padding-bottom:0; border-bottom:0; }
-        .control-heading { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:9px; }
-        .control-heading h3 { margin:0; font-size:14px; }
-        .control-heading span { color:var(--muted); font-size:11px; }
-        input,select { min-width:0; border:1px solid var(--line); border-radius:7px; padding:8px 9px; background:#09141c; color:var(--text); }
-        .field-grow { flex:1 1 140px; }
-        .field-small { width:100px; }
-        .check-control { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; white-space:nowrap; }
-        .check-control input { min-width:auto; }
-        .control-feedback { min-height:18px; margin-top:7px; color:var(--muted); font-size:12px; }
-        .control-feedback.error { color:var(--red); }
-        .bottom-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,.8fr); gap:18px; margin-top:20px; }
-        .panel { border-radius:14px; padding:18px 20px; }
-        .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-        .panel-header h2 { margin:0; font-size:16px; }
-        .command-bar { display:grid; grid-template-columns:minmax(180px,.6fr) minmax(220px,1fr) auto; gap:8px; }
-        .console { height:260px; overflow:auto; padding:12px; border-radius:8px; background:#050c11; border:1px solid #1c2b35; font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; }
-        .console-line { display:grid; grid-template-columns:66px minmax(0,1fr); gap:8px; color:#b9c9d2; }
-        .timestamp { color:#587080; }
-        .log-error { color:var(--red); }
-        .log-info { color:var(--blue); }
-        .command-result { min-height:20px; margin-top:9px; color:var(--accent); font:12px ui-monospace,monospace; overflow-wrap:anywhere; }
-        @media (max-width:1050px) { .instrument-top{grid-template-columns:1fr 1fr 1fr}.instrument-title{grid-column:1/-1}.instrument-body,.bottom-grid{grid-template-columns:1fr}.control-pane{border-left:0;border-top:1px solid var(--line)} }
-        @media (max-width:700px) { .shell{width:min(100% - 18px,1500px);padding-top:16px}.masthead{align-items:flex-start;flex-direction:column}.overview{grid-template-columns:1fr 1fr}.toolbar{align-items:flex-start;flex-direction:column}.instrument-top{grid-template-columns:1fr 1fr}.registers{grid-template-columns:1fr 1fr}.command-bar{grid-template-columns:1fr} }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 </head>
-<body>
+<body data-csrf-token="{{ csrf_token }}" data-auth-required="{{ 'true' if auth_required else 'false' }}">
     <main class="shell">
         <header class="masthead">
             <div><div class="eyebrow">Virtual bench operations</div><h1>SCPI Control Room</h1><div class="subtitle">Live instrument state, deterministic DUT scenarios, and controls that use the same core invariants as remote clients.</div></div>
@@ -109,58 +25,6 @@
             <div class="panel"><div class="panel-header"><h2>Live command stream</h2><span class="last-updated">Newest at bottom</span></div><div class="console" id="commands"></div></div>
         </section>
     </main>
-    <script>
-        const csrfToken = {{ csrf_token | tojson }};
-        const authRequired = {{ auth_required | tojson }};
-        let dashboardToken = sessionStorage.getItem('scpi-dashboard-token') || '';
-        let currentInstruments = [];
-        let refreshTimer = null;
-        let refreshActive = false;
-        let refreshQueued = false;
-        if (authRequired && !dashboardToken) { dashboardToken = window.prompt('Dashboard access token') || ''; if (dashboardToken) sessionStorage.setItem('scpi-dashboard-token',dashboardToken); }
-        function apiFetch(url,options={}) { const headers=new Headers(options.headers||{}); headers.set('X-SCPI-CSRF',csrfToken); if(dashboardToken) headers.set('Authorization',`Bearer ${dashboardToken}`); return fetch(url,{...options,headers}); }
-        async function apiJson(url,options={}) { const response=await apiFetch(url,options); const data=await response.json(); if(!response.ok) throw new Error(data.message||`Request failed (${response.status})`); return data; }
-        function escapeHtml(value) { const span=document.createElement('span'); span.textContent=String(value??''); return span.innerHTML; }
-        function hex(value,width=2) { return `0x${Number(value||0).toString(16).toUpperCase().padStart(width,'0')}`; }
-        function renderMeasurements(snapshot) {
-            if(!snapshot.measurements) { const scalar=snapshot.scalar; if(!scalar) return '<div class="empty">No measurement topology is available.</div>'; return `<div class="chips"><span class="chip good">${escapeHtml(scalar.function)}</span><span class="chip">Range ${escapeHtml(scalar.range??'AUTO')}</span><span class="chip">Last ${escapeHtml(scalar.last_value??'—')}</span></div>`; }
-            const rows=snapshot.measurements.channels.flatMap(channel=>channel.measurements.map(measurement=>`<tr><td>Ch ${channel.number}</td><td>${escapeHtml(measurement.name)}</td><td>${escapeHtml(measurement.parameter)}</td><td>${escapeHtml(measurement.format)}</td><td>${measurement.points}</td></tr>`)).join('');
-            const traces=snapshot.measurements.windows.flatMap(window=>window.traces.map(trace=>`<span class="chip ${trace.visible?'good':''}">W${window.number}:T${trace.number} ${escapeHtml(trace.measurement)}</span>`)).join('');
-            return `${traces?`<div class="chips">${traces}</div>`:''}<div class="table-wrap"><table><thead><tr><th>Channel</th><th>Measurement</th><th>Type</th><th>Format</th><th>Points</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-        }
-        function renderInstrument(inst,index,commands) {
-            const snapshot=inst.snapshot,status=snapshot.status,scenario=snapshot.scenario,acquisition=snapshot.acquisition;
-            const recentCommands=commands.filter(cmd=>cmd.instrument===inst.name).slice(-3).map(cmd=>`<div class="console-line"><span class="timestamp">${escapeHtml(cmd.time_str||'')}</span><span><span class="log-info">${escapeHtml(cmd.command)}</span> → ${escapeHtml(cmd.response)}${cmd.error?` <span class="log-error">${escapeHtml(cmd.error)}</span>`:''}</span></div>`).join('');
-            const acquisitionChips=acquisition.channels.map(channel=>`<span class="chip ${channel.state==='complete'||channel.state==='idle'?'good':'warn'}">Ch ${channel.number}: ${escapeHtml(channel.state)} · ${escapeHtml(channel.trigger_source)}</span>`).join('');
-            const capabilityChips=snapshot.capabilities?[`${snapshot.capabilities.model} / ${snapshot.capabilities.firmware}`,`${snapshot.capabilities.ports} ports`,`${snapshot.capabilities.source_count} sources`,`${snapshot.capabilities.applications.length} applications`].map(value=>`<span class="chip">${escapeHtml(value)}</span>`).join(''):'';
-            const streams=scenario.streams.map(stream=>`<option value="${escapeHtml(stream.stream)}">${escapeHtml(stream.stream)}</option>`).join('');
-            return `<article class="instrument-card" data-instrument-index="${index}" data-instrument-id="${escapeHtml(inst.id)}"><div class="instrument-top"><div class="instrument-title"><span class="run-light ${inst.running?'running':''}"></span><div><div class="instrument-name">${escapeHtml(inst.name)}</div><div class="instrument-address">${escapeHtml(snapshot.identity.reported_model)} · ${escapeHtml(inst.id)} · TCP ${inst.port}</div></div></div><div class="mini-stat"><span>Session</span><strong>${inst.clients?`${inst.clients} active`:'idle'}</strong></div><div class="mini-stat"><span>Commands</span><strong>${inst.commands}</strong></div><div class="mini-stat"><span>Errors</span><strong>${status.errors.length}</strong></div><div class="mini-stat"><span>Scenario</span><strong>${escapeHtml(scenario.state)}</strong></div></div>
-            <div class="instrument-body"><div class="state-pane"><h2 class="section-title">IEEE 488.2 and SCPI status</h2><div class="registers"><div class="register ${status.status_byte?'alert':''}"><span>STB</span><strong>${hex(status.status_byte)}</strong></div><div class="register ${status.event_status?'alert':''}"><span>ESR</span><strong>${hex(status.event_status)}</strong></div><div class="register"><span>ESE</span><strong>${hex(status.event_status_enable)}</strong></div><div class="register"><span>SRE</span><strong>${hex(status.service_request_enable)}</strong></div></div>
-            <div class="chips"><span class="chip ${status.requesting_service?'warn':'good'}">SRQ ${status.requesting_service?'asserted':'clear'}</span><span class="chip">OPER ${hex(status.operation.condition,4)}</span><span class="chip">QUES ${hex(status.questionable.condition,4)}</span><span class="chip">Pending ${snapshot.operations.pending_count}</span><span class="chip">Output ${status.output_queue_count}</span></div><h2 class="section-title">Acquisition and trigger</h2><div class="chips">${acquisitionChips||`<span class="chip">Default ${escapeHtml(acquisition.default_trigger_source)}</span>`}</div>${capabilityChips?`<h2 class="section-title">Capability profile</h2><div class="chips">${capabilityChips}</div>`:''}
-            <details><summary>Channels, measurements, and traces</summary>${renderMeasurements(snapshot)}</details><details><summary>Queued errors (${status.errors.length})</summary>${status.errors.length?`<div class="table-wrap"><table><thead><tr><th>Code</th><th>Category</th><th>Message</th></tr></thead><tbody>${status.errors.map(error=>`<tr><td>${error.code}</td><td>${escapeHtml(error.category)}</td><td>${escapeHtml(error.message)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Error queue is empty.</div>'}</details><details><summary>Recent instrument commands</summary><div class="console" style="height:115px;margin-top:10px">${recentCommands||'<div class="empty">No commands recorded.</div>'}</div></details></div>
-            <aside class="control-pane"><div class="control-block"><div class="control-heading"><h3>Scenario file</h3><span>${escapeHtml(scenario.scenario||'No scenario selected')}</span></div><div class="inline-controls"><input class="field-grow scenario-file" type="file" accept=".json,.txt,application/json,text/plain" aria-label="Scenario JSON or text file"><label class="check-control"><input class="scenario-start" type="checkbox" checked>Start immediately</label><button class="btn compact primary scenario-load">Load file</button></div><div class="inline-controls" style="margin-top:8px"><button class="btn compact scenario-action" data-action="start">Start</button><button class="btn compact scenario-action" data-action="pause">Pause</button><button class="btn compact scenario-action" data-action="reset">Reset</button><button class="btn compact scenario-action" data-action="step">Step all</button></div><div class="control-feedback">${scenario.streams.length?scenario.streams.map(stream=>`${escapeHtml(stream.stream)} ${stream.index+1}/${stream.sample_count}`).join(' · '):'Choose a schema-1 JSON document saved as .json or .txt to supply DUT values.'}</div></div>
-            <div class="control-block"><div class="control-heading"><h3>Deterministic noise</h3><span>Applied to a loaded scenario stream</span></div><div class="inline-controls"><select class="field-grow noise-stream"><option value="">Select loaded stream for noise</option>${streams}</select><input class="field-small noise-amplitude" type="number" min="0" step="any" value="0" aria-label="Noise amplitude"><button class="btn compact noise-apply">Apply noise</button></div><div class="control-feedback">${Object.entries(scenario.noise).map(([name,amplitude])=>`${escapeHtml(name)} ±${escapeHtml(amplitude)}`).join(' · ')||'Noise disabled'}</div></div>
-            <div class="control-block"><div class="control-heading"><h3>SCPI fault injection</h3><span>Uses error/status engine</span></div><div class="inline-controls"><input class="field-small fault-code" type="number" max="-1" value="-300" aria-label="SCPI error code"><input class="field-grow fault-message" type="text" maxlength="200" placeholder="Optional fault detail"><button class="btn compact danger fault-inject">Inject</button></div><div class="control-feedback ${scenario.last_fault?'error':''}">${scenario.last_fault?`${scenario.last_fault.code} ${escapeHtml(scenario.last_fault.message||'')}`:'No injected fault'}</div></div><button class="btn compact restart-instrument">Restart server</button><div class="control-feedback action-feedback"></div></aside></div></article>`;
-        }
-        function bindInstrumentControls() {
-            document.querySelectorAll('.instrument-card').forEach(card=>{ const index=Number(card.dataset.instrumentIndex),instrument=currentInstruments[index],feedback=card.querySelector('.action-feedback'); const run=async(url,body={},method='POST')=>{ feedback.classList.remove('error'); feedback.textContent='Applying…'; try{ await apiJson(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); feedback.textContent='Applied'; await refreshStatus(); }catch(error){ feedback.classList.add('error'); feedback.textContent=error.message; } };
-                card.querySelector('.scenario-load').addEventListener('click',async()=>{ const file=card.querySelector('.scenario-file').files[0]; if(!file){feedback.classList.add('error');feedback.textContent='Choose a scenario JSON file.';return;} try{const scenario=JSON.parse(await file.text());await run(`/api/scenario/${encodeURIComponent(instrument.id)}`,{scenario,start:card.querySelector('.scenario-start').checked},'PUT');}catch(error){feedback.classList.add('error');feedback.textContent=`Invalid scenario JSON: ${error.message}`;} });
-                card.querySelectorAll('.scenario-action').forEach(button=>button.addEventListener('click',()=>run(`/api/scenario/${encodeURIComponent(instrument.id)}/${button.dataset.action}`)));
-                card.querySelector('.noise-apply').addEventListener('click',()=>run(`/api/scenario/${encodeURIComponent(instrument.id)}/noise`,{stream:card.querySelector('.noise-stream').value,amplitude:Number(card.querySelector('.noise-amplitude').value)}));
-                card.querySelector('.fault-inject').addEventListener('click',()=>run(`/api/scenario/${encodeURIComponent(instrument.id)}/fault`,{code:Number(card.querySelector('.fault-code').value),message:card.querySelector('.fault-message').value.trim()||null}));
-                card.querySelector('.restart-instrument').addEventListener('click',()=>run(`/api/restart/${encodeURIComponent(instrument.id)}`)); });
-        }
-        function updateInstrumentSelect(instruments) { const select=document.getElementById('instrument-select'),selected=select.value; select.replaceChildren(new Option('Select instrument','')); instruments.forEach(inst=>select.add(new Option(`${inst.name} · ${inst.port}`,inst.id))); if(instruments.some(inst=>inst.id===selected)) select.value=selected; }
-        function captureInstrumentUi() { const saved={}; document.querySelectorAll('.instrument-card').forEach(card=>{ saved[card.dataset.instrumentId]={details:Array.from(card.querySelectorAll('details')).map(item=>item.open),noiseStream:card.querySelector('.noise-stream')?.value||'',noiseAmplitude:card.querySelector('.noise-amplitude')?.value||'0',faultCode:card.querySelector('.fault-code')?.value||'-300',faultMessage:card.querySelector('.fault-message')?.value||''}; }); return saved; }
-        function restoreInstrumentUi(saved) { document.querySelectorAll('.instrument-card').forEach(card=>{ const state=saved[card.dataset.instrumentId]; if(!state)return; card.querySelectorAll('details').forEach((item,index)=>{item.open=Boolean(state.details[index]);}); const noiseStream=card.querySelector('.noise-stream'),noiseAmplitude=card.querySelector('.noise-amplitude'),faultCode=card.querySelector('.fault-code'),faultMessage=card.querySelector('.fault-message'); if(noiseStream&&Array.from(noiseStream.options).some(option=>option.value===state.noiseStream))noiseStream.value=state.noiseStream;if(noiseAmplitude)noiseAmplitude.value=state.noiseAmplitude;if(faultCode)faultCode.value=state.faultCode;if(faultMessage)faultMessage.value=state.faultMessage; }); }
-        function updateStatus(statusData,commandsData) { const saved=captureInstrumentUi(); currentInstruments=statusData.instruments; document.getElementById('metric-running').textContent=`${statusData.system.running_servers} / ${statusData.system.total_instruments}`; document.getElementById('metric-commands').textContent=statusData.stats.total_commands.toLocaleString(); document.getElementById('metric-rate').textContent=statusData.stats.commands_per_minute.toFixed(1); document.getElementById('metric-errors').textContent=statusData.stats.errors.toLocaleString(); document.getElementById('last-updated').textContent=`Snapshot ${new Date(statusData.system.timestamp*1000).toLocaleTimeString()}`; document.getElementById('instruments').innerHTML=statusData.instruments.map((inst,index)=>renderInstrument(inst,index,commandsData)).join('')||'<div class="panel empty">No instruments are configured.</div>'; updateInstrumentSelect(statusData.instruments); bindInstrumentControls(); restoreInstrumentUi(saved); }
-        async function refreshStatus() { if(refreshActive){refreshQueued=true;return;} refreshActive=true; try{ const [statusData,commandsData]=await Promise.all([apiJson('/api/status'),apiJson('/api/commands')]); updateStatus(statusData,commandsData); document.getElementById('connection-dot').classList.add('online'); document.getElementById('connection-label').textContent='Live'; }catch(error){ document.getElementById('connection-dot').classList.remove('online'); document.getElementById('connection-label').textContent=error.message; }finally{refreshActive=false;if(refreshQueued){refreshQueued=false;scheduleRefresh();}} }
-        function scheduleRefresh() { if(refreshTimer!==null)return; refreshTimer=setTimeout(()=>{refreshTimer=null;refreshStatus();},75); }
-        async function globalAction(url) { try{ await apiJson(url,{method:'POST'}); await refreshStatus(); }catch(error){ document.getElementById('connection-label').textContent=error.message; } }
-        async function sendCommand() { const instrumentId=document.getElementById('instrument-select').value,commandInput=document.getElementById('command-input'),command=commandInput.value.trim(),result=document.getElementById('command-response'); if(!instrumentId||!command){result.textContent='Select an instrument and enter a command.';return;} try{ const data=await apiJson(`/api/send_command/${encodeURIComponent(instrumentId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command})}); result.classList.remove('log-error'); result.textContent=data.error?`${data.response} · ${data.error}`:(data.response||'(no response)'); commandInput.value=''; await refreshStatus(); }catch(error){ result.classList.add('log-error'); result.textContent=error.message; } }
-        document.getElementById('refresh-button').addEventListener('click',refreshStatus); document.getElementById('start-all-button').addEventListener('click',()=>globalAction('/api/start_all')); document.getElementById('stop-all-button').addEventListener('click',()=>globalAction('/api/stop_all')); document.getElementById('send-command-button').addEventListener('click',sendCommand); document.getElementById('command-input').addEventListener('keydown',event=>{if(event.key==='Enter')sendCommand();});
-        const socket=io({auth:{token:dashboardToken}}); socket.on('connect',()=>{document.getElementById('connection-dot').classList.add('online');document.getElementById('connection-label').textContent='Live';scheduleRefresh();}); socket.on('state_changed',scheduleRefresh); socket.on('command_update',data=>{ const consoleElement=document.getElementById('commands'),newLine=document.createElement('div'); newLine.className=`console-line ${data.error?'log-error':''}`; const timestamp=document.createElement('span'); timestamp.className='timestamp'; timestamp.textContent=data.time_str||new Date((data.timestamp||Date.now()/1000)*1000).toLocaleTimeString(); const message=document.createElement('span'); message.className=data.error?'log-error':'log-info'; message.textContent=`[${data.instrument}] ${data.command} → ${data.response}${data.error?` (${data.error})`:''}`; newLine.append(timestamp,message); consoleElement.appendChild(newLine); consoleElement.scrollTop=consoleElement.scrollHeight; while(consoleElement.children.length>40) consoleElement.removeChild(consoleElement.firstChild); scheduleRefresh(); }); socket.on('disconnect',()=>{document.getElementById('connection-dot').classList.remove('online');document.getElementById('connection-label').textContent='Reconnecting';});
-        refreshStatus(); setInterval(refreshStatus,30000);
-    </script>
+    <script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
 </body>
 </html>
