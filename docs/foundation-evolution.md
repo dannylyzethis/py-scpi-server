@@ -103,6 +103,11 @@ The supported code now lives under `src/scpi_emulator`, with project metadata, a
 point, optional dependency groups, tests, and CI configuration. Earlier implementations are retained
 under `legacy/` for reference instead of competing with the active package.
 
+The transport-neutral instrument implementation now lives in `instrument.py`. CSV/XLSX reading,
+validation, identifier normalization, and compatibility-instrument construction live in
+`configuration.py`. Drivers import those focused modules directly; `emulator.py` temporarily
+re-exports their public names so existing library imports continue to work during modularization.
+
 Configuration loading is transactional and strict. It rejects malformed headers, spilled CSV
 fields, invalid ports, duplicate instruments or commands, and unsupported validation rules. If a
 reload fails, the currently running configuration remains intact.

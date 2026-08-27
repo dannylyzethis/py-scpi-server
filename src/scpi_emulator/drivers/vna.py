@@ -36,7 +36,7 @@ class VNADriver:
         self.descriptor = _build_descriptor(self._profile)
 
     def create_instrument(self, request: InstrumentRequest) -> object:
-        from scpi_emulator.emulator import SCPIInstrument
+        from scpi_emulator.instrument import SCPIInstrument
         from scpi_emulator.scpi import VNACapabilities
 
         model = self.descriptor.model(request.model)

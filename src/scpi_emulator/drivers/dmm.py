@@ -53,7 +53,7 @@ class DMMDriver:
     )
 
     def create_instrument(self, request: InstrumentRequest) -> object:
-        from scpi_emulator.emulator import SCPIInstrument
+        from scpi_emulator.instrument import SCPIInstrument
 
         model = self.descriptor.model(request.model)
         firmware = request.firmware or model.firmware_snapshots[0]

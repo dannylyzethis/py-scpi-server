@@ -24,7 +24,7 @@ class CSVDriver:
     """Expose every Equipment block in a configured CSV directory as a model."""
 
     def __init__(self, directory: str | Path) -> None:
-        from scpi_emulator.emulator import (
+        from scpi_emulator.configuration import (
             ConfigurationError,
             load_compatibility_instruments,
         )
@@ -79,7 +79,7 @@ class CSVDriver:
         )
 
     def create_instrument(self, request: InstrumentRequest) -> object:
-        from scpi_emulator.emulator import (
+        from scpi_emulator.configuration import (
             ConfigurationError,
             load_compatibility_instruments,
         )

@@ -52,7 +52,7 @@ class PowerSupplyDriver:
     )
 
     def create_instrument(self, request: InstrumentRequest) -> object:
-        from scpi_emulator.emulator import SCPIInstrument
+        from scpi_emulator.instrument import SCPIInstrument
         from scpi_emulator.scpi.power_supply import (
             PowerSupplySystem,
             register_power_supply_commands,
