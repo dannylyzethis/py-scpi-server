@@ -284,7 +284,7 @@ snapshot includes common synchronization, acquisition, identity, option and capa
 plus the first stateful channel, measurement, display, format, math, marker, limit, and equation
 workflows, plus linear, logarithmic, CW, power, and segment sweep configuration. Named MMEM state
 files now save and restore composition existence through a path-safe per-instrument JSON store;
-they deliberately do not serialize sweep, hardware, scenario, or calibration state. Licensed
+they deliberately do not serialize sweep, hardware, scenario, or calibration state. Profile-enabled
 time-domain, gating, fixture-simulation, gain-compression, noise-figure, and Integrated Pulse
 commands now process the same generic scenario traces.
 The snapshot will continue expanding with applications.
@@ -313,12 +313,16 @@ replace that work.
 
 The largest unfinished areas are:
 
-1. Named-file state save/recall and measurement file operations. Real calibration math and internal
-   calibration state are deliberately out of scope; correction status remains static.
-2. Time domain, fixture simulation, mixers, embedded LO, gain compression, noise figure, pulse,
-   spectrum analysis, IMD, modulation distortion, phase noise, and differential-IQ applications.
+1. Additional generic instrument-family drivers and scenario adapters beyond the current DMM,
+   power-supply, VNA, and CSV foundations.
+2. Broader verified command snapshots driven by concrete automation workflows; the current manifest
+   is intentionally finite and does not claim universal command coverage.
 3. Additional HiSLIP 2.0 security features beyond the completed HiSLIP 1.0/discovery foundation.
-4. Virtual front panels, fault injection, packaging, and release hardening.
+4. Repository modularization, an offline lifecycle-safe dashboard, and the remaining CSV quoted-data
+   parser corrections tracked by cleanup epic `scpi-38a`.
+
+Real calibration mathematics and physical-instrument internal state-file formats remain deliberately
+out of scope; correction status remains static.
 
 Raw TCP, VXI-11, and HiSLIP work today. The INSTR transports bridge Device Clear, trigger, locking,
 serial poll, and internal request state to asynchronous SRQ delivery. Optional LXI DNS-SD records
@@ -414,9 +418,10 @@ developer or build agent to have a costly instrument attached.
 
 ## Current verification snapshot
 
-As of 2026-08-22:
+As of 2026-08-27:
 
-- 295 automated tests pass, with 2 expected failures documenting legacy CSV parser limitations.
+- The complete automated suite passes on the supported CI matrix, with 2 strict expected failures
+  documenting the remaining CSV parser limitations.
 - Two known legacy-parser limitations are retained as explicit expected failures.
 - The vna-2-port and vna-4-port manifests each report 393/393 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
@@ -454,5 +459,5 @@ As of 2026-08-22:
   playback per instrument; injected faults flow through the normal SCPI error/status registers. A
   runnable remote bench/client example reproduces the complete workflow over TCP and HTTP.
 
-See [VNA compatibility baseline](vna-compatibility.md) for model and firmware details, and
+See [Generic VNA capability profiles](vna-capabilities.md) for model and firmware details, and
 [TODO.md](../TODO.md) or `bd ready` for the live implementation backlog.

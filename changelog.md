@@ -5,6 +5,20 @@ All notable changes to the SCPI Equipment Emulator project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Live scenario load/status/start/pause/reset/step commands in the interactive manager.
+- Per-instrument dashboard scenario-file loading with optional immediate start.
+- Ready-to-run DMM and VNA scenario examples, including JSON content saved with a `.txt` extension.
+- A dependency-ordered repository cleanup and modularization backlog under Beads epic `scpi-38a`.
+
+### Fixed
+
+- CI license review now recognizes the reviewed BSD-3-Clause Click 8.5.0 release.
+- The container smoke test now validates the actual bundled generic CSV instrument identity.
+
 ## [4.0.0] - 2026-08-26
 
 ### Added
@@ -270,55 +284,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version Support
 
-| Version | Support Status | Python | ATE clients | Notes |
-|---------|---------------|--------|---------|-------|
-| 2.3.x   | ✅ Active     | 3.6+   | 2018+   | Current with web dashboard |
-| 2.2.x   | ✅ Active     | 3.6+   | 2018+   | Validation fixes |
-| 2.1.x   | ⚠️ Maintenance | 3.6+   | 2018+   | Critical fixes only |
-| 2.0.x   | ⚠️ Maintenance | 3.6+   | 2018+   | Critical fixes only |
-| 1.x.x   | ❌ End of Life | 3.6+   | 2018+   | No longer supported |
+| Version | Support status | Python | Notes |
+|---|---|---|---|
+| 4.x | Active alpha | 3.10+ | Generic identities and bench schema 2 |
+| 3.x | End of life | 3.10+ | Superseded by generic version-4 profiles |
+| 2.x and earlier | Historical only | 3.6+ at the time | Unsupported legacy implementations |
 
 ## Migration Guide
 
-### From 2.2.x to 2.3.x
-- **Optional**: Install Flask dependencies for web dashboard
-- **New**: Web dashboard available at http://localhost:8081
-- **Backward Compatible**: All existing configurations work unchanged
+Version 4 removes repository-owned physical model aliases and coded option identifiers. Rewrite old
+bench files using schema version 2 and select the generic catalog driver/model IDs documented in
+`docs/instrument-catalog.md`. CSV-defined external identity text remains user-controlled.
 
-### From 2.1.x to 2.2.x
-- **Fully Compatible**: No breaking changes
-- **Improved**: Validation now survives VISA device clear
-- **Enhanced**: Better debugging and error reporting
-
-### From 2.0.x to 2.1.x
-- **Fully Compatible**: No breaking changes
-- **Improved**: Enhanced validation processing
-
-### From 1.x.x to 2.0.x
-- **Breaking**: Remove any code expecting welcome message
-- **Added**: Full IEEE 488.2 command support
-- **Enhanced**: VISA compatibility improvements
-
-## Contributors
-
-### Version 2.3.0
-- Enhanced web dashboard development
-- Real-time monitoring implementation
-- WebSocket integration
-
-### Version 2.2.0
-- Critical validation preservation fixes
-- Enhanced debugging capabilities
-
-### Version 2.1.0
-- Validation system improvements
-- Enhanced logging implementation
-
-### Version 2.0.0
-- VISA compatibility implementation
-- IEEE 488.2 standard compliance
-- Major architecture improvements
-
----
-
-For detailed technical information about each version, see the individual release notes and documentation.
+Version 2.x standalone scripts are historical and unsupported. Migrate automation to the packaged
+`scpi-emulator` entry point before relying on current status, scenario, bench, or transport behavior.
