@@ -383,8 +383,8 @@ python tools/verify.py quality
 ```
 
 The `test` profile is the portable OS/Python behavior suite. The `quality` profile is the complete
-local release gate, including lint, commercial-license review, branch coverage, manifests, package
-contents, and installed-wheel CLI smoke tests.
+local release gate, including formatting, import order, lint, commercial-license review, branch
+coverage, manifests, package contents, and installed-wheel CLI smoke tests.
 
 Repository layout:
 

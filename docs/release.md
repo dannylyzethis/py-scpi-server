@@ -12,10 +12,11 @@ python -m pip install -e ".[all,dev]"
 python tools/verify.py quality
 ```
 
-This is the same quality profile called by hosted CI. It runs Ruff, the reviewed commercial-license
-policy, the complete branch-coverage suite, both VNA manifests, an isolated wheel/sdist build,
-wheel-content checks, and installed-wheel CLI/bench smoke tests. For the portable behavior suite
-alone, use `python tools/verify.py test`; the OS/Python matrix calls that exact profile.
+This is the same quality profile called by hosted CI. It checks Ruff formatting, import order, and
+lint; the reviewed commercial-license policy; the complete branch-coverage suite; both VNA
+manifests; an isolated wheel/sdist build; wheel contents; and installed-wheel CLI/bench smoke tests.
+For the portable behavior suite alone, use `python tools/verify.py test`; the OS/Python matrix calls
+that exact profile.
 
 Built-in driver descriptors are the source of truth for the catalog JSON and generated Markdown
 reference. After changing a driver model, firmware, transport, scenario input, configuration field,

@@ -67,6 +67,7 @@ def _verify_wheel(wheel: Path, environment: Path) -> None:
 
 
 def run_quality_profile() -> None:
+    run("-m", "ruff", "format", "--check", "src", "tests", "tools")
     run("-m", "ruff", "check", "src", "tests", "tools")
     run("tools/generate_catalog.py", "--check")
     run("tools/check_licenses.py")
