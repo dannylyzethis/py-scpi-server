@@ -162,117 +162,215 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
     integrated_license = licensed("integrated_pulsed_rf", "integrated-pulsed-rf")
 
     def add(path, handler, *, query=False, parameters=(), available=None):
-        registry.register(CommandSpec(
-            tuple(path), handler, tuple(parameters), query=query,
-            available=available, exists=exists,
-        ))
+        registry.register(
+            CommandSpec(
+                tuple(path),
+                handler,
+                tuple(parameters),
+                query=query,
+                available=available,
+                exists=exists,
+            )
+        )
 
-    add((sense, HeaderNode("PULSe"), HeaderNode("CATalog")),
+    add(
+        (sense, HeaderNode("PULSe"), HeaderNode("CATalog")),
         lambda inv: "Pulse0,Pulse1,Pulse2,Pulse3,Pulse4",
-        query=True, available=basic_license)
+        query=True,
+        available=basic_license,
+    )
 
     for path in (pulse, (*pulse, HeaderNode("STATe"))):
-        add(path, lambda inv, value: _set_generator(state, inv, "enabled", value),
-            parameters=(boolean,), available=basic_license)
-        add(path, lambda inv: _bool(_generator(state, inv).enabled),
-            query=True, available=basic_license)
+        add(
+            path,
+            lambda inv, value: _set_generator(state, inv, "enabled", value),
+            parameters=(boolean,),
+            available=basic_license,
+        )
+        add(
+            path,
+            lambda inv: _bool(_generator(state, inv).enabled),
+            query=True,
+            available=basic_license,
+        )
 
     for header, attribute, setter in (
         ("DELay", "delay", _set_generator_time),
         ("WIDTh", "width", _set_generator_time),
         ("DINCrement", "delay_increment", _set_generator_time),
     ):
-        add((*pulse, HeaderNode(header)),
+        add(
+            (*pulse, HeaderNode(header)),
             lambda inv, value, name=attribute, fn=setter: fn(state, inv, name, value),
-            parameters=(time_value,), available=basic_license)
-        add((*pulse, HeaderNode(header)),
+            parameters=(time_value,),
+            available=basic_license,
+        )
+        add(
+            (*pulse, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(_generator(state, inv), name)),
-            query=True, available=basic_license)
+            query=True,
+            available=basic_license,
+        )
 
-    add((*pulse, HeaderNode("INVert")),
+    add(
+        (*pulse, HeaderNode("INVert")),
         lambda inv, value: _set_generator(state, inv, "inverted", value),
-        parameters=(boolean,), available=basic_license)
-    add((*pulse, HeaderNode("INVert")),
+        parameters=(boolean,),
+        available=basic_license,
+    )
+    add(
+        (*pulse, HeaderNode("INVert")),
         lambda inv: _bool(_generator(state, inv).inverted),
-        query=True, available=basic_license)
-    add((*pulse, HeaderNode("SUBPointtrig")),
+        query=True,
+        available=basic_license,
+    )
+    add(
+        (*pulse, HeaderNode("SUBPointtrig")),
         lambda inv, value: _set_subpoint(state, inv, value),
-        parameters=(boolean,), available=basic_license)
-    add((*pulse, HeaderNode("SUBPointtrig")),
-        lambda inv: _bool(_subpoint(state, inv)), query=True, available=basic_license)
+        parameters=(boolean,),
+        available=basic_license,
+    )
+    add(
+        (*pulse, HeaderNode("SUBPointtrig")),
+        lambda inv: _bool(_subpoint(state, inv)),
+        query=True,
+        available=basic_license,
+    )
 
-    add((sense, HeaderNode("PULSe"), HeaderNode("PERiod")),
+    add(
+        (sense, HeaderNode("PULSe"), HeaderNode("PERiod")),
         lambda inv, value: _set_period(state, inv, value),
-        parameters=(time_value,), available=basic_license)
-    add((sense, HeaderNode("PULSe"), HeaderNode("PERiod")),
+        parameters=(time_value,),
+        available=basic_license,
+    )
+    add(
+        (sense, HeaderNode("PULSe"), HeaderNode("PERiod")),
         lambda inv: str(state.channel(inv.indices["channel"]).period),
-        query=True, available=basic_license)
+        query=True,
+        available=basic_license,
+    )
     for header, attribute, choices in (
         ("TPOLarity", "trigger_polarity", ("POSitive", "NEGative")),
         ("TTYPe", "trigger_type", ("EDGE", "LEVel")),
     ):
-        add((sense, HeaderNode("PULSe"), HeaderNode(header)),
-            lambda inv, value, name=attribute: _set(state.channel(inv.indices["channel"]), name, value),
+        add(
+            (sense, HeaderNode("PULSe"), HeaderNode(header)),
+            lambda inv, value, name=attribute: _set(
+                state.channel(inv.indices["channel"]), name, value
+            ),
             parameters=(ParameterSpec(ParameterType.ENUM, choices=choices),),
-            available=basic_license)
-        add((sense, HeaderNode("PULSe"), HeaderNode(header)),
+            available=basic_license,
+        )
+        add(
+            (sense, HeaderNode("PULSe"), HeaderNode(header)),
             lambda inv, name=attribute: getattr(state.channel(inv.indices["channel"]), name),
-            query=True, available=basic_license)
+            query=True,
+            available=basic_license,
+        )
     pulse4 = (sense, HeaderNode("PULSe", index="pulse", index_default=4), HeaderNode("OPTion"))
-    add(pulse4, lambda inv, value: _set(state.channel(inv.indices["channel"]), "pulse4_adc", value),
-        parameters=(boolean,), available=basic_license)
-    add(pulse4, lambda inv: _bool(state.channel(inv.indices["channel"]).pulse4_adc),
-        query=True, available=basic_license)
+    add(
+        pulse4,
+        lambda inv, value: _set(state.channel(inv.indices["channel"]), "pulse4_adc", value),
+        parameters=(boolean,),
+        available=basic_license,
+    )
+    add(
+        pulse4,
+        lambda inv: _bool(state.channel(inv.indices["channel"]).pulse4_adc),
+        query=True,
+        available=basic_license,
+    )
 
-    add((*integrated, HeaderNode("MODE")),
+    add(
+        (*integrated, HeaderNode("MODE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "mode", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("OFF", "STD", "PROFile")),),
-        available=integrated_license)
-    add((*integrated, HeaderNode("MODE")),
+        available=integrated_license,
+    )
+    add(
+        (*integrated, HeaderNode("MODE")),
         lambda inv: state.channel(inv.indices["channel"]).mode,
-        query=True, available=integrated_license)
+        query=True,
+        available=integrated_license,
+    )
 
     for header, attribute in (
-        ("CWTime", "cw_time_auto"), ("DETectmode", "detect_auto"),
-        ("DRIVe", "drive_auto"), ("IFGain", "if_gain_auto"),
-        ("PRF", "prf_auto"), ("TIMing", "timing_auto"),
-        ("SWGate", "software_gate"), ("WIDeband", "wideband"),
+        ("CWTime", "cw_time_auto"),
+        ("DETectmode", "detect_auto"),
+        ("DRIVe", "drive_auto"),
+        ("IFGain", "if_gain_auto"),
+        ("PRF", "prf_auto"),
+        ("TIMing", "timing_auto"),
+        ("SWGate", "software_gate"),
+        ("WIDeband", "wideband"),
     ):
-        add((*integrated, HeaderNode(header)),
-            lambda inv, value, name=attribute: _set(state.channel(inv.indices["channel"]), name, value),
-            parameters=(boolean,), available=integrated_license)
-        add((*integrated, HeaderNode(header)),
+        add(
+            (*integrated, HeaderNode(header)),
+            lambda inv, value, name=attribute: _set(
+                state.channel(inv.indices["channel"]), name, value
+            ),
+            parameters=(boolean,),
+            available=integrated_license,
+        )
+        add(
+            (*integrated, HeaderNode(header)),
             lambda inv, name=attribute: _bool(getattr(state.channel(inv.indices["channel"]), name)),
-            query=True, available=integrated_license)
+            query=True,
+            available=integrated_license,
+        )
 
     master = (*integrated, HeaderNode("MASTer"))
-    add((*master, HeaderNode("FREQuency")),
+    add(
+        (*master, HeaderNode("FREQuency")),
         lambda inv, value: _set_master_frequency(state, inv, value),
-        parameters=(frequency,), available=integrated_license)
-    add((*master, HeaderNode("FREQuency")),
+        parameters=(frequency,),
+        available=integrated_license,
+    )
+    add(
+        (*master, HeaderNode("FREQuency")),
         lambda inv: str(state.channel(inv.indices["channel"]).master_frequency),
-        query=True, available=integrated_license)
-    add((*master, HeaderNode("PERiod")),
+        query=True,
+        available=integrated_license,
+    )
+    add(
+        (*master, HeaderNode("PERiod")),
         lambda inv, value: _set_master_period(state, inv, value),
-        parameters=(time_value,), available=integrated_license)
-    add((*master, HeaderNode("PERiod")),
+        parameters=(time_value,),
+        available=integrated_license,
+    )
+    add(
+        (*master, HeaderNode("PERiod")),
         lambda inv: str(1 / state.channel(inv.indices["channel"]).master_frequency),
-        query=True, available=integrated_license)
-    add((*master, HeaderNode("WIDTh")),
+        query=True,
+        available=integrated_license,
+    )
+    add(
+        (*master, HeaderNode("WIDTh")),
         lambda inv, value: _set_master_width(state, inv, value),
-        parameters=(time_value,), available=integrated_license)
-    add((*master, HeaderNode("WIDTh")),
+        parameters=(time_value,),
+        available=integrated_license,
+    )
+    add(
+        (*master, HeaderNode("WIDTh")),
         lambda inv: str(state.channel(inv.indices["channel"]).master_width),
-        query=True, available=integrated_license)
+        query=True,
+        available=integrated_license,
+    )
 
     profile = (*integrated, HeaderNode("PROFile"))
     for header, attribute in (("STARt", "profile_start"), ("STOP", "profile_stop")):
-        add((*profile, HeaderNode(header)),
+        add(
+            (*profile, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_profile(state, inv, name, value),
-            parameters=(time_value,), available=integrated_license)
-        add((*profile, HeaderNode(header)),
+            parameters=(time_value,),
+            available=integrated_license,
+        )
+        add(
+            (*profile, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
-            query=True, available=integrated_license)
+            query=True,
+            available=integrated_license,
+        )
 
     if_path = (sense, HeaderNode("IF"))
     for path, attribute in (
@@ -280,46 +378,84 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         ((HeaderNode("FILTer"), HeaderNode("CMODe")), "if_capture_mode"),
         ((HeaderNode("FREQuency"), HeaderNode("AUTO")), "if_frequency_auto"),
     ):
-        add((*if_path, *path),
-            lambda inv, value, name=attribute: _set(state.channel(inv.indices["channel"]), name, value),
-            parameters=(boolean,), available=integrated_license)
-        add((*if_path, *path),
+        add(
+            (*if_path, *path),
+            lambda inv, value, name=attribute: _set(
+                state.channel(inv.indices["channel"]), name, value
+            ),
+            parameters=(boolean,),
+            available=integrated_license,
+        )
+        add(
+            (*if_path, *path),
             lambda inv, name=attribute: _bool(getattr(state.channel(inv.indices["channel"]), name)),
-            query=True, available=integrated_license)
-    add((*if_path, HeaderNode("FREQuency")),
+            query=True,
+            available=integrated_license,
+        )
+    add(
+        (*if_path, HeaderNode("FREQuency")),
         lambda inv, value: _set_if_frequency(state, inv, value),
-        parameters=(frequency,), available=integrated_license)
-    add((*if_path, HeaderNode("FREQuency")),
+        parameters=(frequency,),
+        available=integrated_license,
+    )
+    add(
+        (*if_path, HeaderNode("FREQuency")),
         lambda inv: str(state.channel(inv.indices["channel"]).if_frequency),
-        query=True, available=integrated_license)
+        query=True,
+        available=integrated_license,
+    )
     stage3 = (*if_path, HeaderNode("FILTer"), HeaderNode("STAGe", index="stage", index_default=3))
-    add((*stage3, HeaderNode("TYPE")),
+    add(
+        (*stage3, HeaderNode("TYPE")),
         lambda inv, value: _set_stage3_type(state, inv, value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("RECTangular", "TUKey", "PWINdow", "COEFficient")),),
-        available=integrated_license)
-    add((*stage3, HeaderNode("TYPE")),
+        parameters=(
+            ParameterSpec(
+                ParameterType.ENUM, choices=("RECTangular", "TUKey", "PWINdow", "COEFficient")
+            ),
+        ),
+        available=integrated_license,
+    )
+    add(
+        (*stage3, HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).if_filter_type,
-        query=True, available=integrated_license)
+        query=True,
+        available=integrated_license,
+    )
     parameter = (*stage3, HeaderNode("PARameter"))
-    add(parameter, lambda inv, name, value: _set_if_parameter(state, inv, name, value),
+    add(
+        parameter,
+        lambda inv, name, value: _set_if_parameter(state, inv, name, value),
         parameters=(ParameterSpec(ParameterType.STRING), time_value),
-        available=integrated_license)
-    add(parameter, lambda inv, name: _query_if_parameter(state, inv, name),
-        parameters=(ParameterSpec(ParameterType.STRING),), query=True,
-        available=integrated_license)
+        available=integrated_license,
+    )
+    add(
+        parameter,
+        lambda inv, name: _query_if_parameter(state, inv, name),
+        parameters=(ParameterSpec(ParameterType.STRING),),
+        query=True,
+        available=integrated_license,
+    )
 
     path_element = (sense, HeaderNode("PATH"), HeaderNode("CONFig"), HeaderNode("ELEMent"))
-    add(path_element, lambda inv, element, value: _set_path_element(
-        state, inv, element, value
-    ),
+    add(
+        path_element,
+        lambda inv, element, value: _set_path_element(state, inv, element, value),
         parameters=(ParameterSpec(ParameterType.STRING), ParameterSpec(ParameterType.STRING)),
-        available=integrated_license)
-    add(path_element, lambda inv, element: _query_path_element(state, inv, element),
-        parameters=(ParameterSpec(ParameterType.STRING),), query=True,
-        available=integrated_license)
-    add((*integrated, HeaderNode("CALibration"), HeaderNode("STATe")),
-        lambda inv: "0", query=True, available=integrated_license)
+        available=integrated_license,
+    )
+    add(
+        path_element,
+        lambda inv, element: _query_path_element(state, inv, element),
+        parameters=(ParameterSpec(ParameterType.STRING),),
+        query=True,
+        available=integrated_license,
+    )
+    add(
+        (*integrated, HeaderNode("CALibration"), HeaderNode("STATe")),
+        lambda inv: "0",
+        query=True,
+        available=integrated_license,
+    )
 
 
 def _generator(state, invocation) -> PulseGenerator:
@@ -453,8 +589,15 @@ def _query_path_element(state, invocation, element: str) -> str:
 
 def _scaled(value: NumericValue) -> float:
     scale = {
-        None: 1.0, "S": 1.0, "MS": 1e-3, "US": 1e-6, "NS": 1e-9,
-        "HZ": 1.0, "KHZ": 1e3, "MHZ": 1e6, "GHZ": 1e9,
+        None: 1.0,
+        "S": 1.0,
+        "MS": 1e-3,
+        "US": 1e-6,
+        "NS": 1e-9,
+        "HZ": 1.0,
+        "KHZ": 1e3,
+        "MHZ": 1e6,
+        "GHZ": 1e9,
     }
     return float(value.value) * scale[value.unit]
 

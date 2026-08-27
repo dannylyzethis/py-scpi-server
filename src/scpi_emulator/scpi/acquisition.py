@@ -186,9 +186,7 @@ class AcquisitionController:
                 self._update_operation_condition()
             return channel.operation
 
-    def set_trigger_source(
-        self, source: TriggerSource | str, number: int | None = None
-    ) -> None:
+    def set_trigger_source(self, source: TriggerSource | str, number: int | None = None) -> None:
         source = source if isinstance(source, TriggerSource) else TriggerSource(source.upper())
         with self._lock:
             if number is None:
@@ -219,7 +217,11 @@ class AcquisitionController:
 
     def trigger_delay(self, number: int | None = None) -> float:
         with self._lock:
-            return self._default_trigger_delay if number is None else self.channel(number).trigger_delay
+            return (
+                self._default_trigger_delay
+                if number is None
+                else self.channel(number).trigger_delay
+            )
 
     def set_sweep_time(self, number: int, duration: float) -> None:
         if duration < 0:
@@ -286,7 +288,9 @@ class AcquisitionController:
 
     def trigger(self, source: TriggerSource, number: int | None = None) -> int:
         with self._lock:
-            channels = [self.channel(number)] if number is not None else list(self._channels.values())
+            channels = (
+                [self.channel(number)] if number is not None else list(self._channels.values())
+            )
             accepted = 0
             for channel in channels:
                 if (
@@ -489,9 +493,9 @@ def register_acquisition_commands(
     registry.register(
         CommandSpec(
             path=sweep_mode_path,
-            handler=lambda invocation: acquisition.channel(
-                invocation.indices["channel"]
-            ).sweep_mode.value,
+            handler=lambda invocation: (
+                acquisition.channel(invocation.indices["channel"]).sweep_mode.value
+            ),
             query=True,
         )
     )
@@ -520,9 +524,7 @@ def _register_trigger_commands(
             CommandSpec(
                 path=path,
                 parameters=source_parameters,
-                handler=lambda invocation, value: _empty(
-                    acquisition.set_trigger_source(value)
-                ),
+                handler=lambda invocation, value: _empty(acquisition.set_trigger_source(value)),
             )
         )
         registry.register(
@@ -577,9 +579,7 @@ def _register_channel_boolean(registry, path, setter, reader) -> None:
         CommandSpec(
             path=path,
             parameters=(ParameterSpec(ParameterType.BOOLEAN),),
-            handler=lambda invocation, value: _empty(
-                setter(invocation.indices["channel"], value)
-            ),
+            handler=lambda invocation, value: _empty(setter(invocation.indices["channel"], value)),
         )
     )
     registry.register(
@@ -595,12 +595,8 @@ def _register_channel_integer(registry, path, setter, reader, minimum, maximum) 
     registry.register(
         CommandSpec(
             path=path,
-            parameters=(
-                ParameterSpec(ParameterType.INTEGER, minimum=minimum, maximum=maximum),
-            ),
-            handler=lambda invocation, value: _empty(
-                setter(invocation.indices["channel"], value)
-            ),
+            parameters=(ParameterSpec(ParameterType.INTEGER, minimum=minimum, maximum=maximum),),
+            handler=lambda invocation, value: _empty(setter(invocation.indices["channel"], value)),
         )
     )
     registry.register(
@@ -617,11 +613,11 @@ def _register_channel_number(registry, path, setter, reader, minimum, maximum) -
         CommandSpec(
             path=path,
             parameters=(
-                ParameterSpec(ParameterType.NUMBER, minimum=minimum, maximum=maximum, units=frozenset({"S"})),
+                ParameterSpec(
+                    ParameterType.NUMBER, minimum=minimum, maximum=maximum, units=frozenset({"S"})
+                ),
             ),
-            handler=lambda invocation, value: _empty(
-                setter(invocation.indices["channel"], value)
-            ),
+            handler=lambda invocation, value: _empty(setter(invocation.indices["channel"], value)),
         )
     )
     registry.register(

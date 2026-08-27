@@ -62,9 +62,15 @@ def build_parser():
     )
     parser.add_argument("--start", "-s", action="store_true", help="Start TCP servers immediately")
     parser.add_argument("--web", "-w", action="store_true", help="Start web dashboard")
-    parser.add_argument("--web-port", type=int, default=8081, help="Web dashboard port (default: 8081)")
-    parser.add_argument("--web-host", default="127.0.0.1", help="Dashboard bind host (default: 127.0.0.1)")
-    parser.add_argument("--port", "-p", type=int, default=5025, help="Starting port for instruments (default: 5025)")
+    parser.add_argument(
+        "--web-port", type=int, default=8081, help="Web dashboard port (default: 8081)"
+    )
+    parser.add_argument(
+        "--web-host", default="127.0.0.1", help="Dashboard bind host (default: 127.0.0.1)"
+    )
+    parser.add_argument(
+        "--port", "-p", type=int, default=5025, help="Starting port for instruments (default: 5025)"
+    )
     parser.add_argument("--host", default="localhost", help="Server host (default: localhost)")
     parser.add_argument("--create-example", action="store_true", help="Create example CSV file")
     parser.add_argument("--interactive", "-i", action="store_true", help="Start interactive mode")
@@ -76,6 +82,7 @@ def build_parser():
 
 def _install_signal_handlers(manager):
     """Install process-wide handlers only from the executable path."""
+
     def shutdown(signum, _frame):
         logger.info("Received shutdown signal %s, stopping servers...", signum)
         manager.shutdown()
@@ -126,8 +133,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             definition = load_bench(args.bench)
             uses_csv = any(
-                item.driver.casefold() == "csv-instruments"
-                for item in definition.instruments
+                item.driver.casefold() == "csv-instruments" for item in definition.instruments
             )
             catalog = build_driver_catalog(
                 csv_directory=Path(args.bench).resolve().parent if uses_csv else None
@@ -187,4 +193,3 @@ def main(argv: Sequence[str] | None = None) -> int:
             shutdown_runtime()
 
     return 0
-

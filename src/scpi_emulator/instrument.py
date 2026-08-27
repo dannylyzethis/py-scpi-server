@@ -15,9 +15,9 @@ from .scpi import (
     OperationManager,
     OutputQueue,
     OutputQueueFull,
+    ScalarScenarioSystem,
     SCPICommandError,
     SCPIParseError,
-    ScalarScenarioSystem,
     StatusSystem,
     VNAActiveDeviceSystem,
     VNAAdvancedSystem,
@@ -31,7 +31,6 @@ from .scpi import (
     VNATimeDomainSystem,
     detect_vna_model,
     parse_program_message,
-    split_program_message_units,
     register_acquisition_commands,
     register_active_device_commands,
     register_advanced_commands,
@@ -48,8 +47,8 @@ from .scpi import (
     register_sweep_commands,
     register_time_domain_commands,
     register_vna_data_commands,
+    split_program_message_units,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +96,7 @@ class SCPIInstrument:
         if self.vna_capabilities is None and model is not None:
             self.vna_capabilities = VNACapabilities.create(model)
         registry_capabilities = (
-            self.vna_capabilities.command_capabilities
-            if self.vna_capabilities is not None
-            else ()
+            self.vna_capabilities.command_capabilities if self.vna_capabilities is not None else ()
         )
         self.core_registry = CommandRegistry(registry_capabilities)
         self.identification = (
@@ -132,9 +129,7 @@ class SCPIInstrument:
             )
             self.vna_data.add_application(self.vna_mixer)
             register_mixer_commands(self.core_registry, self.vna_mixer)
-            self.vna_active_device = VNAActiveDeviceSystem(
-                self.vna_measurements, self.data_format
-            )
+            self.vna_active_device = VNAActiveDeviceSystem(self.vna_measurements, self.data_format)
             self.vna_data.add_application(self.vna_active_device)
             register_active_device_commands(self.core_registry, self.vna_active_device)
             self.vna_pulse = VNAPulseSystem(self.vna_measurements)

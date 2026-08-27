@@ -26,9 +26,7 @@ def advanced_vna(*streams) -> SCPIInstrument:
     instrument = SCPIInstrument(
         "Virtual VNA 4 Port",
         "advanced",
-        vna_capabilities=VNACapabilities.create(
-            "vna-4-port"
-        ),
+        vna_capabilities=VNACapabilities.create("vna-4-port"),
     )
     instrument.process_command("SENS:SWE:POIN 4")
     base = trace("S11", (1, 2, 3, 4), advance=AdvancePolicy.TRIGGER)
@@ -42,9 +40,7 @@ def values(response: str) -> tuple[float, ...]:
 
 
 def test_spectrum_setup_data_and_marker_workflow() -> None:
-    instrument = advanced_vna(
-        trace("spectrum.trace", (-80, -20, -50, -60), (-70, -10, -40, -50))
-    )
+    instrument = advanced_vna(trace("spectrum.trace", (-80, -20, -50, -60), (-70, -10, -40, -50)))
     for command in (
         "SENS:SA:BAND:RES 100kHz",
         "SENS:SA:BAND:VID 10kHz",
@@ -69,9 +65,7 @@ def test_spectrum_setup_data_and_marker_workflow() -> None:
 
 def test_custom_measurement_definition_selects_and_activates_real_vna_class() -> None:
     instrument = advanced_vna(trace("spectrum.trace", (-80, -20, -50, -60)))
-    assert instrument.process_command(
-        "CALC:CUST:DEF 'sa_meas','Spectrum Analyzer','B'"
-    ) == ""
+    assert instrument.process_command("CALC:CUST:DEF 'sa_meas','Spectrum Analyzer','B'") == ""
 
     assert instrument.process_command("SENS:SA:STAT?") == "1"
     assert "sa_meas" in instrument.process_command("CALC:PAR:CAT:EXT?")
@@ -149,9 +143,7 @@ def test_diq_ranges_and_scenario_results() -> None:
 
     assert instrument.process_command("SENS:DIQ:FREQ:RANG:COUN?") == "2"
     assert float(instrument.process_command("SENS:DIQ:FREQ:RANG2:STOP?")) == 2e9
-    assert values(instrument.process_command("CALC:DATA? SDAT")) == (
-        1, 1, 2, 2, 3, 3, 4, 4
-    )
+    assert values(instrument.process_command("CALC:DATA? SDAT")) == (1, 1, 2, 2, 3, 3, 4, 4)
     instrument.process_command("SENS:DIQ:FREQ:RANG2:DEL")
     assert instrument.process_command("SENS:DIQ:FREQ:RANG:COUN?") == "1"
 
@@ -166,9 +158,7 @@ def test_wideband_iq_capture_uses_time_axis() -> None:
     assert values(instrument.process_command("CALC:MEAS:DATA:X?")) == pytest.approx(
         (0, 10e-6, 20e-6, 30e-6)
     )
-    assert values(instrument.process_command("CALC:DATA? SDAT")) == (
-        0, 1, 0, -1, 0, 0.5, 0, -0.5
-    )
+    assert values(instrument.process_command("CALC:DATA? SDAT")) == (0, 1, 0, -1, 0, 0.5, 0, -0.5)
 
 
 def test_advanced_license_address_cls_and_reset_semantics() -> None:

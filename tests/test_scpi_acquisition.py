@@ -22,9 +22,7 @@ from scpi_emulator.scpi import (
 def controller(*, auto_progress: bool = False):
     status = StatusSystem()
     operations = OperationManager(status)
-    acquisition = AcquisitionController(
-        operations, status, auto_progress=auto_progress
-    )
+    acquisition = AcquisitionController(operations, status, auto_progress=auto_progress)
     return acquisition, operations, status
 
 

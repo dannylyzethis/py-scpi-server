@@ -207,9 +207,7 @@ def test_invalid_parameters_have_deterministic_scpi_errors(source: str, code: in
 
 def test_unknown_and_wrong_query_form_are_undefined_headers() -> None:
     registry = CommandRegistry()
-    registry.register(
-        CommandSpec(path=(HeaderNode("ABORt"),), handler=lambda invocation: None)
-    )
+    registry.register(CommandSpec(path=(HeaderNode("ABORt"),), handler=lambda invocation: None))
 
     for source in ("NOT:A:COMMAND", "ABOR?"):
         with pytest.raises(SCPICommandError) as error:

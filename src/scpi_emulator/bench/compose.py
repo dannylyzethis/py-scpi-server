@@ -123,8 +123,8 @@ class BenchRuntime:
         self._lock = threading.RLock()
 
     def start(self, *, bind_host: str | None = None) -> None:
-        from scpi_emulator.raw_server import SCPIServer
         from scpi_emulator.hislip_transport import HiSLIPServer
+        from scpi_emulator.raw_server import SCPIServer
         from scpi_emulator.vxi11_transport import VXI11Server
 
         with self._lock:

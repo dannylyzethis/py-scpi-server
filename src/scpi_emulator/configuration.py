@@ -9,7 +9,6 @@ from pathlib import Path
 
 from .instrument import SCPIInstrument
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -77,9 +76,7 @@ class ExcelReader:
         except ConfigurationError:
             raise
         except Exception as error:
-            raise ConfigurationError(
-                f"{excel_path}: unable to read XLSX file: {error}"
-            ) from error
+            raise ConfigurationError(f"{excel_path}: unable to read XLSX file: {error}") from error
 
     @classmethod
     def read_csv(cls, csv_path):
@@ -131,9 +128,7 @@ def validate_compatibility_rule(rule: str, row_num: int) -> None:
     if rule.startswith("range:"):
         values = rule.split(":", 1)[1].split(",")
         if len(values) != 2:
-            raise ConfigurationError(
-                f"row {row_num}: range validation requires exactly two bounds"
-            )
+            raise ConfigurationError(f"row {row_num}: range validation requires exactly two bounds")
         try:
             lower, upper = map(float, values)
         except ValueError as error:
@@ -144,9 +139,7 @@ def validate_compatibility_rule(rule: str, row_num: int) -> None:
     if rule.startswith("enum:"):
         values = [value.strip() for value in rule.split(":", 1)[1].split(",")]
         if not values or any(not value for value in values):
-            raise ConfigurationError(
-                f"row {row_num}: enum validation requires non-empty values"
-            )
+            raise ConfigurationError(f"row {row_num}: enum validation requires non-empty values")
         return
     raise ConfigurationError(f"row {row_num}: unsupported validation rule '{rule}'")
 
@@ -232,8 +225,7 @@ def load_compatibility_instruments(file_path, port_start=5025, *, reserved_ports
             command_key = command.upper()
             if command_key in current_commands:
                 raise ConfigurationError(
-                    f"row {row_num}: duplicate command '{command}' for "
-                    f"'{current_instrument.name}'"
+                    f"row {row_num}: duplicate command '{command}' for '{current_instrument.name}'"
                 )
             if validation and "(.+)" not in command and "{value}" not in command:
                 raise ConfigurationError(
@@ -261,7 +253,11 @@ def load_compatibility_directory(directory_path, port_start=5025):
         raise ConfigurationError(f"directory does not exist: {directory}")
     sources = tuple(
         sorted(
-            (path for path in directory.iterdir() if path.is_file() and path.suffix.lower() == ".csv"),
+            (
+                path
+                for path in directory.iterdir()
+                if path.is_file() and path.suffix.lower() == ".csv"
+            ),
             key=lambda path: path.name.casefold(),
         )
     )

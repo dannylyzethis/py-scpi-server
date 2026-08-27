@@ -12,11 +12,8 @@ from .catalog import (
     TransportDescriptor,
 )
 
-
 POWER_SUPPLY_DRIVER_ID = "virtual-ps"
-POWER_SUPPLY_MODELS = {
-    f"ps-{output_count}-output": output_count for output_count in range(1, 5)
-}
+POWER_SUPPLY_MODELS = {f"ps-{output_count}-output": output_count for output_count in range(1, 5)}
 
 
 class PowerSupplyDriver:

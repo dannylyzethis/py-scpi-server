@@ -1,7 +1,7 @@
 import pytest
 
 from scpi_emulator.emulator import SCPIInstrument
-from scpi_emulator.scpi import VNACapabilities, SCPICommandError
+from scpi_emulator.scpi import SCPICommandError, VNACapabilities
 
 
 def vna() -> SCPIInstrument:
@@ -30,13 +30,11 @@ def test_indexed_abbreviated_define_feed_select_modify_and_delete_workflow() -> 
 
     assert instrument.process_command('CALC2:PAR:DEF:EXT "InputGain","S21"') == ""
     assert instrument.process_command('CALC2:PAR:DEF:EXT "Receiver","A/R1,3"') == ""
-    assert instrument.process_command('DISP:WIND2:STAT ON') == ""
+    assert instrument.process_command("DISP:WIND2:STAT ON") == ""
     assert instrument.process_command('DISP:WIND2:TRAC3:FEED "InputGain"') == ""
     assert instrument.process_command('DISP:WIND2:TRAC4:FEED "Receiver"') == ""
 
-    assert instrument.process_command("CALC2:PAR:CAT:EXT?") == (
-        '"InputGain,S21,Receiver,A/R1,3"'
-    )
+    assert instrument.process_command("CALC2:PAR:CAT:EXT?") == ('"InputGain,S21,Receiver,A/R1,3"')
     assert instrument.process_command("DISP:WIND2:TRAC3:FEED?") == "InputGain"
     assert instrument.process_command("SYST:ACT:CHAN?") == "2"
     assert instrument.process_command("SYST:ACT:MEAS?") == "Receiver"
@@ -57,9 +55,7 @@ def test_legacy_define_generates_unique_names_and_format_enums_accept_abbreviati
 
     instrument.process_command("CALC2:PAR:DEF S21")
     instrument.process_command("CALC2:PAR:DEF S21")
-    assert instrument.process_command("CALC2:PAR:CAT?") == (
-        '"CH2_S21_1,S21,CH2_S21_2,S21"'
-    )
+    assert instrument.process_command("CALC2:PAR:CAT?") == ('"CH2_S21_1,S21,CH2_S21_2,S21"')
     instrument.process_command('CALC2:PAR:SEL "CH2_S21_2"')
     instrument.process_command("CALC2:FORM MLOG")
     assert instrument.process_command("CALC2:FORM?") == "MLOGarithmic"

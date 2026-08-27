@@ -7,8 +7,14 @@ from dataclasses import dataclass
 from scpi_emulator.scenario import AdvancePolicy, ScenarioError, ScenarioPlayer, StreamKind
 
 from .operations import OperationManager
-from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, ParameterType, SCPICommandError
-
+from .registry import (
+    CommandRegistry,
+    CommandSpec,
+    HeaderNode,
+    ParameterSpec,
+    ParameterType,
+    SCPICommandError,
+)
 
 FUNCTION_STREAMS = {
     "VOLTage:DC": "voltage.dc",
@@ -145,32 +151,36 @@ def register_scalar_commands(registry: CommandRegistry, state: ScalarScenarioSys
         ((HeaderNode("MEASure"), HeaderNode("FREQuency")), "FREQuency"),
         ((HeaderNode("MEASure"), HeaderNode("PERiod")), "PERiod"),
     ):
-        registry.register(CommandSpec(
-            path,
-            lambda inv, measurement_range, resolution, selected=function: state.measure(
-                selected, measurement_range, resolution
-            ),
-            (
-                ParameterSpec(ParameterType.NUMBER, required=False, default=None),
-                ParameterSpec(ParameterType.NUMBER, required=False, default=None),
-            ),
-            query=True,
-        ))
+        registry.register(
+            CommandSpec(
+                path,
+                lambda inv, measurement_range, resolution, selected=function: state.measure(
+                    selected, measurement_range, resolution
+                ),
+                (
+                    ParameterSpec(ParameterType.NUMBER, required=False, default=None),
+                    ParameterSpec(ParameterType.NUMBER, required=False, default=None),
+                ),
+                query=True,
+            )
+        )
     for path, function in (
         ((HeaderNode("CONFigure"), HeaderNode("VOLTage"), HeaderNode("DC")), "VOLTage:DC"),
         ((HeaderNode("CONFigure"), HeaderNode("CURRent"), HeaderNode("DC")), "CURRent:DC"),
         ((HeaderNode("CONFigure"), HeaderNode("RESistance")), "RESistance"),
     ):
-        registry.register(CommandSpec(
-            path,
-            lambda inv, measurement_range, resolution, selected=function: _configure(
-                state, selected, measurement_range, resolution
-            ),
-            (
-                ParameterSpec(ParameterType.NUMBER, required=False, default=None),
-                ParameterSpec(ParameterType.NUMBER, required=False, default=None),
-            ),
-        ))
+        registry.register(
+            CommandSpec(
+                path,
+                lambda inv, measurement_range, resolution, selected=function: _configure(
+                    state, selected, measurement_range, resolution
+                ),
+                (
+                    ParameterSpec(ParameterType.NUMBER, required=False, default=None),
+                    ParameterSpec(ParameterType.NUMBER, required=False, default=None),
+                ),
+            )
+        )
 
 
 def _function(value: str) -> str:

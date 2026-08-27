@@ -18,7 +18,6 @@ from .registry import (
     SCPICommandError,
 )
 
-
 _SAFE_COMPONENT = re.compile(r"[A-Za-z0-9_. -]{1,128}\Z")
 
 

@@ -204,9 +204,7 @@ def test_csv_catalog_instrument_can_be_selected_in_a_virtual_bench(tmp_path) -> 
     [
         (lambda raw: raw["instruments"][1].update(id="vna1"), "ids must be unique"),
         (
-            lambda raw: raw["instruments"][1]["resource"].update(
-                raw["instruments"][0]["resource"]
-            ),
+            lambda raw: raw["instruments"][1]["resource"].update(raw["instruments"][0]["resource"]),
             "resource addresses must be unique",
         ),
         (lambda raw: raw["instruments"][0]["resource"].update(port=70000), "between 1 and"),
@@ -255,12 +253,8 @@ def test_same_definition_starts_two_real_socket_instruments_with_bind_override()
     runtime = composed.start(bind_host="127.0.0.1")
     try:
         assert runtime.running is True
-        assert receive_line(first_port, "*IDN?").startswith(
-            "SCPI Emulator,Virtual VNA 2 Port,"
-        )
-        assert receive_line(second_port, "*IDN?").startswith(
-            "SCPI Emulator,Virtual VNA 4 Port,"
-        )
+        assert receive_line(first_port, "*IDN?").startswith("SCPI Emulator,Virtual VNA 2 Port,")
+        assert receive_line(second_port, "*IDN?").startswith("SCPI Emulator,Virtual VNA 4 Port,")
     finally:
         runtime.stop()
 
@@ -353,9 +347,7 @@ def test_composed_hislip_resource_starts_transactionally() -> None:
     )
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(definition)
 
-    assert composed.resources() == {
-        "vna1": f"TCPIP::127.0.0.1::hislip0,{port}::INSTR"
-    }
+    assert composed.resources() == {"vna1": f"TCPIP::127.0.0.1::hislip0,{port}::INSTR"}
     runtime = composed.start()
     try:
         assert isinstance(runtime.servers["vna1"], HiSLIPServer)

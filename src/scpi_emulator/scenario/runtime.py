@@ -215,9 +215,7 @@ class ScenarioPlayer:
             )
         return sample
 
-    def _sample_with_noise(
-        self, state: _StreamState, sample: ScenarioSample
-    ) -> ScenarioSample:
+    def _sample_with_noise(self, state: _StreamState, sample: ScenarioSample) -> ScenarioSample:
         amplitude = self._noise_amplitudes.get(state.definition.name)
         if amplitude is None:
             return sample

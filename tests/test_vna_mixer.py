@@ -10,8 +10,16 @@ from scpi_emulator.scpi import VNACapabilities
 
 
 def mixer_vna(*, scalar_only=False) -> SCPIInstrument:
-    options = ("time_domain", "frequency_offset", "scalar_mixer") if scalar_only else (
-        "time_domain", "frequency_offset", "scalar_mixer", "frequency_converter", "embedded_lo"
+    options = (
+        ("time_domain", "frequency_offset", "scalar_mixer")
+        if scalar_only
+        else (
+            "time_domain",
+            "frequency_offset",
+            "scalar_mixer",
+            "frequency_converter",
+            "embedded_lo",
+        )
     )
     capabilities = VNACapabilities.create("vna-2-port", applications=options)
     instrument = SCPIInstrument("Virtual VNA 2 Port", "mixer", vna_capabilities=capabilities)
@@ -96,9 +104,9 @@ def test_source_roles_embedded_lo_and_application_composition() -> None:
     assert instrument.process_command("SENS:MIX:ELO:CENT?") == "1000000000.0"
     assert instrument.process_command("SENS:MIX:ELO:SPAN?") == "100000000.0"
     assert len(instrument.process_command("CALC:DATA? SDAT").split(",")) == 8
-    axis = tuple(float(value) for value in instrument.process_command(
-        "CALC:MEAS:DATA:X?"
-    ).split(","))
+    axis = tuple(
+        float(value) for value in instrument.process_command("CALC:MEAS:DATA:X?").split(",")
+    )
     assert axis[0] == 0.0
 
 

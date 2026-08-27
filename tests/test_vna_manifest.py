@@ -15,7 +15,6 @@ from scpi_emulator.scpi import (
 )
 from tools.vna_manifest import implementation_keys
 
-
 REPOSITORY_ROOT = Path(__file__).parents[1]
 
 

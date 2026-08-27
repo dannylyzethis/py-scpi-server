@@ -22,7 +22,6 @@ from .catalog import (
     TransportDescriptor,
 )
 
-
 VNA_DRIVER_ID = "virtual-vna"
 VNA_MANIFEST_RESOURCE = "profiles/vna_commands.v1.json"
 VNA_CAPABILITY_RESOURCE = "profiles/vna_capabilities.v1.json"
@@ -63,9 +62,7 @@ class VNADriver:
             and configured_serial is not None
             and request.serial_number != configured_serial
         ):
-            raise CatalogError(
-                "bench serial_number conflicts with legacy VNA configuration.serial"
-            )
+            raise CatalogError("bench serial_number conflicts with legacy VNA configuration.serial")
         if request.serial_number is not None:
             configuration["serial"] = request.serial_number
         capabilities = VNACapabilities.create(

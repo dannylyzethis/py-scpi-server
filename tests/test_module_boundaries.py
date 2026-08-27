@@ -1,32 +1,31 @@
 from pathlib import Path
 
+from scpi_emulator.cli import build_parser as DirectBuildParser
+from scpi_emulator.cli import main as DirectMain
 from scpi_emulator.configuration import (
     ConfigurationError,
     ExcelReader,
     load_compatibility_instruments,
 )
-from scpi_emulator.cli import build_parser as DirectBuildParser
-from scpi_emulator.cli import main as DirectMain
+from scpi_emulator.dashboard import WebDashboard as DirectDashboard
 from scpi_emulator.emulator import (
     ConfigurationError as FacadeConfigurationError,
 )
 from scpi_emulator.emulator import (
     ExcelReader as FacadeExcelReader,
 )
+from scpi_emulator.emulator import SCPIEmulatorManager
 from scpi_emulator.emulator import (
     SCPIInstrument as FacadeSCPIInstrument,
 )
-from scpi_emulator.emulator import SCPIEmulatorManager
+from scpi_emulator.emulator import SCPIServer as FacadeSCPIServer
+from scpi_emulator.emulator import WebDashboard as FacadeDashboard
 from scpi_emulator.emulator import build_parser as FacadeBuildParser
 from scpi_emulator.emulator import main as FacadeMain
 from scpi_emulator.instrument import SCPIInstrument
+from scpi_emulator.interactive import InteractiveShell
 from scpi_emulator.raw_server import SCPIServer as DirectSCPIServer
 from scpi_emulator.runtime import SCPIEmulatorManager as DirectManager
-from scpi_emulator.dashboard import WebDashboard as DirectDashboard
-from scpi_emulator.emulator import WebDashboard as FacadeDashboard
-from scpi_emulator.emulator import SCPIServer as FacadeSCPIServer
-from scpi_emulator.interactive import InteractiveShell
-
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 

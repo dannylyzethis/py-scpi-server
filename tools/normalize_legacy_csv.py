@@ -4,7 +4,6 @@ import argparse
 import csv
 from pathlib import Path
 
-
 COLUMNS = ["Equipment", "Port", "Command", "Response", "Validation"]
 VALIDATION_PREFIXES = ("range:", "enum:")
 

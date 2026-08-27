@@ -26,9 +26,7 @@ def test_lxi_records_share_identity_and_use_configured_ports() -> None:
         HISLIP_SERVICE_TYPE,
         VXI11_SERVICE_TYPE,
     ]
-    assert {record.name.split(".", 1)[0] for record in records} == {
-        "Virtual Bench Instrument"
-    }
+    assert {record.name.split(".", 1)[0] for record in records} == {"Virtual Bench Instrument"}
     assert {record.port for record in records} == {4881, 1234}
     assert all(record.server == "scpi-test.local." for record in records)
     assert list(records[0].properties)[:5] == [
@@ -38,9 +36,7 @@ def test_lxi_records_share_identity_and_use_configured_ports() -> None:
         "SerialNumber",
         "FirmwareVersion",
     ]
-    assert records[0].properties["VisaAddress"] == (
-        "TCPIP::scpi-test.local.::hislip0,4881::INSTR"
-    )
+    assert records[0].properties["VisaAddress"] == ("TCPIP::scpi-test.local.::hislip0,4881::INSTR")
 
 
 def test_lxi_record_validation() -> None:
@@ -79,18 +75,19 @@ def test_pyvisa_discovers_and_opens_advertised_hislip(monkeypatch) -> None:
     try:
         advertiser.start()
         advertised = advertiser.records[0]
-        assert advertiser.zeroconf.get_service_info(
-            advertised.service_type, advertised.name, timeout=1000
-        ).port == 4880
+        assert (
+            advertiser.zeroconf.get_service_info(
+                advertised.service_type, advertised.name, timeout=1000
+            ).port
+            == 4880
+        )
         resources = tcpip.TCPIPInstrHiSLIP.list_resources(wait_time=1.0)
         if not resources:
             pytest.skip("this host does not route multicast DNS over loopback")
         assert "TCPIP::127.0.0.1::hislip0,4880::INSTR" in resources
         resource = manager.open_resource("TCPIP::127.0.0.1::hislip0,4880::INSTR")
         resource.timeout = 2000
-        assert resource.query("*IDN?").startswith(
-            "SCPI_Emulator,Discovered HiSLIP,discovered,"
-        )
+        assert resource.query("*IDN?").startswith("SCPI_Emulator,Discovered HiSLIP,discovered,")
     finally:
         if resource is not None:
             resource.close()

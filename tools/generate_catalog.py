@@ -10,7 +10,6 @@ from typing import Any
 
 from scpi_emulator.drivers import build_driver_catalog
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 JSON_PATH = REPOSITORY_ROOT / "docs" / "instrument-options.json"
 DOCUMENT_PATH = REPOSITORY_ROOT / "docs" / "instrument-catalog.md"

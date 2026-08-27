@@ -13,7 +13,6 @@ from .catalog import (
     TransportDescriptor,
 )
 
-
 DMM_DRIVER_ID = "virtual-dmm"
 
 

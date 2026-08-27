@@ -96,9 +96,7 @@ def test_initialization_query_maximum_size_lock_status_and_single_session(runnin
         assert maximum.message_type == ASYNC_MAX_MSG_SIZE_RESPONSE
         assert struct.unpack("!Q", maximum.payload)[0] == 1024 * 1024
 
-        assert exchange(sync, b"*IDN?\n").startswith(
-            b"SCPI_Emulator,HiSLIP Test,hislip_test,"
-        )
+        assert exchange(sync, b"*IDN?\n").startswith(b"SCPI_Emulator,HiSLIP Test,hislip_test,")
 
         send_message(asynchronous, HiSLIPMessage(ASYNC_LOCK, control_code=1))
         assert receive_message(asynchronous).control_code == 1
@@ -166,13 +164,9 @@ def test_real_pyvisa_hislip_query_clear_trigger_and_serial_poll(running_hislip) 
     manager = pyvisa.ResourceManager("@py")
     resource = None
     try:
-        resource = manager.open_resource(
-            f"TCPIP0::127.0.0.1::hislip0,{running_hislip.port}::INSTR"
-        )
+        resource = manager.open_resource(f"TCPIP0::127.0.0.1::hislip0,{running_hislip.port}::INSTR")
         resource.timeout = 2000
-        assert resource.query("*IDN?").startswith(
-            "SCPI_Emulator,HiSLIP Test,hislip_test,"
-        )
+        assert resource.query("*IDN?").startswith("SCPI_Emulator,HiSLIP Test,hislip_test,")
         resource.write("VOLT 7.5")
         assert resource.read().strip() == "OK"
         resource.clear()
@@ -208,13 +202,9 @@ def test_native_pyvisa_hislip_query_status_and_opc_service_request() -> None:
     assert server.start()
     resource = None
     try:
-        resource = manager.open_resource(
-            f"TCPIP0::127.0.0.1::hislip0,{server.port}::INSTR"
-        )
+        resource = manager.open_resource(f"TCPIP0::127.0.0.1::hislip0,{server.port}::INSTR")
         resource.timeout = 2000
-        assert resource.query("*IDN?").startswith(
-            "SCPI_Emulator,Native HiSLIP,native_hislip,"
-        )
+        assert resource.query("*IDN?").startswith("SCPI_Emulator,Native HiSLIP,native_hislip,")
         assert resource.read_stb() == 0
 
         resource.enable_event(

@@ -91,7 +91,9 @@ class VNAActiveDeviceSystem:
             gains = tuple(20 * math.log10(abs(value)) if value else -200.0 for value in source)
         output = []
         for value, power, gain in zip(source, powers, gains):
-            compression = max(0.0, power - state.compression_power) if state.compression_enabled else 0
+            compression = (
+                max(0.0, power - state.compression_power) if state.compression_enabled else 0
+            )
             magnitude = 10 ** ((float(gain) - compression) / 20)
             phase = math.atan2(value.imag, value.real)
             output.append(complex(magnitude * math.cos(phase), magnitude * math.sin(phase)))
@@ -114,8 +116,10 @@ class VNAActiveDeviceSystem:
                 values = compression
             else:
                 output = self._read_trace("gain_compression", "output_power", len(powers))
-                values = output if output is not None else tuple(
-                    power + value for power, value in zip(powers, gain)
+                values = (
+                    output
+                    if output is not None
+                    else tuple(power + value for power, value in zip(powers, gain))
                 )
         return self.data_format.encode_values(values)
 
@@ -127,8 +131,11 @@ class VNAActiveDeviceSystem:
             gain = tuple(12.0 - max(0.0, power - state.compression_power) for power in powers)
         compression = tuple(max(0.0, gain[0] - value) for value in gain)
         index = next(
-            (position for position, value in enumerate(compression)
-             if value >= state.compression_db),
+            (
+                position
+                for position, value in enumerate(compression)
+                if value >= state.compression_db
+            ),
             len(powers) - 1,
         )
         values = {
@@ -140,7 +147,11 @@ class VNAActiveDeviceSystem:
         return f"{values[result.upper()]:.12g}"
 
     def gain_status(self, channel: int) -> str:
-        return "1" if float(self.gain_scalar(channel, "COMP")) >= self.gain(channel).compression_db else "0"
+        return (
+            "1"
+            if float(self.gain_scalar(channel, "COMP")) >= self.gain(channel).compression_db
+            else "0"
+        )
 
     def noise_data(self, channel: int, result: str):
         measurement = self.measurements.selected(channel)
@@ -149,8 +160,7 @@ class VNAActiveDeviceSystem:
         values = self._read_trace("noise_figure", normalized.casefold(), points)
         if values is None:
             gain = tuple(
-                20 * math.log10(abs(value)) if value else -200.0
-                for value in measurement.samples
+                20 * math.log10(abs(value)) if value else -200.0 for value in measurement.samples
             )
             if normalized == "GAIN":
                 values = gain
@@ -169,11 +179,12 @@ class VNAActiveDeviceSystem:
         values = self._read_trace("noise_figure", result.casefold(), points)
         if values is None:
             gain = tuple(
-                20 * math.log10(abs(value)) if value else -200.0
-                for value in measurement.samples
+                20 * math.log10(abs(value)) if value else -200.0 for value in measurement.samples
             )
-            values = gain if result.upper() == "GAIN" else tuple(
-                max(0.1, 3.0 - value * 0.02) for value in gain
+            values = (
+                gain
+                if result.upper() == "GAIN"
+                else tuple(max(0.1, 3.0 - value * 0.02) for value in gain)
             )
         return f"{sum(values) / len(values):.12g}" if values else "0"
 
@@ -183,8 +194,14 @@ class VNAActiveDeviceSystem:
         requested = self.bindings.get((application.casefold(), result.casefold()))
         candidates = (requested, f"{application}.{result}", result)
         names = {name.casefold(): name for name in self.player.stream_names}
-        return next((names[value.casefold()] for value in candidates
-                     if value and value.casefold() in names), None)
+        return next(
+            (
+                names[value.casefold()]
+                for value in candidates
+                if value and value.casefold() in names
+            ),
+            None,
+        )
 
     def _read_trace(self, application: str, result: str, points: int):
         stream = self._stream(application, result)
@@ -229,118 +246,211 @@ def register_active_device_commands(
     noise_license = licensed("noise_figure", "noise-figure")
 
     def add(path, handler, *, query=False, parameters=(), available=None):
-        registry.register(CommandSpec(
-            tuple(path), handler, tuple(parameters), query=query,
-            available=available, exists=exists,
-        ))
+        registry.register(
+            CommandSpec(
+                tuple(path),
+                handler,
+                tuple(parameters),
+                query=query,
+                available=available,
+                exists=exists,
+            )
+        )
 
-    add((*gc, HeaderNode("STATe")),
+    add(
+        (*gc, HeaderNode("STATe")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "enabled", value),
-        parameters=(boolean,), available=gain_license)
-    add((*gc, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=gain_license,
+    )
+    add(
+        (*gc, HeaderNode("STATe")),
         lambda inv: _bool(state.gain(inv.indices["channel"]).enabled),
-        query=True, available=gain_license)
+        query=True,
+        available=gain_license,
+    )
     compression = (*gc, HeaderNode("COMPression"))
-    add((*compression, HeaderNode("STATe")),
-        lambda inv, value: _set(state.gain(inv.indices["channel"]),
-                                "compression_enabled", value),
-        parameters=(boolean,), available=gain_license)
-    add((*compression, HeaderNode("STATe")),
+    add(
+        (*compression, HeaderNode("STATe")),
+        lambda inv, value: _set(state.gain(inv.indices["channel"]), "compression_enabled", value),
+        parameters=(boolean,),
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("STATe")),
         lambda inv: _bool(state.gain(inv.indices["channel"]).compression_enabled),
-        query=True, available=gain_license)
-    add((*compression, HeaderNode("POWer")),
-        lambda inv, value: _set(state.gain(inv.indices["channel"]),
-                                "compression_power", float(value.value)),
-        parameters=(ParameterSpec(ParameterType.NUMBER,
-                                  minimum=Decimal(-120), maximum=Decimal(50)),),
-        available=gain_license)
-    add((*compression, HeaderNode("POWer")),
+        query=True,
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("POWer")),
+        lambda inv, value: _set(
+            state.gain(inv.indices["channel"]), "compression_power", float(value.value)
+        ),
+        parameters=(
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
+        ),
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("POWer")),
         lambda inv: str(state.gain(inv.indices["channel"]).compression_power),
-        query=True, available=gain_license)
-    add((*compression, HeaderNode("DB")),
-        lambda inv, value: _set(state.gain(inv.indices["channel"]),
-                                "compression_db", float(value.value)),
-        parameters=(ParameterSpec(ParameterType.NUMBER,
-                                  minimum=Decimal(0), maximum=Decimal(100)),),
-        available=gain_license)
-    add((*compression, HeaderNode("DB")),
+        query=True,
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("DB")),
+        lambda inv, value: _set(
+            state.gain(inv.indices["channel"]), "compression_db", float(value.value)
+        ),
+        parameters=(ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(100)),),
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("DB")),
         lambda inv: str(state.gain(inv.indices["channel"]).compression_db),
-        query=True, available=gain_license)
-    add((*compression, HeaderNode("REFerence")),
+        query=True,
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("REFerence")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "reference", value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("INTernal", "EXTernal")),),
-        available=gain_license)
-    add((*compression, HeaderNode("REFerence")),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("INTernal", "EXTernal")),),
+        available=gain_license,
+    )
+    add(
+        (*compression, HeaderNode("REFerence")),
         lambda inv: state.gain(inv.indices["channel"]).reference,
-        query=True, available=gain_license)
+        query=True,
+        available=gain_license,
+    )
     power = (*gc, HeaderNode("POWer"))
     for header, attribute in (("STARt", "power_start"), ("STOP", "power_stop")):
-        add((*power, HeaderNode(header)),
+        add(
+            (*power, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_power(state, inv, name, value),
-            parameters=(ParameterSpec(ParameterType.NUMBER,
-                                      minimum=Decimal(-120), maximum=Decimal(50)),),
-            available=gain_license)
-        add((*power, HeaderNode(header)),
+            parameters=(
+                ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
+            ),
+            available=gain_license,
+        )
+        add(
+            (*power, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.gain(inv.indices["channel"]), name)),
-            query=True, available=gain_license)
-    add((*gc, HeaderNode("SWEep"), HeaderNode("POINts")),
+            query=True,
+            available=gain_license,
+        )
+    add(
+        (*gc, HeaderNode("SWEep"), HeaderNode("POINts")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "points", value),
         parameters=(ParameterSpec(ParameterType.INTEGER, minimum=2, maximum=100001),),
-        available=gain_license)
-    add((*gc, HeaderNode("SWEep"), HeaderNode("POINts")),
+        available=gain_license,
+    )
+    add(
+        (*gc, HeaderNode("SWEep"), HeaderNode("POINts")),
         lambda inv: str(state.gain(inv.indices["channel"]).points),
-        query=True, available=gain_license)
-    add((*calc_gc, HeaderNode("DATA")),
+        query=True,
+        available=gain_license,
+    )
+    add(
+        (*calc_gc, HeaderNode("DATA")),
         lambda inv, result: state.gain_data(inv.indices["channel"], result),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("IPOW", "OPOW", "GAIN", "COMP")),),
-        query=True, available=gain_license)
-    for header, result in (("PIN", "PIN"), ("POUT", "POUT"),
-                           ("GAIN", "GAIN"), ("COMP", "COMP")):
-        add((*calc_gc, HeaderNode("RESult"), HeaderNode(header)),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("IPOW", "OPOW", "GAIN", "COMP")),),
+        query=True,
+        available=gain_license,
+    )
+    for header, result in (("PIN", "PIN"), ("POUT", "POUT"), ("GAIN", "GAIN"), ("COMP", "COMP")):
+        add(
+            (*calc_gc, HeaderNode("RESult"), HeaderNode(header)),
             lambda inv, name=result: state.gain_scalar(inv.indices["channel"], name),
-            query=True, available=gain_license)
-    add((*calc_gc, HeaderNode("STATus")),
+            query=True,
+            available=gain_license,
+        )
+    add(
+        (*calc_gc, HeaderNode("STATus")),
         lambda inv: state.gain_status(inv.indices["channel"]),
-        query=True, available=gain_license)
-    add((*gc, HeaderNode("CALibration"), HeaderNode("STATe")),
-        lambda inv: "0", query=True, available=gain_license)
+        query=True,
+        available=gain_license,
+    )
+    add(
+        (*gc, HeaderNode("CALibration"), HeaderNode("STATe")),
+        lambda inv: "0",
+        query=True,
+        available=gain_license,
+    )
 
-    add((*noise, HeaderNode("STATe")),
+    add(
+        (*noise, HeaderNode("STATe")),
         lambda inv, value: _set(state.noise(inv.indices["channel"]), "enabled", value),
-        parameters=(boolean,), available=noise_license)
-    add((*noise, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=noise_license,
+    )
+    add(
+        (*noise, HeaderNode("STATe")),
         lambda inv: _bool(state.noise(inv.indices["channel"]).enabled),
-        query=True, available=noise_license)
+        query=True,
+        available=noise_license,
+    )
     for path, attribute, parameter in (
-        ((HeaderNode("POWer"),), "source_power",
-         ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50))),
-        ((HeaderNode("BANDwidth"),), "bandwidth",
-         ParameterSpec(ParameterType.NUMBER, minimum=Decimal(1),
-                       units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"}))),
-        ((HeaderNode("AVERage"), HeaderNode("COUNt")), "average_count",
-         ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100000)),
-        ((HeaderNode("TEMPerature"),), "temperature",
-         ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(10000))),
+        (
+            (HeaderNode("POWer"),),
+            "source_power",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
+        ),
+        (
+            (HeaderNode("BANDwidth"),),
+            "bandwidth",
+            ParameterSpec(
+                ParameterType.NUMBER,
+                minimum=Decimal(1),
+                units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"}),
+            ),
+        ),
+        (
+            (HeaderNode("AVERage"), HeaderNode("COUNt")),
+            "average_count",
+            ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100000),
+        ),
+        (
+            (HeaderNode("TEMPerature"),),
+            "temperature",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(10000)),
+        ),
     ):
-        add((*noise, *path),
+        add(
+            (*noise, *path),
             lambda inv, value, name=attribute: _set_noise(state, inv, name, value),
-            parameters=(parameter,), available=noise_license)
-        add((*noise, *path),
+            parameters=(parameter,),
+            available=noise_license,
+        )
+        add(
+            (*noise, *path),
             lambda inv, name=attribute: str(getattr(state.noise(inv.indices["channel"]), name)),
-            query=True, available=noise_license)
-    add((*calc_noise, HeaderNode("DATA")),
+            query=True,
+            available=noise_license,
+        )
+    add(
+        (*calc_noise, HeaderNode("DATA")),
         lambda inv, result: state.noise_data(inv.indices["channel"], result),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("NF", "GAIN", "YFACtor", "TEFFective")),),
-        query=True, available=noise_license)
+        parameters=(
+            ParameterSpec(ParameterType.ENUM, choices=("NF", "GAIN", "YFACtor", "TEFFective")),
+        ),
+        query=True,
+        available=noise_license,
+    )
     for header, result in (("NF", "NF"), ("GAIN", "GAIN")):
-        add((*calc_noise, HeaderNode("RESult"), HeaderNode(header)),
+        add(
+            (*calc_noise, HeaderNode("RESult"), HeaderNode(header)),
             lambda inv, name=result: state.noise_scalar(inv.indices["channel"], name),
-            query=True, available=noise_license)
-    add((*noise, HeaderNode("CALibration"), HeaderNode("STATe")),
-        lambda inv: "0", query=True, available=noise_license)
+            query=True,
+            available=noise_license,
+        )
+    add(
+        (*noise, HeaderNode("CALibration"), HeaderNode("STATe")),
+        lambda inv: "0",
+        query=True,
+        available=noise_license,
+    )
 
 
 def _set(target, name: str, value) -> str:
@@ -371,12 +481,15 @@ def _numeric_trace(value, stream: str, points: int) -> tuple[float, ...]:
         values = (float(value.real if isinstance(value, complex) else value),) * points
     else:
         try:
-            values = tuple(float(item.real if isinstance(item, complex) else item) for item in value)
+            values = tuple(
+                float(item.real if isinstance(item, complex) else item) for item in value
+            )
         except (TypeError, ValueError) as exc:
             raise SCPICommandError(-230, f"Data corrupt or stale; stream {stream!r}") from exc
     if len(values) != points:
         raise SCPICommandError(
-            -230, f"Data corrupt or stale; stream {stream!r} length {len(values)}, expected {points}"
+            -230,
+            f"Data corrupt or stale; stream {stream!r} length {len(values)}, expected {points}",
         )
     return values
 
@@ -392,8 +505,7 @@ def _resample(samples: tuple[complex, ...], points: int) -> tuple[complex, ...]:
     if not samples:
         return (0j,) * points
     return tuple(
-        samples[round(index * (len(samples) - 1) / (points - 1))]
-        for index in range(points)
+        samples[round(index * (len(samples) - 1) / (points - 1))] for index in range(points)
     )
 
 

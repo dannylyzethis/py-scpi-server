@@ -43,9 +43,7 @@ def test_indexed_absolute_header_and_numeric_unit() -> None:
 
 
 def test_relative_headers_resolve_against_previous_parent() -> None:
-    message = parse_program_message(
-        ":SENS1:FREQ:STAR 1e6;STOP 2.5E9;:SOUR1:POW -10dBm;LEV 2"
-    )
+    message = parse_program_message(":SENS1:FREQ:STAR 1e6;STOP 2.5E9;:SOUR1:POW -10dBm;LEV 2")
 
     assert [command.header for command in message.commands] == [
         "SENS1:FREQ:STAR",
@@ -131,9 +129,7 @@ def test_indefinite_binary_block_consumes_message_remainder() -> None:
         ("sense", "SENSe", True),
     ],
 )
-def test_mnemonic_abbreviation_matching(
-    candidate: str, specification: str, matches: bool
-) -> None:
+def test_mnemonic_abbreviation_matching(candidate: str, specification: str, matches: bool) -> None:
     assert mnemonic_matches(candidate, specification) is matches
 
 
@@ -151,8 +147,6 @@ def test_mnemonic_abbreviation_matching(
         ("*IDN?;", "empty command unit"),
     ],
 )
-def test_malformed_messages_raise_parse_errors(
-    source: str | bytes, error_text: str
-) -> None:
+def test_malformed_messages_raise_parse_errors(source: str | bytes, error_text: str) -> None:
     with pytest.raises(SCPIParseError, match=error_text):
         parse_program_message(source)

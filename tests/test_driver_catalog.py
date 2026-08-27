@@ -6,19 +6,19 @@ import pytest
 
 from scpi_emulator.drivers import (
     CSV_DRIVER_ID,
-    CSVDriver,
+    POWER_SUPPLY_DRIVER_ID,
     CatalogError,
+    CSVDriver,
+    DMMDriver,
     DriverCatalog,
     DriverDescriptor,
     DriverMaturity,
-    DMMDriver,
     InstrumentRequest,
     ModelDescriptor,
-    VNADriver,
-    POWER_SUPPLY_DRIVER_ID,
     ScenarioInputDescriptor,
     SupportLevel,
     TransportDescriptor,
+    VNADriver,
     build_driver_catalog,
 )
 
@@ -83,10 +83,7 @@ def test_builtin_catalog_advertises_vna_models_without_ui_dependency() -> None:
     descriptor = driver.descriptor
     assert descriptor.maturity is DriverMaturity.ALPHA
     assert {model.model for model in descriptor.models} == {"vna-2-port", "vna-4-port"}
-    fields = {
-        field.name: field
-        for field in descriptor.model("vna-2-port").configuration_fields
-    }
+    fields = {field.name: field for field in descriptor.model("vna-2-port").configuration_fields}
     assert set(fields) == {
         "source_count",
         "hardware_features",
@@ -241,9 +238,7 @@ def test_catalog_creates_a_configured_vna_through_the_driver_contract() -> None:
         ),
     )
 
-    assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,User Four Port VNA,VNA-001,E.1.0"
-    )
+    assert instrument.process_command("*IDN?") == ("SCPI Emulator,User Four Port VNA,VNA-001,E.1.0")
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
     assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
 

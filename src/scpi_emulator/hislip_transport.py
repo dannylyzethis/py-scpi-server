@@ -9,7 +9,6 @@ import time
 from dataclasses import dataclass, field
 from itertools import count
 
-
 HEADER = struct.Struct("!2sBBIQ")
 PROLOGUE = b"HS"
 PROTOCOL_VERSION = 0x0100
@@ -69,13 +68,16 @@ class HiSLIPMessage:
 
     def encode(self) -> bytes:
         payload = bytes(self.payload)
-        return HEADER.pack(
-            PROLOGUE,
-            self.message_type & 0xFF,
-            self.control_code & 0xFF,
-            self.parameter & 0xFFFFFFFF,
-            len(payload),
-        ) + payload
+        return (
+            HEADER.pack(
+                PROLOGUE,
+                self.message_type & 0xFF,
+                self.control_code & 0xFF,
+                self.parameter & 0xFFFFFFFF,
+                len(payload),
+            )
+            + payload
+        )
 
 
 def _recv_exact(connection: socket.socket, size: int) -> bytes | None:
@@ -266,7 +268,9 @@ class HiSLIPServer:
                 self._fatal(connection, FATAL_INITIALIZATION, "initialization required")
         except HiSLIPProtocolError as error:
             message_type = ERROR if error.code == ERROR_MESSAGE_TOO_LARGE else FATAL_ERROR
-            self._safe_send(connection, HiSLIPMessage(message_type, error.code, payload=str(error).encode()))
+            self._safe_send(
+                connection, HiSLIPMessage(message_type, error.code, payload=str(error).encode())
+            )
         except (OSError, ValueError):
             pass
         finally:
@@ -293,7 +297,9 @@ class HiSLIPServer:
             return None
         with self._lock:
             if self._session is not None and not self._session.closed:
-                self._fatal(connection, FATAL_MAX_CLIENTS, "instrument already has an active session")
+                self._fatal(
+                    connection, FATAL_MAX_CLIENTS, "instrument already has an active session"
+                )
                 return None
             identifier = next(self._session_ids) & 0xFFFF
             if identifier == 0:
@@ -447,7 +453,9 @@ class HiSLIPServer:
                 )
             elif message.message_type == ASYNC_REMOTE_LOCAL_CONTROL:
                 if message.control_code not in range(0, 7):
-                    self._error(connection, ERROR_UNRECOGNIZED_CONTROL, "invalid remote/local control")
+                    self._error(
+                        connection, ERROR_UNRECOGNIZED_CONTROL, "invalid remote/local control"
+                    )
                 else:
                     self._async_send(session, HiSLIPMessage(ASYNC_REMOTE_LOCAL_RESPONSE))
             else:

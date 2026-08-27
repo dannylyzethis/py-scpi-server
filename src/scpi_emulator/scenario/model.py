@@ -101,7 +101,9 @@ class ScenarioStream:
         previous = -1.0
         for sample in self.samples:
             if not isinstance(sample, ScenarioSample):
-                raise ScenarioFormatError(f"stream {self.name!r} samples must be ScenarioSample values")
+                raise ScenarioFormatError(
+                    f"stream {self.name!r} samples must be ScenarioSample values"
+                )
             if sample.at_seconds < previous:
                 raise ScenarioFormatError(
                     f"stream {self.name!r} sample times must be non-decreasing"
@@ -128,7 +130,9 @@ class ScenarioDefinition:
             raise ScenarioFormatError("scenario streams must be iterable") from error
         _require_name(self.name, "scenario name")
         if self.schema_version != 1:
-            raise ScenarioFormatError(f"unsupported scenario schema version {self.schema_version!r}")
+            raise ScenarioFormatError(
+                f"unsupported scenario schema version {self.schema_version!r}"
+            )
         if isinstance(self.seed, bool) or not isinstance(self.seed, int):
             raise ScenarioFormatError("scenario seed must be an integer")
         if not self.streams:
@@ -170,8 +174,10 @@ def _validate_value(name: str, kind: StreamKind, value: Any) -> None:
             raise ScenarioFormatError(f"trace stream {name!r} requires a numeric vector")
         return
     if kind is StreamKind.TABLE:
-        if not isinstance(value, tuple) or not value or not all(
-            isinstance(row, tuple) for row in value
+        if (
+            not isinstance(value, tuple)
+            or not value
+            or not all(isinstance(row, tuple) for row in value)
         ):
             raise ScenarioFormatError(f"table stream {name!r} requires rows")
         widths = {len(row) for row in value}

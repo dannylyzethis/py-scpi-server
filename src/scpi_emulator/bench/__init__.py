@@ -1,7 +1,7 @@
 """Reusable virtual-bench definitions, composition, and runtime startup."""
 
-from .codec import dumps_bench, load_bench, loads_bench, save_bench
 from .builder import BenchBuildCancelled, GuidedBenchBuilder
+from .codec import dumps_bench, load_bench, loads_bench, save_bench
 from .compose import BenchComposer, BenchRuntime, ComposedBench, ComposedInstrument
 from .model import (
     BenchCompositionError,

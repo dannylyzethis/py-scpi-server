@@ -9,7 +9,6 @@ import time
 from dataclasses import dataclass, field
 from itertools import count
 
-
 PORTMAP_PROGRAM = 100000
 PORTMAP_VERSION = 2
 DEVICE_CORE_PROGRAM = 0x0607AF
@@ -78,7 +77,7 @@ class XdrReader:
         padded = end + (-length % 4)
         if padded > len(self.data):
             raise XdrError("truncated XDR opaque value")
-        value = self.data[self.offset:end]
+        value = self.data[self.offset : end]
         self.offset = padded
         return value
 

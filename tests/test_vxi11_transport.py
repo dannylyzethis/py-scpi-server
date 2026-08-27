@@ -20,9 +20,9 @@ from scpi_emulator.vxi11_transport import (
     RPC_REPLY,
     RPC_SUCCESS,
     RPC_VERSION,
-    RpcTcpServer,
     VXI_DEVICE_LOCKED,
     VXI_SUCCESS,
+    RpcTcpServer,
     VXI11Server,
     XdrReader,
     XdrWriter,
@@ -106,15 +106,7 @@ def test_portmapper_create_link_query_and_destroy(running_vxi11) -> None:
     error, link, abort_port, max_receive = create_link(server)
     assert (error, abort_port, max_receive) == (VXI_SUCCESS, server.async_server.port, 1024 * 1024)
 
-    write = (
-        XdrWriter()
-        .i32(link)
-        .u32(1000)
-        .u32(1000)
-        .i32(FLAG_END)
-        .opaque(b"*IDN?\n")
-        .build()
-    )
+    write = XdrWriter().i32(link).u32(1000).u32(1000).i32(FLAG_END).opaque(b"*IDN?\n").build()
     response = rpc_call(server.host, server.port, DEVICE_CORE_PROGRAM, 1, 11, write)
     assert (response.i32(), response.u32()) == (VXI_SUCCESS, 6)
     response = rpc_call(server.host, server.port, DEVICE_CORE_PROGRAM, 1, 13, generic(link))
@@ -200,13 +192,7 @@ def test_opc_service_request_uses_interrupt_channel(running_vxi11) -> None:
     try:
         host = struct.unpack("!I", socket.inet_aton("127.0.0.1"))[0]
         channel = (
-            XdrWriter()
-            .u32(host)
-            .u32(callback.port)
-            .u32(DEVICE_INTR_PROGRAM)
-            .u32(1)
-            .i32(0)
-            .build()
+            XdrWriter().u32(host).u32(callback.port).u32(DEVICE_INTR_PROGRAM).u32(1).i32(0).build()
         )
         assert rpc_call(server.host, server.port, DEVICE_CORE_PROGRAM, 1, 25, channel).i32() == 0
         enable = XdrWriter().i32(link).boolean(True).opaque(b"opc-handle").build()
@@ -238,9 +224,7 @@ def test_real_pyvisa_instr_query_clear_trigger_and_serial_poll() -> None:
     manager = pyvisa.ResourceManager("@py")
     resource = None
     try:
-        resource = manager.open_resource(
-            f"TCPIP0::127.0.0.1,{server.port}::inst0::INSTR"
-        )
+        resource = manager.open_resource(f"TCPIP0::127.0.0.1,{server.port}::inst0::INSTR")
         resource.timeout = 2000
         assert resource.query("*IDN?").startswith("SCPI_Emulator,PyVISA Test,pyvisa_test,")
 

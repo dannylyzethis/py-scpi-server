@@ -21,9 +21,12 @@ def _instrument(serial: str = "PSU-001", model: str = "ps-3-output", reported_mo
             ),
         ),
     )
-    return BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
-        definition
-    ).instrument("supply").instrument
+    return (
+        BenchComposer(build_driver_catalog(discover_plugins=False))
+        .compose(definition)
+        .instrument("supply")
+        .instrument
+    )
 
 
 def test_triple_output_supply_retains_independent_selected_output_state() -> None:

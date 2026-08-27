@@ -1,13 +1,5 @@
 """SCPI language primitives."""
 
-from .active_device import (
-    GainCompressionState,
-    NoiseFigureState,
-    VNAActiveDeviceSystem,
-    register_active_device_commands,
-)
-from .advanced import AdvancedChannel, AdvancedMarker, VNAAdvancedSystem, register_advanced_commands
-
 from .acquisition import (
     AcquisitionChannel,
     AcquisitionController,
@@ -17,6 +9,13 @@ from .acquisition import (
     TriggerSource,
     register_acquisition_commands,
 )
+from .active_device import (
+    GainCompressionState,
+    NoiseFigureState,
+    VNAActiveDeviceSystem,
+    register_active_device_commands,
+)
+from .advanced import AdvancedChannel, AdvancedMarker, VNAAdvancedSystem, register_advanced_commands
 from .capabilities import (
     CapabilityError,
     VNACapabilities,
@@ -25,22 +24,14 @@ from .capabilities import (
 )
 from .common import register_common_commands
 from .errors import (
-    ErrorCategory,
-    ErrorQueue,
     NO_ERROR,
     QUEUE_OVERFLOW,
+    ErrorCategory,
+    ErrorQueue,
     SCPIErrorRecord,
     StandardEventBit,
     classify_error,
     standard_error,
-)
-from .operations import (
-    OperationHandle,
-    OperationManager,
-    OperationState,
-    OperationStateError,
-    OperationTimeout,
-    register_operation_commands,
 )
 from .manifest import (
     CommandManifest,
@@ -55,8 +46,8 @@ from .measurements import (
     ChannelState,
     MarkerState,
     MeasurementState,
-    VNAMeasurementSystem,
     TraceState,
+    VNAMeasurementSystem,
     WindowState,
     register_measurement_commands,
 )
@@ -67,6 +58,14 @@ from .mixer import (
     VNAMixerSystem,
     register_mixer_commands,
 )
+from .operations import (
+    OperationHandle,
+    OperationManager,
+    OperationState,
+    OperationStateError,
+    OperationTimeout,
+    register_operation_commands,
+)
 from .output import (
     BinaryResponse,
     ByteOrder,
@@ -76,8 +75,6 @@ from .output import (
     OutputQueueFull,
     register_format_commands,
 )
-from .vna_data import VNADataSystem, register_vna_data_commands
-from .pulse import PulseChannel, PulseGenerator, VNAPulseSystem, register_pulse_commands
 from .parser import (
     BinaryBlock,
     Command,
@@ -91,6 +88,7 @@ from .parser import (
     parse_program_message,
     split_program_message_units,
 )
+from .pulse import PulseChannel, PulseGenerator, VNAPulseSystem, register_pulse_commands
 from .registry import (
     CommandRegistry,
     CommandSpec,
@@ -101,6 +99,8 @@ from .registry import (
     ResolvedCommand,
     SCPICommandError,
 )
+from .scalar_data import ScalarConfiguration, ScalarScenarioSystem, register_scalar_commands
+from .state_files import VNAStateFileStore, register_state_file_commands
 from .status import (
     EVENT_REGISTER_MASK,
     STATUS_REGISTER_MASK,
@@ -110,9 +110,8 @@ from .status import (
     register_status_commands,
 )
 from .sweeps import VNASweepChannel, VNASweepSystem, register_sweep_commands
-from .scalar_data import ScalarConfiguration, ScalarScenarioSystem, register_scalar_commands
-from .state_files import VNAStateFileStore, register_state_file_commands
-from .time_domain import VNATimeDomainSystem, TimeDomainChannel, register_time_domain_commands
+from .time_domain import TimeDomainChannel, VNATimeDomainSystem, register_time_domain_commands
+from .vna_data import VNADataSystem, register_vna_data_commands
 
 __all__ = [
     "GainCompressionState",

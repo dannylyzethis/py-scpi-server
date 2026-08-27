@@ -8,7 +8,14 @@ from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
 
 from .measurements import MeasurementState, VNAMeasurementSystem
 from .output import DataFormat
-from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, ParameterType, SCPICommandError
+from .registry import (
+    CommandRegistry,
+    CommandSpec,
+    HeaderNode,
+    ParameterSpec,
+    ParameterType,
+    SCPICommandError,
+)
 
 
 class VNADataSystem:
@@ -64,7 +71,9 @@ class VNADataSystem:
     def values(self, channel: int, access: str):
         self._check_event_error()
         measurement = self.measurements.selected(channel)
-        samples = self._application_samples(channel, self._samples(measurement), measurement.stimulus)
+        samples = self._application_samples(
+            channel, self._samples(measurement), measurement.stimulus
+        )
         if access in ("SDATa", "RDATa"):
             values = tuple(component for value in samples for component in (value.real, value.imag))
         else:
@@ -188,33 +197,55 @@ def register_vna_data_commands(registry: CommandRegistry, state: VNADataSystem) 
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     data = HeaderNode("DATA")
     access = ParameterSpec(ParameterType.ENUM, choices=("SDATa", "FDATa", "RDATa"))
+
     def exists(inv):
         channel = state.measurements.channels.get(inv.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
-    registry.register(CommandSpec(
-        (calc, data), lambda inv, kind: state.values(inv.indices["channel"], kind),
-        (access,), query=True, exists=exists,
-    ))
+
+    registry.register(
+        CommandSpec(
+            (calc, data),
+            lambda inv, kind: state.values(inv.indices["channel"], kind),
+            (access,),
+            query=True,
+            exists=exists,
+        )
+    )
     for kind in ("SDATa", "FDATa", "RDATa"):
-        registry.register(CommandSpec(
-            (calc, data, HeaderNode(kind)),
-            lambda inv, selected=kind: state.values(inv.indices["channel"], selected),
-            query=True, exists=exists,
-        ))
-    registry.register(CommandSpec(
-        (calc, HeaderNode("MEASure"), data, HeaderNode("X")),
-        lambda inv: state.x_values(inv.indices["channel"]), query=True, exists=exists,
-    ))
-    registry.register(CommandSpec(
-        (calc, HeaderNode("RDATA")),
-        lambda inv, receiver: state.receiver_values(inv.indices["channel"], receiver),
-        (ParameterSpec(ParameterType.CHARACTER),), query=True, exists=exists,
-    ))
-    registry.register(CommandSpec(
-        (calc, data, HeaderNode("SNP"), HeaderNode("PORTs")),
-        lambda inv, ports: state.snp_values(inv.indices["channel"], ports),
-        (ParameterSpec(ParameterType.STRING),), query=True, exists=exists,
-    ))
+        registry.register(
+            CommandSpec(
+                (calc, data, HeaderNode(kind)),
+                lambda inv, selected=kind: state.values(inv.indices["channel"], selected),
+                query=True,
+                exists=exists,
+            )
+        )
+    registry.register(
+        CommandSpec(
+            (calc, HeaderNode("MEASure"), data, HeaderNode("X")),
+            lambda inv: state.x_values(inv.indices["channel"]),
+            query=True,
+            exists=exists,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (calc, HeaderNode("RDATA")),
+            lambda inv, receiver: state.receiver_values(inv.indices["channel"], receiver),
+            (ParameterSpec(ParameterType.CHARACTER),),
+            query=True,
+            exists=exists,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (calc, data, HeaderNode("SNP"), HeaderNode("PORTs")),
+            lambda inv, ports: state.snp_values(inv.indices["channel"], ports),
+            (ParameterSpec(ParameterType.STRING),),
+            query=True,
+            exists=exists,
+        )
+    )
 
 
 def _formatted(samples: tuple[complex, ...], display_format: str) -> tuple[float, ...]:

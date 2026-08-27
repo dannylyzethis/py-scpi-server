@@ -5,7 +5,6 @@ import pytest
 from scpi_emulator.dashboard import HAS_FLASK, WebDashboard
 from scpi_emulator.emulator import SCPIInstrument
 
-
 pytestmark = pytest.mark.skipif(not HAS_FLASK, reason="web extras are not installed")
 
 
@@ -88,14 +87,20 @@ def test_remote_control_plane_requires_bearer_token() -> None:
     client = dashboard.app.test_client()
 
     assert client.get("/api/status").status_code == 401
-    assert client.get(
-        "/api/status",
-        headers={"Authorization": "Bearer wrong"},
-    ).status_code == 401
-    assert client.get(
-        "/api/status",
-        headers={"Authorization": "Bearer secret-token"},
-    ).status_code == 200
+    assert (
+        client.get(
+            "/api/status",
+            headers={"Authorization": "Bearer wrong"},
+        ).status_code
+        == 401
+    )
+    assert (
+        client.get(
+            "/api/status",
+            headers={"Authorization": "Bearer secret-token"},
+        ).status_code
+        == 200
+    )
 
 
 def test_remote_websocket_requires_the_same_token() -> None:
@@ -285,9 +290,9 @@ def test_vna_snapshot_exposes_capabilities_channels_measurements_and_traces() ->
     dashboard = WebDashboard(manager)
     manager.web_dashboard = dashboard
 
-    snapshot = dashboard.app.test_client().get("/api/status").get_json()["instruments"][0][
-        "snapshot"
-    ]
+    snapshot = (
+        dashboard.app.test_client().get("/api/status").get_json()["instruments"][0]["snapshot"]
+    )
 
     assert snapshot["capabilities"]["model"] == "vna-2-port"
     assert snapshot["measurements"]["channels"][0]["selected"] == "CH1_S11_1"

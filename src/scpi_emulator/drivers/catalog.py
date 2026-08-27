@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
-
 DRIVER_ENTRY_POINT_GROUP = "scpi_emulator.drivers"
 
 
@@ -56,11 +55,7 @@ class ConfigurationFieldDescriptor:
         if not isinstance(self.value_type, ConfigurationFieldType):
             raise CatalogError("configuration field value_type is invalid")
         _require_unique(self.choices, f"configuration field {self.name!r} choices")
-        if (
-            self.minimum is not None
-            and self.maximum is not None
-            and self.minimum > self.maximum
-        ):
+        if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
             raise CatalogError(f"configuration field {self.name!r} range is inverted")
 
 
@@ -316,7 +311,9 @@ class DriverCatalog:
                 registered.append(driver.descriptor.id)
             except Exception as error:
                 name = getattr(entry_point, "name", "<unknown>")
-                raise CatalogError(f"could not load driver entry point {name!r}: {error}") from error
+                raise CatalogError(
+                    f"could not load driver entry point {name!r}: {error}"
+                ) from error
         return tuple(registered)
 
 

@@ -20,7 +20,6 @@ from .model import (
     StreamKind,
 )
 
-
 BINARY_MAGIC = b"SCPI-SCENARIO\x00\x01"
 
 
@@ -38,7 +37,9 @@ def load_scenario_bytes(data: bytes) -> ScenarioDefinition:
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as error:
-        raise ScenarioFormatError("scenario is neither UTF-8 JSON nor a binary container") from error
+        raise ScenarioFormatError(
+            "scenario is neither UTF-8 JSON nor a binary container"
+        ) from error
     return loads_scenario(text)
 
 
@@ -93,7 +94,9 @@ def _parse_stream(name: str, raw: Any) -> ScenarioStream:
         advance = AdvancePolicy(raw.get("advance", AdvancePolicy.READ.value))
         end = EndPolicy(raw.get("end", EndPolicy.ERROR.value))
     except ValueError as error:
-        raise ScenarioFormatError(f"stream {name!r} has an unknown policy or kind: {error}") from error
+        raise ScenarioFormatError(
+            f"stream {name!r} has an unknown policy or kind: {error}"
+        ) from error
     samples_raw = raw.get("samples")
     if not isinstance(samples_raw, list) or not samples_raw:
         raise ScenarioFormatError(f"stream {name!r} samples must be a non-empty array")
@@ -162,7 +165,9 @@ def _decode_numeric_binary(raw: Any) -> tuple[int | float | complex, ...]:
     if dtype.startswith("complex"):
         if len(values) % 2:
             raise ScenarioFormatError(f"$binary {dtype} requires real/imaginary pairs")
-        return tuple(complex(values[index], values[index + 1]) for index in range(0, len(values), 2))
+        return tuple(
+            complex(values[index], values[index + 1]) for index in range(0, len(values), 2)
+        )
     return tuple(values)
 
 

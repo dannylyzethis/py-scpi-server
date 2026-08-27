@@ -13,7 +13,6 @@ from scpi_emulator.scenario import (
     StreamKind,
 )
 
-
 REPOSITORY_ROOT = Path(__file__).parents[1]
 CSV_EXAMPLES = REPOSITORY_ROOT / "examples" / "csv"
 SHIPPED_CATALOGS = (
@@ -92,9 +91,7 @@ def test_configuration_rejects_missing_required_columns(tmp_path: Path) -> None:
     ("path", "instrument_count"),
     SHIPPED_CATALOGS,
 )
-def test_shipped_catalogs_are_canonical_and_loadable(
-    path: Path, instrument_count: int
-) -> None:
+def test_shipped_catalogs_are_canonical_and_loadable(path: Path, instrument_count: int) -> None:
     with path.open(encoding="utf-8-sig", newline="") as source:
         rows = list(csv.reader(source))
 
@@ -132,9 +129,7 @@ def test_vna_identity_response_is_not_truncated() -> None:
     assert manager.load_from_file(CSV_EXAMPLES / "vna" / "vna-commands.csv")
 
     vna = manager.instruments["virtual_vna_2_port_csv_static"]["instrument"]
-    assert vna.process_command("*IDN?") == (
-        "SCPI Emulator,Virtual VNA 2 Port,EMU00000001,E.1.0"
-    )
+    assert vna.process_command("*IDN?") == ("SCPI Emulator,Virtual VNA 2 Port,EMU00000001,E.1.0")
     assert vna.process_command("SYST:CAP:FREQ:MAX?") == "50000000000"
     assert vna.process_command("SENS1:FREQ:STOP?") == "50000000000"
     assert vna.process_command("SENS1:FREQ:STOP 51e9") == ""
@@ -189,9 +184,7 @@ def test_semantically_invalid_configuration_is_rejected(
     assert message in caplog.text
 
 
-def test_spilled_csv_fields_are_rejected_with_actionable_error(
-    tmp_path: Path, caplog
-) -> None:
+def test_spilled_csv_fields_are_rejected_with_actionable_error(tmp_path: Path, caplog) -> None:
     config = tmp_path / "spilled.csv"
     config.write_text(
         "Equipment,Port,Command,Response,Validation\n"
@@ -211,8 +204,7 @@ def test_failed_reload_preserves_active_configuration(tmp_path: Path) -> None:
 
     invalid = tmp_path / "invalid.csv"
     invalid.write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "Device,not-a-port,*IDN?,Device,\n",
+        "Equipment,Port,Command,Response,Validation\nDevice,not-a-port,*IDN?,Device,\n",
         encoding="utf-8",
     )
 
@@ -223,8 +215,7 @@ def test_failed_reload_preserves_active_configuration(tmp_path: Path) -> None:
 def test_command_with_empty_response_is_loaded(tmp_path: Path) -> None:
     config = tmp_path / "write_only.csv"
     config.write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "Device,6101,ACTION,,\n",
+        "Equipment,Port,Command,Response,Validation\nDevice,6101,ACTION,,\n",
         encoding="utf-8",
     )
 

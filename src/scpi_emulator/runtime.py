@@ -14,6 +14,7 @@ from .raw_server import SCPIServer
 
 logger = logging.getLogger(__name__)
 
+
 class SCPIEmulatorManager:
     """Manages multiple SCPI instrument emulators with web dashboard"""
 
@@ -25,7 +26,7 @@ class SCPIEmulatorManager:
         self._bench_runtime = None
         self._active_source = None
         self._interactive_catalog = None
-        
+
     @staticmethod
     def _instrument_id(name):
         return compatibility_instrument_id(name)
@@ -68,8 +69,7 @@ class SCPIEmulatorManager:
         path = Path(file_path).resolve()
         definition = load_bench(path)
         uses_csv = any(
-            item.driver.casefold() == 'csv-instruments'
-            for item in definition.instruments
+            item.driver.casefold() == "csv-instruments" for item in definition.instruments
         )
         catalog = build_driver_catalog(csv_directory=path.parent if uses_csv else None)
         runtime = BenchRuntime(BenchComposer(catalog).compose(definition))
@@ -93,9 +93,7 @@ class SCPIEmulatorManager:
     @property
     def active_instruments(self):
         return (
-            self._bench_runtime.instruments
-            if self._bench_runtime is not None
-            else self.instruments
+            self._bench_runtime.instruments if self._bench_runtime is not None else self.instruments
         )
 
     def start_active_servers(self):
@@ -118,10 +116,8 @@ class SCPIEmulatorManager:
             self.active_runtime.web_dashboard = None
         self.stop_active_servers()
 
-    def start_active_dashboard(self, host='127.0.0.1', port=8081, *, auth_token=None):
-        return self.active_runtime.start_web_dashboard(
-            host, port, auth_token=auth_token
-        )
+    def start_active_dashboard(self, host="127.0.0.1", port=8081, *, auth_token=None):
+        return self.active_runtime.start_web_dashboard(host, port, auth_token=auth_token)
 
     def configured_instruments(self):
         """Return UI-neutral rows for every active configured instrument."""
@@ -135,7 +131,7 @@ class SCPIEmulatorManager:
                         definition.id,
                         composed.instrument,
                         composed.resource_name(),
-                        bool(getattr(server, 'running', False)),
+                        bool(getattr(server, "running", False)),
                         model=definition.model,
                         serial=definition.serial_number,
                         reported_model=definition.reported_model,
@@ -147,21 +143,21 @@ class SCPIEmulatorManager:
             rows.append(
                 _interactive_instrument_row(
                     instrument_id,
-                    item['instrument'],
+                    item["instrument"],
                     f"TCPIP::127.0.0.1::{item['port']}::SOCKET",
-                    bool(getattr(server, 'running', False)),
+                    bool(getattr(server, "running", False)),
                 )
             )
         return tuple(rows)
 
-    def start_all_servers(self, host='localhost'):
+    def start_all_servers(self, host="localhost"):
         """Start TCP servers for all instruments"""
         success_count = 0
-        
+
         for inst_id, inst_data in self.instruments.items():
-            instrument = inst_data['instrument']
-            port = inst_data['port']
-            
+            instrument = inst_data["instrument"]
+            port = inst_data["port"]
+
             server = SCPIServer(instrument, self, host, port)
             if server.start():
                 self.servers[inst_id] = server
@@ -170,7 +166,7 @@ class SCPIEmulatorManager:
                 logger.error(f"Failed to start server for {instrument.name}")
                 self.stop_all_servers()
                 return False
-        
+
         if success_count == len(self.instruments) and success_count > 0:
             self.running = True
             logger.info(f"Started {success_count} SCPI servers")
@@ -183,18 +179,19 @@ class SCPIEmulatorManager:
         """Stop all TCP servers"""
         for server in self.servers.values():
             server.stop()
-        
+
         self.servers.clear()
         self.running = False
         logger.info("All servers stopped")
 
-    def start_web_dashboard(self, host='127.0.0.1', port=8081, *, auth_token=None):
+    def start_web_dashboard(self, host="127.0.0.1", port=8081, *, auth_token=None):
         """Start the web dashboard"""
         from .dashboard import HAS_FLASK, WebDashboard
+
         if not HAS_FLASK:
             logger.warning("Flask not available. Cannot start web dashboard.")
             return False
-            
+
         self.web_dashboard = WebDashboard(self, host, port, auth_token=auth_token)
         return self.web_dashboard.start()
 

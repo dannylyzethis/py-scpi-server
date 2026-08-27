@@ -33,9 +33,7 @@ def test_log_cw_and_power_sweeps_generate_the_expected_x_values() -> None:
     instrument.process_command("SENS:FREQ:STOP 10GHz")
     instrument.process_command("SENS:SWE:POIN 3")
     instrument.process_command("SENS:SWE:TYPE LOG")
-    assert instrument.vna_measurements.selected(1).stimulus == pytest.approx(
-        (1e9, 10**9.5, 1e10)
-    )
+    assert instrument.vna_measurements.selected(1).stimulus == pytest.approx((1e9, 10**9.5, 1e10))
 
     instrument.process_command("SENS:FREQ:CW 2.4GHz")
     instrument.process_command("SENS:SWE:TYPE CW")

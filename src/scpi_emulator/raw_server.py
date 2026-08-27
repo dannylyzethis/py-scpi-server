@@ -197,9 +197,7 @@ class SCPIServer:
 
     def execute_control_command(self, command):
         """Serialize dashboard execution with the physical TCP session."""
-        return self.execute_control_action(
-            lambda instrument: instrument.process_command(command)
-        )
+        return self.execute_control_action(lambda instrument: instrument.process_command(command))
 
     def execute_control_action(self, action):
         """Run one control mutation under the instrument session lock."""

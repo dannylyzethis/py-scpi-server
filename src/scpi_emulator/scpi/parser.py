@@ -106,10 +106,9 @@ def mnemonic_matches(candidate: str, specification: str) -> bool:
 
     candidate_upper = candidate.upper()
     specification_upper = specification.upper()
-    return (
-        mandatory_length <= len(candidate_upper) <= len(specification_upper)
-        and specification_upper.startswith(candidate_upper)
-    )
+    return mandatory_length <= len(candidate_upper) <= len(
+        specification_upper
+    ) and specification_upper.startswith(candidate_upper)
 
 
 def parse_program_message(message: str | bytes) -> ProgramMessage:

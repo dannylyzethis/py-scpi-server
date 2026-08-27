@@ -3,7 +3,6 @@ from pathlib import Path
 from scpi_emulator.emulator import SCPIInstrument
 from scpi_emulator.scenario import load_scenario
 
-
 EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "scenarios"
 
 

@@ -1,15 +1,16 @@
+import csv
 import json
 import re
-import csv
 from pathlib import Path
 
 from scpi_emulator.drivers import build_driver_catalog
 from tools.generate_catalog import check_catalog_artifacts
 
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CATALOG_DOCUMENT = REPOSITORY_ROOT / "docs" / "instrument-catalog.md"
 OPTION_DOCUMENT = REPOSITORY_ROOT / "docs" / "instrument-options.json"
+
+
 def test_generated_catalog_artifacts_match_runtime_descriptors() -> None:
     assert check_catalog_artifacts() == ()
 

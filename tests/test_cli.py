@@ -1,11 +1,10 @@
-import json
 import io
+import json
 import socket
 
 import pytest
 
-from scpi_emulator import __version__
-from scpi_emulator import cli
+from scpi_emulator import __version__, cli
 from scpi_emulator.bench import BenchError, BenchRuntime
 from scpi_emulator.cli import build_parser, main
 from scpi_emulator.emulator import SCPIEmulatorManager
@@ -60,13 +59,11 @@ def test_directory_load_starts_all_csvs_and_prints_resources_and_dashboard(
     definitions = tmp_path / "instruments"
     definitions.mkdir()
     (definitions / "first.csv").write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "First Device,,VALUE?,ONE,\n",
+        "Equipment,Port,Command,Response,Validation\nFirst Device,,VALUE?,ONE,\n",
         encoding="utf-8",
     )
     (definitions / "second.csv").write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "Second Device,,VALUE?,TWO,\n",
+        "Equipment,Port,Command,Response,Validation\nSecond Device,,VALUE?,TWO,\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(SCPIEmulatorManager, "start_all_servers", _start_manager)
@@ -77,18 +74,21 @@ def test_directory_load_starts_all_csvs_and_prints_resources_and_dashboard(
     )
     monkeypatch.setattr(cli.time, "sleep", _interrupt_on_sleep)
 
-    assert main(
-        [
-            "--load",
-            str(definitions),
-            "--start",
-            "--port",
-            "6200",
-            "--web",
-            "--web-port",
-            "9090",
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "--load",
+                str(definitions),
+                "--start",
+                "--port",
+                "6200",
+                "--web",
+                "--web-port",
+                "9090",
+            ]
+        )
+        == 0
+    )
 
     output = capsys.readouterr().out
     assert "first_device: TCPIP::localhost::6200::SOCKET" in output
@@ -96,15 +96,12 @@ def test_directory_load_starts_all_csvs_and_prints_resources_and_dashboard(
     assert "Web dashboard: http://127.0.0.1:9090" in output
 
 
-def test_directory_load_rejects_duplicate_equipment_with_both_filenames(
-    tmp_path, capsys
-) -> None:
+def test_directory_load_rejects_duplicate_equipment_with_both_filenames(tmp_path, capsys) -> None:
     definitions = tmp_path / "duplicates"
     definitions.mkdir()
     for filename in ("alpha.csv", "beta.csv"):
         (definitions / filename).write_text(
-            "Equipment,Port,Command,Response,Validation\n"
-            "Shared Device,,VALUE?,1,\n",
+            "Equipment,Port,Command,Response,Validation\nShared Device,,VALUE?,1,\n",
             encoding="utf-8",
         )
 
@@ -140,8 +137,7 @@ def test_bench_starts_unchanged_and_prints_precise_resource_and_dashboard(
     tmp_path, monkeypatch, capsys
 ) -> None:
     (tmp_path / "relay.csv").write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "Bench Relay,,STATE?,OPEN,\n",
+        "Equipment,Port,Command,Response,Validation\nBench Relay,,STATE?,OPEN,\n",
         encoding="utf-8",
     )
     bench = tmp_path / "bench.json"
@@ -376,9 +372,7 @@ def test_bench_plus_interactive_adopts_cli_composition(tmp_path, monkeypatch) ->
     assert [row["id"] for row in seen] == ["meter1"]
 
 
-def test_running_bench_output_is_safe_for_ascii_only_windows_streams(
-    tmp_path, monkeypatch
-) -> None:
+def test_running_bench_output_is_safe_for_ascii_only_windows_streams(tmp_path, monkeypatch) -> None:
     bench = tmp_path / "bench.json"
     _interactive_bench(bench, 6403)
     monkeypatch.setattr(BenchRuntime, "start", lambda self: None)
@@ -426,8 +420,7 @@ def test_interactive_catalog_can_include_csv_models_from_quoted_folder(
     folder = tmp_path / "CSV catalog"
     folder.mkdir()
     (folder / "fixtures.csv").write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "Bench Relay,,STATE?,OPEN,\n",
+        "Equipment,Port,Command,Response,Validation\nBench Relay,,STATE?,OPEN,\n",
         encoding="utf-8",
     )
     commands = iter([f'catalog csv "{folder}"', "quit"])

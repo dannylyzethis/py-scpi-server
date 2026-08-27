@@ -20,7 +20,6 @@ from .registry import (
     SCPICommandError,
 )
 
-
 SWEEP_TYPES = ("LINear", "LOGarithmic", "CW", "POWer", "SEGMent")
 RECEIVERS = ("ARECeiver", "BRECeiver", "CRECeiver", "DRECeiver")
 
@@ -67,7 +66,9 @@ class VNASweepChannel:
 
     def axis(self) -> tuple[float, ...]:
         if self.sweep_type == "SEGMent":
-            return tuple(value for segment in self.segments if segment.enabled for value in segment.axis())
+            return tuple(
+                value for segment in self.segments if segment.enabled for value in segment.axis()
+            )
         if self.sweep_type == "CW":
             return (self.frequency_cw,) * self.points
         if self.sweep_type == "POWer":
@@ -179,8 +180,11 @@ class VNASweepSystem:
         if not 1 <= segment_number <= len(channel.segments) + 1:
             raise SCPICommandError(-222, "Data out of range; segment number")
         segment = SegmentState(
-            segment_number, channel.frequency_start, channel.frequency_stop,
-            if_bandwidth=channel.if_bandwidth, dwell=channel.dwell,
+            segment_number,
+            channel.frequency_start,
+            channel.frequency_stop,
+            if_bandwidth=channel.if_bandwidth,
+            dwell=channel.dwell,
         )
         channel.segments.insert(segment_number - 1, segment)
         self._renumber(channel)
@@ -247,8 +251,9 @@ def register_sweep_commands(registry: CommandRegistry, state: VNASweepSystem) ->
     frequency = (sense, HeaderNode("FREQuency"))
     sweep = (sense, HeaderNode("SWEep"))
     segment = HeaderNode("SEGMent", index="segment", index_default=1)
-    frequency_number = ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0),
-        units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"}))
+    frequency_number = ParameterSpec(
+        ParameterType.NUMBER, minimum=Decimal(0), units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"})
+    )
     power_number = ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50))
 
     def add(path, handler, *, query=False, parameters=()):
@@ -267,101 +272,186 @@ def register_sweep_commands(registry: CommandRegistry, state: VNASweepSystem) ->
         ("STOP", "frequency_stop"),
         ("CW", "frequency_cw"),
     ):
-        add((*frequency, HeaderNode(header)),
+        add(
+            (*frequency, HeaderNode(header)),
             lambda inv, value, attr=attribute: _set_number(state, inv, attr, value),
-            parameters=(frequency_number,))
-        add((*frequency, HeaderNode(header)),
+            parameters=(frequency_number,),
+        )
+        add(
+            (*frequency, HeaderNode(header)),
             lambda inv, attr=attribute: _format_number(
                 getattr(state.channel(inv.indices["channel"]), attr)
             ),
-            query=True)
-    add((*frequency, HeaderNode("CENTer")),
+            query=True,
+        )
+    add(
+        (*frequency, HeaderNode("CENTer")),
         lambda inv, value: _empty(state.set_center(inv.indices["channel"], _number(value))),
-        parameters=(frequency_number,))
-    add((*frequency, HeaderNode("CENTer")),
+        parameters=(frequency_number,),
+    )
+    add(
+        (*frequency, HeaderNode("CENTer")),
         lambda inv: _format_number(state.channel(inv.indices["channel"]).frequency_center),
-        query=True)
-    add((*frequency, HeaderNode("SPAN")),
+        query=True,
+    )
+    add(
+        (*frequency, HeaderNode("SPAN")),
         lambda inv, value: _empty(state.set_span(inv.indices["channel"], _number(value))),
-        parameters=(frequency_number,))
-    add((*frequency, HeaderNode("SPAN")),
-        lambda inv: _format_number(state.channel(inv.indices["channel"]).frequency_span), query=True)
+        parameters=(frequency_number,),
+    )
+    add(
+        (*frequency, HeaderNode("SPAN")),
+        lambda inv: _format_number(state.channel(inv.indices["channel"]).frequency_span),
+        query=True,
+    )
 
-    add((*sweep, HeaderNode("POINts")),
+    add(
+        (*sweep, HeaderNode("POINts")),
         lambda inv, value: _empty(state.configure(inv.indices["channel"], "points", value)),
-        parameters=(ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100001),))
-    add((*sweep, HeaderNode("POINts")),
-        lambda inv: str(state.channel(inv.indices["channel"]).points), query=True)
-    add((*sweep, HeaderNode("TYPE")),
+        parameters=(ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100001),),
+    )
+    add(
+        (*sweep, HeaderNode("POINts")),
+        lambda inv: str(state.channel(inv.indices["channel"]).points),
+        query=True,
+    )
+    add(
+        (*sweep, HeaderNode("TYPE")),
         lambda inv, value: _empty(state.configure(inv.indices["channel"], "sweep_type", value)),
-        parameters=(ParameterSpec(ParameterType.ENUM, choices=SWEEP_TYPES),))
-    add((*sweep, HeaderNode("TYPE")),
-        lambda inv: state.channel(inv.indices["channel"]).sweep_type, query=True)
-    add((*sweep, HeaderNode("DWELl")),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=SWEEP_TYPES),),
+    )
+    add(
+        (*sweep, HeaderNode("TYPE")),
+        lambda inv: state.channel(inv.indices["channel"]).sweep_type,
+        query=True,
+    )
+    add(
+        (*sweep, HeaderNode("DWELl")),
         lambda inv, value: _set_number(state, inv, "dwell", value),
-        parameters=(ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), units=frozenset({"S"})),))
-    add((*sweep, HeaderNode("DWELl")),
-        lambda inv: str(state.channel(inv.indices["channel"]).dwell), query=True)
-    add((*sweep, HeaderNode("GENeration")),
+        parameters=(
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), units=frozenset({"S"})),
+        ),
+    )
+    add(
+        (*sweep, HeaderNode("DWELl")),
+        lambda inv: str(state.channel(inv.indices["channel"]).dwell),
+        query=True,
+    )
+    add(
+        (*sweep, HeaderNode("GENeration")),
         lambda inv, value: _empty(state.configure(inv.indices["channel"], "generation", value)),
-        parameters=(ParameterSpec(ParameterType.ENUM, choices=("STEPped", "ANALog")),))
-    add((*sweep, HeaderNode("GENeration")),
-        lambda inv: state.channel(inv.indices["channel"]).generation, query=True)
-    add((sense, HeaderNode("BANDwidth")),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("STEPped", "ANALog")),),
+    )
+    add(
+        (*sweep, HeaderNode("GENeration")),
+        lambda inv: state.channel(inv.indices["channel"]).generation,
+        query=True,
+    )
+    add(
+        (sense, HeaderNode("BANDwidth")),
         lambda inv, value: _set_number(state, inv, "if_bandwidth", value),
-        parameters=(frequency_number,))
-    add((sense, HeaderNode("BANDwidth")),
-        lambda inv: str(state.channel(inv.indices["channel"]).if_bandwidth), query=True)
+        parameters=(frequency_number,),
+    )
+    add(
+        (sense, HeaderNode("BANDwidth")),
+        lambda inv: str(state.channel(inv.indices["channel"]).if_bandwidth),
+        query=True,
+    )
 
     receiver = ParameterSpec(ParameterType.ENUM, choices=RECEIVERS)
     attenuation = ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(70))
-    add((sense, HeaderNode("POWer"), HeaderNode("ATTenuator")),
-        lambda inv, name, value: _empty(state.set_receiver_attenuation(
-            inv.indices["channel"], name, _number(value))), parameters=(receiver, attenuation))
-    add((sense, HeaderNode("POWer"), HeaderNode("ATTenuator")),
+    add(
+        (sense, HeaderNode("POWer"), HeaderNode("ATTenuator")),
+        lambda inv, name, value: _empty(
+            state.set_receiver_attenuation(inv.indices["channel"], name, _number(value))
+        ),
+        parameters=(receiver, attenuation),
+    )
+    add(
+        (sense, HeaderNode("POWer"), HeaderNode("ATTenuator")),
         lambda inv, name: str(state.receiver_attenuation(inv.indices["channel"], name)),
-        query=True, parameters=(receiver,))
+        query=True,
+        parameters=(receiver,),
+    )
 
-    add((sense, segment, HeaderNode("ADD")),
-        lambda inv: _empty(state.add_segment(inv.indices["channel"], inv.indices["segment"])))
-    add((sense, segment, HeaderNode("DELete")),
-        lambda inv: _empty(state.delete_segment(inv.indices["channel"], inv.indices["segment"])))
-    add((sense, HeaderNode("SEGMent"), HeaderNode("DELete"), HeaderNode("ALL")),
-        lambda inv: _empty(state.delete_all_segments(inv.indices["channel"])))
-    add((sense, HeaderNode("SEGMent"), HeaderNode("COUNt")),
-        lambda inv: str(len(state.channel(inv.indices["channel"]).segments)), query=True)
+    add(
+        (sense, segment, HeaderNode("ADD")),
+        lambda inv: _empty(state.add_segment(inv.indices["channel"], inv.indices["segment"])),
+    )
+    add(
+        (sense, segment, HeaderNode("DELete")),
+        lambda inv: _empty(state.delete_segment(inv.indices["channel"], inv.indices["segment"])),
+    )
+    add(
+        (sense, HeaderNode("SEGMent"), HeaderNode("DELete"), HeaderNode("ALL")),
+        lambda inv: _empty(state.delete_all_segments(inv.indices["channel"])),
+    )
+    add(
+        (sense, HeaderNode("SEGMent"), HeaderNode("COUNt")),
+        lambda inv: str(len(state.channel(inv.indices["channel"]).segments)),
+        query=True,
+    )
     for header, attribute in (("STARt", "frequency_start"), ("STOP", "frequency_stop")):
-        add((sense, segment, HeaderNode("FREQuency"), HeaderNode(header)),
+        add(
+            (sense, segment, HeaderNode("FREQuency"), HeaderNode(header)),
             lambda inv, value, attr=attribute: _set_segment_number(state, inv, attr, value),
-            parameters=(frequency_number,))
-        add((sense, segment, HeaderNode("FREQuency"), HeaderNode(header)),
-            lambda inv, attr=attribute: str(getattr(state.segment(
-                inv.indices["channel"], inv.indices["segment"]), attr)), query=True)
+            parameters=(frequency_number,),
+        )
+        add(
+            (sense, segment, HeaderNode("FREQuency"), HeaderNode(header)),
+            lambda inv, attr=attribute: str(
+                getattr(state.segment(inv.indices["channel"], inv.indices["segment"]), attr)
+            ),
+            query=True,
+        )
     for path, attribute, parameter in (
-        ((HeaderNode("SWEep"), HeaderNode("POINts")), "points",
-         ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100001)),
+        (
+            (HeaderNode("SWEep"), HeaderNode("POINts")),
+            "points",
+            ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100001),
+        ),
         ((HeaderNode("BWIDth"),), "if_bandwidth", frequency_number),
-        ((HeaderNode("SWEep"), HeaderNode("DWELl")), "dwell",
-         ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), units=frozenset({"S"}))),
+        (
+            (HeaderNode("SWEep"), HeaderNode("DWELl")),
+            "dwell",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), units=frozenset({"S"})),
+        ),
         ((HeaderNode("STATe"),), "enabled", ParameterSpec(ParameterType.BOOLEAN)),
     ):
-        add((sense, segment, *path),
+        add(
+            (sense, segment, *path),
             lambda inv, value, attr=attribute: _set_segment_value(state, inv, attr, value),
-            parameters=(parameter,))
-        add((sense, segment, *path),
-            lambda inv, attr=attribute: _segment_query(state, inv, attr), query=True)
+            parameters=(parameter,),
+        )
+        add(
+            (sense, segment, *path),
+            lambda inv, attr=attribute: _segment_query(state, inv, attr),
+            query=True,
+        )
 
-    add((source, power), lambda inv, value: _empty(state.set_port_power(
-        inv.indices["channel"], inv.indices["port"], _number(value))), parameters=(power_number,))
-    add((source, power), lambda inv: str(state.port_power(
-        inv.indices["channel"], inv.indices["port"])), query=True)
+    add(
+        (source, power),
+        lambda inv, value: _empty(
+            state.set_port_power(inv.indices["channel"], inv.indices["port"], _number(value))
+        ),
+        parameters=(power_number,),
+    )
+    add(
+        (source, power),
+        lambda inv: str(state.port_power(inv.indices["channel"], inv.indices["port"])),
+        query=True,
+    )
     for header, attribute in (("STARt", "power_start"), ("STOP", "power_stop")):
-        add((source, power, HeaderNode(header)),
+        add(
+            (source, power, HeaderNode(header)),
             lambda inv, value, attr=attribute: _set_number(state, inv, attr, value),
-            parameters=(power_number,))
-        add((source, power, HeaderNode(header)),
+            parameters=(power_number,),
+        )
+        add(
+            (source, power, HeaderNode(header)),
             lambda inv, attr=attribute: str(getattr(state.channel(inv.indices["channel"]), attr)),
-            query=True)
+            query=True,
+        )
 
 
 def _set_number(state: VNASweepSystem, invocation, attribute: str, value: NumericValue) -> str:
@@ -370,22 +460,25 @@ def _set_number(state: VNASweepSystem, invocation, attribute: str, value: Numeri
 
 
 def _set_segment_number(state, invocation, attribute: str, value: NumericValue) -> str:
-    state.configure_segment(invocation.indices["channel"], invocation.indices["segment"],
-                            attribute, _number(value))
+    state.configure_segment(
+        invocation.indices["channel"], invocation.indices["segment"], attribute, _number(value)
+    )
     return ""
 
 
 def _set_segment_value(state, invocation, attribute: str, value) -> str:
     if isinstance(value, NumericValue):
         value = _number(value)
-    state.configure_segment(invocation.indices["channel"], invocation.indices["segment"],
-                            attribute, value)
+    state.configure_segment(
+        invocation.indices["channel"], invocation.indices["segment"], attribute, value
+    )
     return ""
 
 
 def _segment_query(state, invocation, attribute: str) -> str:
-    value = getattr(state.segment(invocation.indices["channel"], invocation.indices["segment"]),
-                    attribute)
+    value = getattr(
+        state.segment(invocation.indices["channel"], invocation.indices["segment"]), attribute
+    )
     return str(int(value)) if isinstance(value, bool) else str(value)
 
 

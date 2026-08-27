@@ -20,7 +20,6 @@ from .registry import (
     SCPICommandError,
 )
 
-
 MAX_CHANNEL = 200
 MAX_WINDOW = 24
 MAX_TRACE = 24
@@ -266,7 +265,9 @@ class VNAMeasurementSystem:
     def selected(self, channel_number: int) -> MeasurementState:
         channel = self.channel(channel_number)
         if channel.selected is None or channel.selected not in channel.measurements:
-            raise SCPICommandError(-200, f"Execution error; channel {channel_number} has no selection")
+            raise SCPICommandError(
+                -200, f"Execution error; channel {channel_number} has no selection"
+            )
         return channel.measurements[channel.selected]
 
     def delete(self, channel_number: int, name: str) -> None:
@@ -409,6 +410,7 @@ def register_measurement_commands(registry: CommandRegistry, state: VNAMeasureme
     window = HeaderNode("WINDow", index="window", index_default=1)
     trace = HeaderNode("TRACe", index="trace", index_default=1)
     marker = HeaderNode("MARKer", index="marker", index_default=1)
+
     def channel_available(inv):
         return 1 <= inv.indices.get("channel", 1) <= MAX_CHANNEL
 
@@ -451,170 +453,399 @@ def register_measurement_commands(registry: CommandRegistry, state: VNAMeasureme
     boolean = ParameterSpec(ParameterType.BOOLEAN)
     integer = ParameterSpec(ParameterType.INTEGER, minimum=1)
 
-    add((calc, HeaderNode("PARameter"), HeaderNode("DEFine"), HeaderNode("EXTended")),
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("DEFine"), HeaderNode("EXTended")),
         lambda inv, name, parameter: state.define(inv.indices["channel"], name, parameter) and "",
-        parameters=(string, string), available=channel_available)
-    add((calc, HeaderNode("PARameter"), HeaderNode("DEFine")),
+        parameters=(string, string),
+        available=channel_available,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("DEFine")),
         lambda inv, parameter: state.define_legacy(inv.indices["channel"], parameter) and "",
-        parameters=(ParameterSpec(ParameterType.CHARACTER),), available=channel_available)
-    add((calc, HeaderNode("PARameter"), HeaderNode("CATalog"), HeaderNode("EXTended")),
-        lambda inv: state.catalog(inv.indices["channel"]), query=True, available=channel_available,
-        exists=channel_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("CATalog")),
-        lambda inv: state.catalog(inv.indices["channel"]), query=True, available=channel_available,
-        exists=channel_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("SELect")),
+        parameters=(ParameterSpec(ParameterType.CHARACTER),),
+        available=channel_available,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("CATalog"), HeaderNode("EXTended")),
+        lambda inv: state.catalog(inv.indices["channel"]),
+        query=True,
+        available=channel_available,
+        exists=channel_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("CATalog")),
+        lambda inv: state.catalog(inv.indices["channel"]),
+        query=True,
+        available=channel_available,
+        exists=channel_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("SELect")),
         lambda inv, name: state.select(inv.indices["channel"], name) and "",
-        parameters=(string,), available=channel_available, exists=channel_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("MNUMber")),
+        parameters=(string,),
+        available=channel_available,
+        exists=channel_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("MNUMber")),
         lambda inv, number: state.select_number(inv.indices["channel"], number) and "",
-        parameters=(integer,), available=channel_available, exists=channel_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("MNUMber")),
+        parameters=(integer,),
+        available=channel_available,
+        exists=channel_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("MNUMber")),
         lambda inv: str(state.selected(inv.indices["channel"]).number),
-        query=True, available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("MODify"), HeaderNode("EXTended")),
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("MODify"), HeaderNode("EXTended")),
         lambda inv, parameter: _modify(state.selected(inv.indices["channel"]), parameter),
-        parameters=(string,), available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("DELete")),
+        parameters=(string,),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("DELete")),
         lambda inv, name: state.delete(inv.indices["channel"], name) or "",
-        parameters=(string,), available=channel_available, exists=channel_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("DELete"), HeaderNode("ALL")),
-        lambda inv: state.delete_all(inv.indices["channel"]) or "", available=channel_available,
-        exists=channel_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("WNUMber")),
+        parameters=(string,),
+        available=channel_available,
+        exists=channel_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("DELete"), HeaderNode("ALL")),
+        lambda inv: state.delete_all(inv.indices["channel"]) or "",
+        available=channel_available,
+        exists=channel_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("WNUMber")),
         lambda inv: _window_or_zero(state, state.selected(inv.indices["channel"]).name, 0),
-        query=True, available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("PARameter"), HeaderNode("TNUMber")),
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("PARameter"), HeaderNode("TNUMber")),
         lambda inv: _window_or_zero(state, state.selected(inv.indices["channel"]).name, 1),
-        query=True, available=channel_available, exists=selected_measurement_exists)
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
 
-    add((calc, HeaderNode("FORMat")),
-        lambda inv, value: _setattr_response(state.selected(inv.indices["channel"]), "format", value),
+    add(
+        (calc, HeaderNode("FORMat")),
+        lambda inv, value: _setattr_response(
+            state.selected(inv.indices["channel"]), "format", value
+        ),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=DISPLAY_FORMATS),),
-        available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("FORMat")),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("FORMat")),
         lambda inv: state.selected(inv.indices["channel"]).format,
-        query=True, available=channel_available, exists=selected_measurement_exists)
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
 
-    add((calc, HeaderNode("MATH"), HeaderNode("FUNCtion")),
-        lambda inv, value: _setattr_response(state.selected(inv.indices["channel"]), "math_function", value),
+    add(
+        (calc, HeaderNode("MATH"), HeaderNode("FUNCtion")),
+        lambda inv, value: _setattr_response(
+            state.selected(inv.indices["channel"]), "math_function", value
+        ),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=MATH_FUNCTIONS),),
-        available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("MATH"), HeaderNode("FUNCtion")),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("MATH"), HeaderNode("FUNCtion")),
         lambda inv: state.selected(inv.indices["channel"]).math_function,
-        query=True, available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("MATH"), HeaderNode("MEMorize")),
-        lambda inv: _memorize(state.selected(inv.indices["channel"])), available=channel_available,
-        exists=selected_measurement_exists)
-    add((calc, HeaderNode("MATH"), HeaderNode("INTerpolate")),
-        lambda inv, value: _setattr_response(state.selected(inv.indices["channel"]), "math_interpolate", value),
-        parameters=(boolean,), available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("MATH"), HeaderNode("INTerpolate")),
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("MATH"), HeaderNode("MEMorize")),
+        lambda inv: _memorize(state.selected(inv.indices["channel"])),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("MATH"), HeaderNode("INTerpolate")),
+        lambda inv, value: _setattr_response(
+            state.selected(inv.indices["channel"]), "math_interpolate", value
+        ),
+        parameters=(boolean,),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("MATH"), HeaderNode("INTerpolate")),
         lambda inv: _bool(state.selected(inv.indices["channel"]).math_interpolate),
-        query=True, available=channel_available, exists=selected_measurement_exists)
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
 
-    add((calc, marker), lambda inv, value: _marker_enable(state, inv, value),
-        parameters=(boolean,), available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker), lambda inv: _marker_query(state, inv, "enabled"),
-        query=True, available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("STATe")), lambda inv, value: _marker_enable(state, inv, value),
-        parameters=(boolean,), available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("STATe")), lambda inv: _marker_query(state, inv, "enabled"),
-        query=True, available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("X")), lambda inv, value: _marker_x(state, inv, value),
-        parameters=(ParameterSpec(ParameterType.NUMBER, units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"})),),
-        available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("X")), lambda inv: _marker_query(state, inv, "x"),
-        query=True, available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("Y")),
+    add(
+        (calc, marker),
+        lambda inv, value: _marker_enable(state, inv, value),
+        parameters=(boolean,),
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker),
+        lambda inv: _marker_query(state, inv, "enabled"),
+        query=True,
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("STATe")),
+        lambda inv, value: _marker_enable(state, inv, value),
+        parameters=(boolean,),
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("STATe")),
+        lambda inv: _marker_query(state, inv, "enabled"),
+        query=True,
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("X")),
+        lambda inv, value: _marker_x(state, inv, value),
+        parameters=(
+            ParameterSpec(ParameterType.NUMBER, units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"})),
+        ),
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("X")),
+        lambda inv: _marker_query(state, inv, "x"),
+        query=True,
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("Y")),
         lambda inv: state.marker_y(inv.indices["channel"], inv.indices["marker"]),
-        query=True, available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("BUCKet")), lambda inv, value: _marker_bucket(state, inv, value),
-        parameters=(ParameterSpec(ParameterType.INTEGER, minimum=0),), available=marker_available,
-        exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("BUCKet")), lambda inv: _marker_query(state, inv, "bucket"),
-        query=True, available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("FORMat")), lambda inv, value: _marker_format(state, inv, value),
+        query=True,
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("BUCKet")),
+        lambda inv, value: _marker_bucket(state, inv, value),
+        parameters=(ParameterSpec(ParameterType.INTEGER, minimum=0),),
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("BUCKet")),
+        lambda inv: _marker_query(state, inv, "bucket"),
+        query=True,
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("FORMat")),
+        lambda inv, value: _marker_format(state, inv, value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=MARKER_FORMATS),),
-        available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("FORMat")), lambda inv: _marker_query(state, inv, "format"),
-        query=True, available=marker_available, exists=selected_measurement_exists)
-    add((calc, marker, HeaderNode("FUNCtion"), HeaderNode("EXECute")),
-        lambda inv, value: state.marker_search(inv.indices["channel"], inv.indices["marker"], value) or "",
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("FORMat")),
+        lambda inv: _marker_query(state, inv, "format"),
+        query=True,
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, marker, HeaderNode("FUNCtion"), HeaderNode("EXECute")),
+        lambda inv, value: (
+            state.marker_search(inv.indices["channel"], inv.indices["marker"], value) or ""
+        ),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("MAX", "MIN")),),
-        available=marker_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("MARKer"), HeaderNode("AOFF")),
-        lambda inv: _markers_off(state.selected(inv.indices["channel"])), available=channel_available,
-        exists=selected_measurement_exists)
+        available=marker_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("MARKer"), HeaderNode("AOFF")),
+        lambda inv: _markers_off(state.selected(inv.indices["channel"])),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
 
-    add((calc, HeaderNode("LIMit"), HeaderNode("STATe")),
-        lambda inv, value: _setattr_response(state.selected(inv.indices["channel"]), "limit_enabled", value),
-        parameters=(boolean,), available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("LIMit"), HeaderNode("STATe")),
+    add(
+        (calc, HeaderNode("LIMit"), HeaderNode("STATe")),
+        lambda inv, value: _setattr_response(
+            state.selected(inv.indices["channel"]), "limit_enabled", value
+        ),
+        parameters=(boolean,),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("LIMit"), HeaderNode("STATe")),
         lambda inv: _bool(state.selected(inv.indices["channel"]).limit_enabled),
-        query=True, available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("LIMit"), HeaderNode("FAIL")),
-        lambda inv: _bool(state.selected(inv.indices["channel"]).limit_enabled and state.selected(inv.indices["channel"]).limit_failed),
-        query=True, available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("EQUation"), HeaderNode("TEXT")),
-        lambda inv, value: _setattr_response(state.selected(inv.indices["channel"]), "equation", value),
-        parameters=(string,), available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("EQUation"), HeaderNode("TEXT")),
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("LIMit"), HeaderNode("FAIL")),
+        lambda inv: _bool(
+            state.selected(inv.indices["channel"]).limit_enabled
+            and state.selected(inv.indices["channel"]).limit_failed
+        ),
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("EQUation"), HeaderNode("TEXT")),
+        lambda inv, value: _setattr_response(
+            state.selected(inv.indices["channel"]), "equation", value
+        ),
+        parameters=(string,),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("EQUation"), HeaderNode("TEXT")),
         lambda inv: state.selected(inv.indices["channel"]).equation,
-        query=True, available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("EQUation"), HeaderNode("STATe")),
-        lambda inv, value: _setattr_response(state.selected(inv.indices["channel"]), "equation_enabled", value),
-        parameters=(boolean,), available=channel_available, exists=selected_measurement_exists)
-    add((calc, HeaderNode("EQUation"), HeaderNode("STATe")),
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("EQUation"), HeaderNode("STATe")),
+        lambda inv, value: _setattr_response(
+            state.selected(inv.indices["channel"]), "equation_enabled", value
+        ),
+        parameters=(boolean,),
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
+    add(
+        (calc, HeaderNode("EQUation"), HeaderNode("STATe")),
         lambda inv: _bool(state.selected(inv.indices["channel"]).equation_enabled),
-        query=True, available=channel_available, exists=selected_measurement_exists)
+        query=True,
+        available=channel_available,
+        exists=selected_measurement_exists,
+    )
 
-    add((display, HeaderNode("CHANnel", index="channel", index_default=1), HeaderNode("STATe")),
+    add(
+        (display, HeaderNode("CHANnel", index="channel", index_default=1), HeaderNode("STATe")),
         lambda inv, enabled: _channel_state(state, inv.indices["channel"], enabled),
-        parameters=(boolean,), available=channel_available)
-    add((display, HeaderNode("CHANnel", index="channel", index_default=1), HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=channel_available,
+    )
+    add(
+        (display, HeaderNode("CHANnel", index="channel", index_default=1), HeaderNode("STATe")),
         lambda inv: _bool(inv.indices["channel"] in state.channels),
-        query=True, available=channel_available)
-    add((display, window, HeaderNode("STATe")),
+        query=True,
+        available=channel_available,
+    )
+    add(
+        (display, window, HeaderNode("STATe")),
         lambda inv, enabled: state.set_window(inv.indices["window"], enabled) or "",
-        parameters=(boolean,), available=window_available)
-    add((display, window, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=window_available,
+    )
+    add(
+        (display, window, HeaderNode("STATe")),
         lambda inv: _bool(inv.indices["window"] in state.windows),
-        query=True, available=window_available)
-    add((display, HeaderNode("CATalog")),
-        lambda inv: ",".join(str(number) for number in sorted(state.windows)) or "EMPTY", query=True)
-    add((display, window, HeaderNode("CATalog")),
-        lambda inv: _trace_catalog(state, inv.indices["window"]), query=True,
-        available=window_available, exists=window_exists)
-    add((display, window, trace, HeaderNode("FEED")),
+        query=True,
+        available=window_available,
+    )
+    add(
+        (display, HeaderNode("CATalog")),
+        lambda inv: ",".join(str(number) for number in sorted(state.windows)) or "EMPTY",
+        query=True,
+    )
+    add(
+        (display, window, HeaderNode("CATalog")),
+        lambda inv: _trace_catalog(state, inv.indices["window"]),
+        query=True,
+        available=window_available,
+        exists=window_exists,
+    )
+    add(
+        (display, window, trace, HeaderNode("FEED")),
         lambda inv, name: state.feed(inv.indices["window"], inv.indices["trace"], name) and "",
-        parameters=(string,), available=display_available)
-    add((display, window, trace, HeaderNode("FEED")),
+        parameters=(string,),
+        available=display_available,
+    )
+    add(
+        (display, window, trace, HeaderNode("FEED")),
         lambda inv: state.trace(inv.indices["window"], inv.indices["trace"]).measurement,
-        query=True, available=display_available, exists=trace_exists)
-    add((display, window, trace, HeaderNode("SELect")),
+        query=True,
+        available=display_available,
+        exists=trace_exists,
+    )
+    add(
+        (display, window, trace, HeaderNode("SELect")),
         lambda inv: state.select_trace(inv.indices["window"], inv.indices["trace"]) or "",
-        available=display_available, exists=trace_exists)
-    add((display, window, trace, HeaderNode("STATe")),
-        lambda inv, enabled: _trace_visible(state, inv, enabled), parameters=(boolean,),
-        available=display_available, exists=trace_exists)
-    add((display, window, trace, HeaderNode("STATe")),
+        available=display_available,
+        exists=trace_exists,
+    )
+    add(
+        (display, window, trace, HeaderNode("STATe")),
+        lambda inv, enabled: _trace_visible(state, inv, enabled),
+        parameters=(boolean,),
+        available=display_available,
+        exists=trace_exists,
+    )
+    add(
+        (display, window, trace, HeaderNode("STATe")),
         lambda inv: _bool(state.trace(inv.indices["window"], inv.indices["trace"]).visible),
-        query=True, available=display_available, exists=trace_exists)
-    add((display, window, trace, HeaderNode("TITLe"), HeaderNode("DATA")),
-        lambda inv, value: _trace_title(state, inv, value), parameters=(string,),
-        available=display_available, exists=trace_exists)
-    add((display, window, trace, HeaderNode("TITLe"), HeaderNode("DATA")),
+        query=True,
+        available=display_available,
+        exists=trace_exists,
+    )
+    add(
+        (display, window, trace, HeaderNode("TITLe"), HeaderNode("DATA")),
+        lambda inv, value: _trace_title(state, inv, value),
+        parameters=(string,),
+        available=display_available,
+        exists=trace_exists,
+    )
+    add(
+        (display, window, trace, HeaderNode("TITLe"), HeaderNode("DATA")),
         lambda inv: state.trace(inv.indices["window"], inv.indices["trace"]).title,
-        query=True, available=display_available, exists=trace_exists)
-    add((display, window, HeaderNode("TRACe"), HeaderNode("NEXT")),
-        lambda inv: str(_next_trace(state, inv.indices["window"])), query=True,
-        available=window_available, exists=window_exists)
+        query=True,
+        available=display_available,
+        exists=trace_exists,
+    )
+    add(
+        (display, window, HeaderNode("TRACe"), HeaderNode("NEXT")),
+        lambda inv: str(_next_trace(state, inv.indices["window"])),
+        query=True,
+        available=window_available,
+        exists=window_exists,
+    )
 
-    add((HeaderNode("SYSTem"), HeaderNode("ACTive"), HeaderNode("CHANnel")),
-        lambda inv: str(state.active_context()[0] if state.active_context() else 0), query=True)
-    add((HeaderNode("SYSTem"), HeaderNode("ACTive"), HeaderNode("MEASurement")),
-        lambda inv: state.active_context()[1].name if state.active_context() else "", query=True)
+    add(
+        (HeaderNode("SYSTem"), HeaderNode("ACTive"), HeaderNode("CHANnel")),
+        lambda inv: str(state.active_context()[0] if state.active_context() else 0),
+        query=True,
+    )
+    add(
+        (HeaderNode("SYSTem"), HeaderNode("ACTive"), HeaderNode("MEASurement")),
+        lambda inv: state.active_context()[1].name if state.active_context() else "",
+        query=True,
+    )
 
 
 def _modify(measurement: MeasurementState, parameter: str) -> str:

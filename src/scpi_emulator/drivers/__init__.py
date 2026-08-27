@@ -19,10 +19,10 @@ from .catalog import (
     SupportLevel,
     TransportDescriptor,
 )
-from .vna import VNA_DRIVER_ID, VNADriver
-from .dmm import DMM_DRIVER_ID, DMMDriver
 from .csv_driver import CSV_DRIVER_ID, CSVDriver
+from .dmm import DMM_DRIVER_ID, DMMDriver
 from .power_supply import POWER_SUPPLY_DRIVER_ID, PowerSupplyDriver
+from .vna import VNA_DRIVER_ID, VNADriver
 
 
 def build_driver_catalog(

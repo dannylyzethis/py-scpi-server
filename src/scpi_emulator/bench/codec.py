@@ -60,7 +60,9 @@ def _parse_bench(raw: Any) -> BenchDefinition:
         name=name,
         description=raw.get("description", ""),
         metadata=metadata,
-        instruments=tuple(_parse_instrument(item, index) for index, item in enumerate(instruments_raw)),
+        instruments=tuple(
+            _parse_instrument(item, index) for index, item in enumerate(instruments_raw)
+        ),
     )
 
 

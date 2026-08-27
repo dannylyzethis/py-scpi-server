@@ -175,7 +175,9 @@ def _validate_command(
     try:
         re.compile(firmware_pattern)
     except re.error as error:
-        raise ManifestError(f"command {command_id!r} has invalid firmware_pattern: {error}") from error
+        raise ManifestError(
+            f"command {command_id!r} has invalid firmware_pattern: {error}"
+        ) from error
 
     parameters = entry.get("parameters")
     response = entry.get("response")

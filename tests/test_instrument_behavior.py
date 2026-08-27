@@ -48,9 +48,7 @@ def test_undefined_header_is_reported_through_error_queue(
     instrument: SCPIInstrument,
 ) -> None:
     assert instrument.process_command("NOT:A:COMMAND") == ""
-    assert instrument.process_command("SYST:ERR?") == (
-        '-113,"Undefined header; NOT:A:COMMAND"'
-    )
+    assert instrument.process_command("SYST:ERR?") == ('-113,"Undefined header; NOT:A:COMMAND"')
 
 
 def test_semicolon_chain_collects_query_responses(instrument: SCPIInstrument) -> None:
@@ -116,9 +114,7 @@ def test_wai_blocks_later_program_units_and_abort_cancels_work(
 ) -> None:
     sweep = instrument.begin_operation("sweep")
     responses: Queue[str] = Queue()
-    thread = Thread(
-        target=lambda: responses.put(instrument.process_command("*WAI;*IDN?"))
-    )
+    thread = Thread(target=lambda: responses.put(instrument.process_command("*WAI;*IDN?")))
     thread.start()
 
     with pytest.raises(Empty):

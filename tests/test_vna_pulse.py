@@ -17,9 +17,7 @@ def pulse_vna(*streams: ScenarioStream, integrated=True) -> SCPIInstrument:
     capabilities = VNACapabilities.create(
         "vna-2-port", hardware_features=("pulse_control",), applications=options
     )
-    instrument = SCPIInstrument(
-        "Virtual VNA 2 Port", "pulse", vna_capabilities=capabilities
-    )
+    instrument = SCPIInstrument("Virtual VNA 2 Port", "pulse", vna_capabilities=capabilities)
     instrument.process_command("SENS:SWE:POIN 4")
     base = ScenarioStream(
         "S11",
@@ -63,9 +61,7 @@ def test_pulse_generator_configuration_round_trips() -> None:
     for command in commands:
         assert instrument.process_command(command) == ""
 
-    assert instrument.process_command("SENS:PULS:CAT?") == (
-        "Pulse0,Pulse1,Pulse2,Pulse3,Pulse4"
-    )
+    assert instrument.process_command("SENS:PULS:CAT?") == ("Pulse0,Pulse1,Pulse2,Pulse3,Pulse4")
     assert instrument.process_command("SENS:PULS1:STAT?") == "1"
     assert float(instrument.process_command("SENS:PULS1:DEL?")) == pytest.approx(50e-6)
     assert float(instrument.process_command("SENS:PULS1:WIDT?")) == pytest.approx(100e-6)
@@ -77,9 +73,7 @@ def test_pulse_generator_configuration_round_trips() -> None:
 
 
 def test_integrated_pulse_profile_changes_axis_and_uses_scenario_trace() -> None:
-    instrument = pulse_vna(
-        pulse_trace("pulse.profile", (0j, 1 + 0j, 0.5 + 0.25j, 0j))
-    )
+    instrument = pulse_vna(pulse_trace("pulse.profile", (0j, 1 + 0j, 0.5 + 0.25j, 0j)))
     instrument.process_command("SENS:SWE:PULS:PROF:STAR 0")
     instrument.process_command("SENS:SWE:PULS:PROF:STOP 30us")
     instrument.process_command("SENS:SWE:PULS:MODE PROF")
@@ -104,13 +98,9 @@ def test_point_in_pulse_follows_shared_trigger_policy() -> None:
     )
     instrument.process_command("SENS:SWE:PULS:MODE STD")
 
-    assert values(instrument.process_command("CALC:DATA? SDATA")) == (
-        1, 0, 1, 0, 1, 0, 1, 0
-    )
+    assert values(instrument.process_command("CALC:DATA? SDATA")) == (1, 0, 1, 0, 1, 0, 1, 0)
     instrument.process_command("INIT:IMM")
-    assert values(instrument.process_command("CALC:DATA? SDATA")) == (
-        2, 0, 2, 0, 2, 0, 2, 0
-    )
+    assert values(instrument.process_command("CALC:DATA? SDATA")) == (2, 0, 2, 0, 2, 0, 2, 0)
 
 
 def test_integrated_setup_if_filter_gate_and_master_timing_round_trip() -> None:

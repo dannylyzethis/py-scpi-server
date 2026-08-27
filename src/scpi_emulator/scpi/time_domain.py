@@ -123,9 +123,7 @@ class VNATimeDomainSystem:
             raise SCPICommandError(-222, "Data out of range; fixture port")
 
 
-def register_time_domain_commands(
-    registry: CommandRegistry, state: VNATimeDomainSystem
-) -> None:
+def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomainSystem) -> None:
     """Register profile-gated CALCulate time-domain and fixture command families."""
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     transform = (calc, HeaderNode("TRANsform"), HeaderNode("TIME"))
@@ -156,99 +154,167 @@ def register_time_domain_commands(
     time_license = licensed("time_domain", "time-domain", "enhanced_time_domain")
     fixture_license = licensed("fixture_removal", "fixture-removal")
 
-    add((*transform, HeaderNode("STATe")),
+    add(
+        (*transform, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "transform_enabled", value),
-        parameters=(boolean,), available=time_license)
-    add((*transform, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=time_license,
+    )
+    add(
+        (*transform, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).transform_enabled),
-        query=True, available=time_license)
-    add((*transform, HeaderNode("TYPE")),
+        query=True,
+        available=time_license,
+    )
+    add(
+        (*transform, HeaderNode("TYPE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "transform_type", value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("BANDpass", "LOWPass", "IMPulse", "STEP")),),
-        available=time_license)
-    add((*transform, HeaderNode("TYPE")),
+        parameters=(
+            ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "LOWPass", "IMPulse", "STEP")),
+        ),
+        available=time_license,
+    )
+    add(
+        (*transform, HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).transform_type,
-        query=True, available=time_license)
-    add((*transform, HeaderNode("WINDow")),
+        query=True,
+        available=time_license,
+    )
+    add(
+        (*transform, HeaderNode("WINDow")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "window", value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("MINimum", "NORMal", "MAXimum")),),
-        available=time_license)
-    add((*transform, HeaderNode("WINDow")),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("MINimum", "NORMal", "MAXimum")),),
+        available=time_license,
+    )
+    add(
+        (*transform, HeaderNode("WINDow")),
         lambda inv: state.channel(inv.indices["channel"]).window,
-        query=True, available=time_license)
+        query=True,
+        available=time_license,
+    )
 
-    add((*gate, HeaderNode("STATe")),
+    add(
+        (*gate, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_enabled", value),
-        parameters=(boolean,), available=time_license)
-    add((*gate, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=time_license,
+    )
+    add(
+        (*gate, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).gate_enabled),
-        query=True, available=time_license)
+        query=True,
+        available=time_license,
+    )
     for header, attribute in (("STARt", "gate_start"), ("STOP", "gate_stop")):
-        add((*gate, HeaderNode(header)),
+        add(
+            (*gate, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_gate(state, inv, name, value),
             parameters=(ParameterSpec(ParameterType.NUMBER, units=frozenset({"S"})),),
-            available=time_license)
-        add((*gate, HeaderNode(header)),
+            available=time_license,
+        )
+        add(
+            (*gate, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
-            query=True, available=time_license)
-    add((*gate, HeaderNode("TYPE")),
+            query=True,
+            available=time_license,
+        )
+    add(
+        (*gate, HeaderNode("TYPE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_type", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "NOTCh")),),
-        available=time_license)
-    add((*gate, HeaderNode("TYPE")),
+        available=time_license,
+    )
+    add(
+        (*gate, HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).gate_type,
-        query=True, available=time_license)
+        query=True,
+        available=time_license,
+    )
 
-    add((*fixture, HeaderNode("STATe")),
+    add(
+        (*fixture, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "fixture_enabled", value),
-        parameters=(boolean,), available=fixture_license)
-    add((*fixture, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=fixture_license,
+    )
+    add(
+        (*fixture, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).fixture_enabled),
-        query=True, available=fixture_license)
+        query=True,
+        available=fixture_license,
+    )
     fixture_port = (*fixture, HeaderNode("SEND"), HeaderNode("DEEMbed"), port)
-    add((*fixture_port, HeaderNode("USER"), HeaderNode("FILename")),
-        lambda inv, value: state.set_fixture_file(
-            inv.indices["channel"], inv.indices["port"], value
-        ) or "",
-        parameters=(ParameterSpec(ParameterType.STRING),), available=fixture_license)
-    add((*fixture_port, HeaderNode("USER"), HeaderNode("FILename")),
+    add(
+        (*fixture_port, HeaderNode("USER"), HeaderNode("FILename")),
+        lambda inv, value: (
+            state.set_fixture_file(inv.indices["channel"], inv.indices["port"], value) or ""
+        ),
+        parameters=(ParameterSpec(ParameterType.STRING),),
+        available=fixture_license,
+    )
+    add(
+        (*fixture_port, HeaderNode("USER"), HeaderNode("FILename")),
         lambda inv: state.fixture_file(inv.indices["channel"], inv.indices["port"]),
-        query=True, available=fixture_license)
-    add((*fixture_port, HeaderNode("STATe")),
-        lambda inv, value: state.set_fixture_port(
-            inv.indices["channel"], inv.indices["port"], value
-        ) or "",
-        parameters=(boolean,), available=fixture_license)
-    add((*fixture_port, HeaderNode("STATe")),
+        query=True,
+        available=fixture_license,
+    )
+    add(
+        (*fixture_port, HeaderNode("STATe")),
+        lambda inv, value: (
+            state.set_fixture_port(inv.indices["channel"], inv.indices["port"], value) or ""
+        ),
+        parameters=(boolean,),
+        available=fixture_license,
+    )
+    add(
+        (*fixture_port, HeaderNode("STATe")),
         lambda inv: _bool(state.fixture_port(inv.indices["channel"], inv.indices["port"])),
-        query=True, available=fixture_license)
+        query=True,
+        available=fixture_license,
+    )
     embedding_port = (*fixture, HeaderNode("SEND"), HeaderNode("EMBed"), port)
-    add((*embedding_port, HeaderNode("USER"), HeaderNode("FILename")),
-        lambda inv, value: state.set_embedding_file(
-            inv.indices["channel"], inv.indices["port"], value
-        ) or "",
-        parameters=(ParameterSpec(ParameterType.STRING),), available=fixture_license)
-    add((*embedding_port, HeaderNode("USER"), HeaderNode("FILename")),
+    add(
+        (*embedding_port, HeaderNode("USER"), HeaderNode("FILename")),
+        lambda inv, value: (
+            state.set_embedding_file(inv.indices["channel"], inv.indices["port"], value) or ""
+        ),
+        parameters=(ParameterSpec(ParameterType.STRING),),
+        available=fixture_license,
+    )
+    add(
+        (*embedding_port, HeaderNode("USER"), HeaderNode("FILename")),
         lambda inv: state.embedding_file(inv.indices["channel"], inv.indices["port"]),
-        query=True, available=fixture_license)
-    add((*embedding_port, HeaderNode("STATe")),
-        lambda inv, value: state.set_embedding_port(
-            inv.indices["channel"], inv.indices["port"], value
-        ) or "",
-        parameters=(boolean,), available=fixture_license)
-    add((*embedding_port, HeaderNode("STATe")),
+        query=True,
+        available=fixture_license,
+    )
+    add(
+        (*embedding_port, HeaderNode("STATe")),
+        lambda inv, value: (
+            state.set_embedding_port(inv.indices["channel"], inv.indices["port"], value) or ""
+        ),
+        parameters=(boolean,),
+        available=fixture_license,
+    )
+    add(
+        (*embedding_port, HeaderNode("STATe")),
         lambda inv: _bool(state.embedding_port(inv.indices["channel"], inv.indices["port"])),
-        query=True, available=fixture_license)
-    add((*fixture, HeaderNode("BALanced"), HeaderNode("TOPology")),
+        query=True,
+        available=fixture_license,
+    )
+    add(
+        (*fixture, HeaderNode("BALanced"), HeaderNode("TOPology")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "topology", value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("NONE", "BBALanced", "SBALanced", "MIXed")),),
-        available=fixture_license)
-    add((*fixture, HeaderNode("BALanced"), HeaderNode("TOPology")),
+        parameters=(
+            ParameterSpec(ParameterType.ENUM, choices=("NONE", "BBALanced", "SBALanced", "MIXed")),
+        ),
+        available=fixture_license,
+    )
+    add(
+        (*fixture, HeaderNode("BALanced"), HeaderNode("TOPology")),
         lambda inv: state.channel(inv.indices["channel"]).topology,
-        query=True, available=fixture_license)
+        query=True,
+        available=fixture_license,
+    )
 
 
 def _set(target, name: str, value) -> str:
@@ -302,14 +368,14 @@ def _window(samples: tuple[complex, ...], kind: str) -> tuple[complex, ...]:
     denominator = len(samples) - 1
     if kind == "MAXimum":
         weights = (
-            0.42 - 0.5 * math.cos(2 * math.pi * index / denominator)
+            0.42
+            - 0.5 * math.cos(2 * math.pi * index / denominator)
             + 0.08 * math.cos(4 * math.pi * index / denominator)
             for index in range(len(samples))
         )
     else:
         weights = (
-            0.5 - 0.5 * math.cos(2 * math.pi * index / denominator)
-            for index in range(len(samples))
+            0.5 - 0.5 * math.cos(2 * math.pi * index / denominator) for index in range(len(samples))
         )
     return tuple(value * weight for value, weight in zip(samples, weights))
 
@@ -334,8 +400,11 @@ def _idft(samples: tuple[complex, ...]) -> tuple[complex, ...]:
     if not count:
         return ()
     return tuple(
-        sum(value * cmath.exp(2j * math.pi * output * index / count)
-            for index, value in enumerate(samples)) / count
+        sum(
+            value * cmath.exp(2j * math.pi * output * index / count)
+            for index, value in enumerate(samples)
+        )
+        / count
         for output in range(count)
     )
 
@@ -343,8 +412,10 @@ def _idft(samples: tuple[complex, ...]) -> tuple[complex, ...]:
 def _dft(samples: tuple[complex, ...]) -> tuple[complex, ...]:
     count = len(samples)
     return tuple(
-        sum(value * cmath.exp(-2j * math.pi * output * index / count)
-            for index, value in enumerate(samples))
+        sum(
+            value * cmath.exp(-2j * math.pi * output * index / count)
+            for index, value in enumerate(samples)
+        )
         for output in range(count)
     )
 

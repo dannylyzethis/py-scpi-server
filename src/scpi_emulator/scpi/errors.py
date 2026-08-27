@@ -99,12 +99,14 @@ def standard_error(code: int, detail: str | None = None) -> SCPIErrorRecord:
     category = classify_error(code)
     message = _STANDARD_MESSAGES.get(code)
     if message is None:
-        message = _STANDARD_MESSAGES[{
-            ErrorCategory.COMMAND: -100,
-            ErrorCategory.EXECUTION: -200,
-            ErrorCategory.DEVICE: -300,
-            ErrorCategory.QUERY: -400,
-        }[category]]
+        message = _STANDARD_MESSAGES[
+            {
+                ErrorCategory.COMMAND: -100,
+                ErrorCategory.EXECUTION: -200,
+                ErrorCategory.DEVICE: -300,
+                ErrorCategory.QUERY: -400,
+            }[category]
+        ]
     if detail:
         message = f"{message}; {detail}"
     return SCPIErrorRecord(code, message, category)

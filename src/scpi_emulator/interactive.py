@@ -16,6 +16,7 @@ class InteractiveShell:
 
     def __getattr__(self, name):
         return getattr(self.manager, name)
+
     def run(self):
         """Interactive command-line interface"""
         print(f"\n SCPI Emulator Manager {__version__} - Interactive Mode")
@@ -39,28 +40,28 @@ class InteractiveShell:
         print("  help              - Show these commands")
         print("  quit              - Exit")
         print("=" * 60)
-        
+
         while True:
             try:
                 user_input = input("\nSCPI-MGR> ").strip()
-                
+
                 if not user_input:
                     continue
-                
+
                 parts = user_input.split(maxsplit=1)
                 command = parts[0].lower()
-                
-                if command == 'quit':
+
+                if command == "quit":
                     if self.active_running:
                         self.stop_active_servers()
                     break
-                
-                elif command == 'load':
+
+                elif command == "load":
                     if len(parts) < 2:
                         print("Usage: load <path> or load bench <file>")
                         continue
                     argument = parts[1].strip()
-                    if argument.casefold().startswith('bench '):
+                    if argument.casefold().startswith("bench "):
                         file_path = _interactive_path(argument[6:])
                         try:
                             self.load_bench_file(file_path)
@@ -76,7 +77,7 @@ class InteractiveShell:
                         else:
                             print(f"[ERROR] Could not load instruments from {file_path!r}")
 
-                elif command == 'bench':
+                elif command == "bench":
                     if len(parts) < 2:
                         print("Usage: bench <file>")
                         continue
@@ -88,14 +89,14 @@ class InteractiveShell:
                     except Exception as error:
                         print(f"[ERROR] Could not load bench {file_path!r}: {error}")
 
-                elif command == 'instruments':
+                elif command == "instruments":
                     self._print_configured_instruments()
 
-                elif command == 'catalog':
+                elif command == "catalog":
                     self._print_catalog(parts[1] if len(parts) > 1 else "")
 
-                elif command == 'create':
-                    if len(parts) < 2 or not parts[1].casefold().startswith('bench '):
+                elif command == "create":
+                    if len(parts) < 2 or not parts[1].casefold().startswith("bench "):
                         print("Usage: create bench <file>")
                         continue
                     target = Path(_interactive_path(parts[1][6:])).resolve()
@@ -105,7 +106,7 @@ class InteractiveShell:
 
                         csv_directory = (
                             target.parent
-                            if target.parent.is_dir() and any(target.parent.glob('*.csv'))
+                            if target.parent.is_dir() and any(target.parent.glob("*.csv"))
                             else None
                         )
                         catalog = build_driver_catalog(csv_directory=csv_directory)
@@ -118,8 +119,8 @@ class InteractiveShell:
                         print(f"Bench creation cancelled: {error}")
                     except Exception as error:
                         print(f"[ERROR] Could not create bench {str(target)!r}: {error}")
-                
-                elif command == 'start':
+
+                elif command == "start":
                     if not self.active_instruments:
                         print("[ERROR] No instruments loaded. Use 'load' or 'load bench' first.")
                         continue
@@ -133,8 +134,8 @@ class InteractiveShell:
                     else:
                         print("[OK] Active instruments started")
                         self._print_configured_instruments()
-                
-                elif command == 'web':
+
+                elif command == "web":
                     try:
                         started = self.start_active_dashboard()
                     except Exception as error:
@@ -145,29 +146,29 @@ class InteractiveShell:
                     else:
                         print("[OK] Web dashboard started at http://127.0.0.1:8081")
 
-                elif command == 'scenario':
+                elif command == "scenario":
                     self._interactive_scenario(parts[1] if len(parts) > 1 else "")
-                
-                elif command == 'status':
+
+                elif command == "status":
                     source = self._active_source or "none"
                     state = "running" if self.active_running else "stopped"
                     print(f"Active configuration: {source}")
                     print(f"Server state: {state}")
                     self._print_configured_instruments()
-                
-                elif command == 'stop':
+
+                elif command == "stop":
                     self.stop_active_servers()
                     print("[OK] Active instruments stopped")
 
-                elif command == 'help':
+                elif command == "help":
                     print(
                         "Use load, load bench, create bench, instruments, catalog, start, "
                         "web, scenario, status, stop, or quit."
                     )
-                
+
                 else:
                     print(f"[ERROR] Unknown command: {command}")
-                    
+
             except KeyboardInterrupt:
                 print("\nShutting down...")
                 if self.active_running:
@@ -195,10 +196,7 @@ class InteractiveShell:
                     instrument_id,
                     lambda instrument: instrument.scenario_control.select(definition),
                 )
-                print(
-                    f"[OK] Scenario {result['scenario']!r} loaded for {instrument_id} "
-                    "(paused)"
-                )
+                print(f"[OK] Scenario {result['scenario']!r} loaded for {instrument_id} (paused)")
             except (KeyError, OSError, ScenarioError, RuntimeError, TypeError, ValueError) as error:
                 print(f"[ERROR] Could not load scenario {str(scenario_path)!r}: {error}")
             return
@@ -245,9 +243,9 @@ class InteractiveShell:
         entry = self.active_instruments.get(instrument_id)
         if entry is None:
             raise KeyError(f"instrument {instrument_id!r} is not configured")
-        instrument = entry.get('instrument') if isinstance(entry, dict) else None
+        instrument = entry.get("instrument") if isinstance(entry, dict) else None
         if instrument is None:
-            instrument = getattr(entry, 'instrument', None)
+            instrument = getattr(entry, "instrument", None)
         if instrument is None:
             raise KeyError(f"instrument {instrument_id!r} is not configured")
         return instrument
@@ -255,13 +253,13 @@ class InteractiveShell:
     def _execute_interactive_scenario(self, instrument_id, action):
         instrument = self._scenario_instrument(instrument_id)
         server = self.active_runtime.servers.get(instrument_id)
-        if server is not None and hasattr(server, 'execute_control_action'):
+        if server is not None and hasattr(server, "execute_control_action"):
             result = server.execute_control_action(action)
         else:
             result = action(instrument)
-        dashboard = getattr(self.active_runtime, 'web_dashboard', None)
+        dashboard = getattr(self.active_runtime, "web_dashboard", None)
         if dashboard is not None:
-            dashboard.emit_state_changed('scenario-interactive', instrument_id)
+            dashboard.emit_state_changed("scenario-interactive", instrument_id)
         return result
 
     @staticmethod
@@ -270,7 +268,7 @@ class InteractiveShell:
             f"Scenario {instrument_id}: {scenario['state']} | "
             f"{scenario['scenario'] or 'none'} | seed {scenario['seed']}"
         )
-        displayed = positions if positions is not None else scenario['streams']
+        displayed = positions if positions is not None else scenario["streams"]
         for position in displayed:
             print(
                 f"  {position['stream']}: sample {position['index'] + 1}/"
@@ -303,11 +301,11 @@ class InteractiveShell:
 
         argument = argument.strip()
         try:
-            if argument.casefold().startswith('csv '):
+            if argument.casefold().startswith("csv "):
                 directory = _interactive_path(argument[4:])
                 self._interactive_catalog = build_driver_catalog(csv_directory=directory)
                 print(f"[OK] Included CSV instruments from {directory}")
-                argument = 'csv-instruments'
+                argument = "csv-instruments"
             elif self._interactive_catalog is None:
                 self._interactive_catalog = build_driver_catalog()
             selected = argument.split(maxsplit=1) if argument else []
@@ -334,9 +332,7 @@ class InteractiveShell:
             print(f"  Firmware: {', '.join(model.firmware_snapshots)}")
             print(
                 "  Transports: "
-                + ", ".join(
-                    f"{item.name} ({item.support.value})" for item in driver.transports
-                )
+                + ", ".join(f"{item.name} ({item.support.value})" for item in driver.transports)
             )
             print(f"  Hardware features: {len(model.available_hardware_features)}")
             print(f"  Applications: {len(model.available_applications)}")
@@ -355,8 +351,7 @@ class InteractiveShell:
                 print(
                     "  Scenario inputs: "
                     + ", ".join(
-                        f"{item.kind} ({item.support.value})"
-                        for item in driver.scenario_inputs
+                        f"{item.kind} ({item.support.value})" for item in driver.scenario_inputs
                     )
                 )
             coverage = [item for item in driver.command_coverage if item.model == model.model]
@@ -372,11 +367,9 @@ class InteractiveShell:
             print(f"[ERROR] Could not browse catalog: {error}")
 
 
-
-
 def _interactive_path(value):
     value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'\"', "'"}:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
         return value[1:-1]
     return value
 
@@ -391,19 +384,19 @@ def _interactive_instrument_row(
     serial=None,
     reported_model=None,
 ):
-    identity = str(getattr(instrument, 'identification', '')).split(',', 3)
+    identity = str(getattr(instrument, "identification", "")).split(",", 3)
     model = model or (
-        identity[1] if len(identity) == 4 else getattr(instrument, 'name', instrument_id)
+        identity[1] if len(identity) == 4 else getattr(instrument, "name", instrument_id)
     )
     serial = serial or (identity[2] if len(identity) == 4 else instrument_id)
     reported_model = reported_model or (
-        identity[1] if len(identity) == 4 else getattr(instrument, 'name', instrument_id)
+        identity[1] if len(identity) == 4 else getattr(instrument, "name", instrument_id)
     )
     return {
-        'id': instrument_id,
-        'model': model,
-        'reported_model': reported_model,
-        'serial': serial,
-        'state': 'running' if running else 'stopped',
-        'resource': resource,
+        "id": instrument_id,
+        "model": model,
+        "reported_model": reported_model,
+        "serial": serial,
+        "state": "running" if running else "stopped",
+        "resource": resource,
     }

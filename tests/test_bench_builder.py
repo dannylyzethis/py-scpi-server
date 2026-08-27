@@ -18,8 +18,7 @@ def answers(*values):
 
 def test_guided_builder_creates_atomic_mixed_bench_with_safe_defaults(tmp_path) -> None:
     (tmp_path / "relay.csv").write_text(
-        "Equipment,Port,Command,Response,Validation\n"
-        "Bench Relay,,STATE?,OPEN,\n",
+        "Equipment,Port,Command,Response,Validation\nBench Relay,,STATE?,OPEN,\n",
         encoding="utf-8",
     )
     target = tmp_path / "mixed bench.json"
@@ -99,9 +98,7 @@ def test_guided_builder_makes_all_applications_a_single_choice(tmp_path) -> None
     composed = BenchComposer(build_driver_catalog(discover_plugins=False)).compose(
         load_bench(target)
     )
-    assert "APP-TIME-DOMAIN" in composed.instrument("vna1").instrument.process_command(
-        "*OPT?"
-    )
+    assert "APP-TIME-DOMAIN" in composed.instrument("vna1").instrument.process_command("*OPT?")
 
 
 def test_advanced_frequency_prompts_accept_scientific_notation_and_retry_ranges(

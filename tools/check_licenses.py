@@ -12,7 +12,6 @@ from packaging.markers import default_environment
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-
 ROOT = Path(__file__).resolve().parents[1]
 INVENTORY_PATH = ROOT / "licenses" / "dependencies.json"
 
@@ -31,13 +30,10 @@ def _dependency_closure(roots: list[str]) -> dict[str, metadata.Distribution]:
             requirement = Requirement(raw_requirement)
             contexts = active_extras or frozenset({""})
             if requirement.marker and not any(
-                requirement.marker.evaluate({**environment, "extra": extra})
-                for extra in contexts
+                requirement.marker.evaluate({**environment, "extra": extra}) for extra in contexts
             ):
                 continue
-            pending.append(
-                (canonicalize_name(requirement.name), frozenset(requirement.extras))
-            )
+            pending.append((canonicalize_name(requirement.name), frozenset(requirement.extras)))
     return found
 
 
@@ -79,9 +75,7 @@ def _reviewed_versions(entry: dict[str, object]) -> set[str]:
 def main() -> int:
     inventory = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
     requirements = inventory["policy"].get("requirements", {})
-    packages = {
-        canonicalize_name(name): entry for name, entry in inventory["packages"].items()
-    }
+    packages = {canonicalize_name(name): entry for name, entry in inventory["packages"].items()}
     permitted = set(inventory["policy"]["permitted_licenses"])
     errors: list[str] = []
 

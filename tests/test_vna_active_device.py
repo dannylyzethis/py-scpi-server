@@ -60,12 +60,8 @@ def test_gain_compression_configuration_and_scenario_results() -> None:
 
     assert instrument.process_command("SENS:GC:COMP:REF?") == "EXTernal"
     assert instrument.process_command("SENS:GC:SWE:POIN?") == "5"
-    assert numbers(instrument.process_command("CALC:GC:DATA? GAIN")) == (
-        12, 12, 11.5, 10.5, 9
-    )
-    assert numbers(instrument.process_command("CALC:GC:DATA? IPOW")) == (
-        -20, -15, -10, -5, 0
-    )
+    assert numbers(instrument.process_command("CALC:GC:DATA? GAIN")) == (12, 12, 11.5, 10.5, 9)
+    assert numbers(instrument.process_command("CALC:GC:DATA? IPOW")) == (-20, -15, -10, -5, 0)
     assert instrument.process_command("CALC:GC:RES:PIN?") == "-5"
     assert instrument.process_command("CALC:GC:RES:GAIN?") == "10.5"
     assert instrument.process_command("CALC:GC:STAT?") == "1"
@@ -88,15 +84,9 @@ def test_noise_figure_configuration_and_scenario_results() -> None:
         assert instrument.process_command(command) == ""
 
     assert instrument.process_command("SENS:NOIS:BAND?") == "10000000.0"
-    assert numbers(instrument.process_command("CALC:NOIS:DATA? NF")) == (
-        2.1, 2.2, 2.3, 2.4
-    )
-    assert numbers(instrument.process_command("CALC:NOIS:DATA? GAIN")) == (
-        15, 14, 13, 12
-    )
-    assert numbers(instrument.process_command("CALC:NOIS:DATA? YFAC")) == (
-        1.6, 1.7, 1.8, 1.9
-    )
+    assert numbers(instrument.process_command("CALC:NOIS:DATA? NF")) == (2.1, 2.2, 2.3, 2.4)
+    assert numbers(instrument.process_command("CALC:NOIS:DATA? GAIN")) == (15, 14, 13, 12)
+    assert numbers(instrument.process_command("CALC:NOIS:DATA? YFAC")) == (1.6, 1.7, 1.8, 1.9)
     assert instrument.process_command("CALC:NOIS:RES:NF?") == "2.25"
     assert instrument.process_command("SENS:NOIS:CAL:STAT?") == "0"
 
@@ -148,6 +138,4 @@ def test_trigger_policy_advances_shared_gain_result_stream() -> None:
 def test_bad_active_device_trace_length_reports_data_error() -> None:
     instrument = active_device_vna(trace("noise_figure.nf", (1, 2)))
     assert instrument.process_command("CALC:NOIS:DATA? NF") == ""
-    assert instrument.process_command("SYST:ERR?").startswith(
-        '-230,"Data corrupt or stale'
-    )
+    assert instrument.process_command("SYST:ERR?").startswith('-230,"Data corrupt or stale')

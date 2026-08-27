@@ -13,9 +13,7 @@ def licensed_vna() -> SCPIInstrument:
     capabilities = VNACapabilities.create(
         "vna-2-port", applications=("time_domain", "fixture_removal")
     )
-    instrument = SCPIInstrument(
-        "Virtual VNA 2 Port", "time-domain", vna_capabilities=capabilities
-    )
+    instrument = SCPIInstrument("Virtual VNA 2 Port", "time-domain", vna_capabilities=capabilities)
     instrument.process_command("SENS:SWE:POIN 4")
     stream = ScenarioStream(
         "S11",
@@ -40,9 +38,9 @@ def test_time_transform_round_trips_and_changes_data_and_axis() -> None:
     assert instrument.process_command("CALC:TRAN:TIME:WIND?") == "MINimum"
     assert instrument.process_command("CALC:TRAN:TIME:STAT?") == "1"
     assert instrument.process_command("CALC:DATA? SDAT") != frequency_data
-    time_axis = tuple(float(value) for value in instrument.process_command(
-        "CALC:MEAS:DATA:X?"
-    ).split(","))
+    time_axis = tuple(
+        float(value) for value in instrument.process_command("CALC:MEAS:DATA:X?").split(",")
+    )
     assert time_axis[0] == 0
     assert time_axis[-1] > 0
     assert ",".join(str(value) for value in time_axis) != frequency_axis
@@ -69,28 +67,22 @@ def test_fixture_file_port_and_balanced_topology_change_results() -> None:
     instrument = licensed_vna()
     original = instrument.process_command("CALC:DATA? SDAT")
 
-    instrument.process_command(
-        'CALC:FSIM:SEND:DEEM:PORT1:USER:FIL "fixture-port-1.s2p"'
-    )
+    instrument.process_command('CALC:FSIM:SEND:DEEM:PORT1:USER:FIL "fixture-port-1.s2p"')
     instrument.process_command("CALC:FSIM:SEND:DEEM:PORT1:STAT ON")
     instrument.process_command("CALC:FSIM:BAL:TOP BBAL")
     instrument.process_command("CALC:FSIM:STAT ON")
-    assert instrument.process_command(
-        "CALC:FSIM:SEND:DEEM:PORT1:USER:FIL?"
-    ) == "fixture-port-1.s2p"
+    assert instrument.process_command("CALC:FSIM:SEND:DEEM:PORT1:USER:FIL?") == "fixture-port-1.s2p"
     assert instrument.process_command("CALC:FSIM:SEND:DEEM:PORT1:STAT?") == "1"
     assert instrument.process_command("CALC:FSIM:BAL:TOP?") == "BBALanced"
     assert instrument.process_command("CALC:FSIM:STAT?") == "1"
     assert instrument.process_command("CALC:DATA? SDAT") != original
 
-    instrument.process_command(
-        'CALC:FSIM:SEND:EMB:PORT2:USER:FIL "embedding-port-2.s2p"'
-    )
+    instrument.process_command('CALC:FSIM:SEND:EMB:PORT2:USER:FIL "embedding-port-2.s2p"')
     instrument.process_command("CALC:FSIM:SEND:EMB:PORT2:STAT ON")
     instrument.process_command("CALC:FSIM:BAL:TOP MIX")
-    assert instrument.process_command(
-        "CALC:FSIM:SEND:EMB:PORT2:USER:FIL?"
-    ) == "embedding-port-2.s2p"
+    assert (
+        instrument.process_command("CALC:FSIM:SEND:EMB:PORT2:USER:FIL?") == "embedding-port-2.s2p"
+    )
     assert instrument.process_command("CALC:FSIM:SEND:EMB:PORT2:STAT?") == "1"
     assert instrument.process_command("CALC:FSIM:BAL:TOP?") == "MIXed"
 
@@ -151,9 +143,7 @@ def test_invalid_gate_and_fixture_inputs_report_scpi_errors() -> None:
     assert instrument.process_command("CALC:FILT:TIME:STOP 0S") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
 
-    assert instrument.process_command(
-        'CALC:FSIM:SEND:DEEM:PORT1:USER:FIL ""'
-    ) == ""
+    assert instrument.process_command('CALC:FSIM:SEND:DEEM:PORT1:USER:FIL ""') == ""
     assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
     assert instrument.process_command("CALC:FSIM:SEND:DEEM:PORT3:STAT ON") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')

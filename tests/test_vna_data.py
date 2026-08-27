@@ -15,8 +15,11 @@ from scpi_emulator.scpi import BinaryResponse
 
 def trace_stream(name, traces, *, advance=AdvancePolicy.READ):
     return ScenarioStream(
-        name, StreamKind.TRACE, tuple(ScenarioSample(value) for value in traces),
-        advance=advance, end=EndPolicy.HOLD_LAST,
+        name,
+        StreamKind.TRACE,
+        tuple(ScenarioSample(value) for value in traces),
+        advance=advance,
+        end=EndPolicy.HOLD_LAST,
     )
 
 
@@ -57,9 +60,9 @@ def test_late_measurement_binding_and_wrong_length_report_scpi_data_error() -> N
 
 
 def test_trigger_policy_advances_shared_player_used_by_vna_adapter() -> None:
-    instrument = instrument_with(trace_stream(
-        "S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.TRIGGER
-    ))
+    instrument = instrument_with(
+        trace_stream("S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.TRIGGER)
+    )
     instrument.process_command("FORM:DATA ASC")
     assert instrument.process_command("CALC:DATA? SDAT") == "1.0,0.0,1.0,0.0"
     instrument.process_command("INIT")
@@ -67,9 +70,9 @@ def test_trigger_policy_advances_shared_player_used_by_vna_adapter() -> None:
 
 
 def test_reset_rewinds_same_shared_player_while_cls_preserves_position() -> None:
-    instrument = instrument_with(trace_stream(
-        "S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.READ
-    ))
+    instrument = instrument_with(
+        trace_stream("S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.READ)
+    )
     instrument.process_command("FORM:DATA ASC")
     assert instrument.process_command("CALC:DATA? SDAT").startswith("1.0")
     instrument.process_command("*CLS")
@@ -94,18 +97,19 @@ def test_receiver_and_snp_queries_use_named_streams_and_column_order() -> None:
     instrument.process_command("FORM:DATA ASC")
 
     assert instrument.process_command("CALC:RDATA? A") == "10.0,1.0,20.0,2.0"
-    values = tuple(float(value) for value in instrument.process_command(
-        'CALC:DATA:SNP:PORTS? "1,2"'
-    ).split(","))
+    values = tuple(
+        float(value)
+        for value in instrument.process_command('CALC:DATA:SNP:PORTS? "1,2"').split(",")
+    )
     assert len(values) == 18  # 2 X values + 4 S-parameters * (2 real + 2 imaginary)
     assert values[2:6] == (1.0, 2.0, 0.1, 0.2)
     assert values[6:10] == (3.0, 4.0, 0.3, 0.4)
 
 
 def test_operation_completion_policy_advances_after_sweep_finishes() -> None:
-    instrument = instrument_with(trace_stream(
-        "S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.OPERATION
-    ))
+    instrument = instrument_with(
+        trace_stream("S11", ((1 + 0j, 1 + 0j), (2 + 0j, 2 + 0j)), advance=AdvancePolicy.OPERATION)
+    )
     instrument.process_command("FORM:DATA ASC")
     instrument.process_command("SENS:BAND 1MHz")
     assert instrument.process_command("CALC:DATA? SDAT").startswith("1.0")

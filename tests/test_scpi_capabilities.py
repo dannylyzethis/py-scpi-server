@@ -7,9 +7,7 @@ from scpi_emulator.scpi import CapabilityError, CommandSpec, HeaderNode, VNACapa
 def test_default_generic_identity_topology_and_frequency_are_consistent() -> None:
     instrument = SCPIInstrument("Virtual VNA 2 Port", "vna")
 
-    assert instrument.process_command("*IDN?") == (
-        "SCPI Emulator,vna-2-port,EMU00000001,E.1.0"
-    )
+    assert instrument.process_command("*IDN?") == ("SCPI Emulator,vna-2-port,EMU00000001,E.1.0")
     options = instrument.process_command("*OPT?").split(",")
     assert options[:2] == ["PORTS-2", "SOURCES-1"]
     assert "HW-NOISE-RECEIVER" in options

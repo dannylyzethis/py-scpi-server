@@ -5,7 +5,6 @@ import pytest
 from scpi_emulator.dashboard import HAS_FLASK, WebDashboard
 from scpi_emulator.emulator import SCPIInstrument
 
-
 pytestmark = pytest.mark.skipif(not HAS_FLASK, reason="web extras are not installed")
 
 
@@ -246,20 +245,24 @@ def test_remote_scenario_api_requires_bearer_and_csrf_tokens() -> None:
     client = dashboard.app.test_client()
 
     assert client.get("/api/session").status_code == 401
-    session = client.get(
-        "/api/session", headers={"Authorization": "Bearer remote-secret"}
-    )
+    session = client.get("/api/session", headers={"Authorization": "Bearer remote-secret"})
     csrf = session.get_json()["csrf_token"]
-    assert client.put(
-        "/api/scenario/dmm1",
-        headers={"Authorization": "Bearer remote-secret"},
-        json={"scenario": dmm_scenario()},
-    ).status_code == 403
-    assert client.put(
-        "/api/scenario/dmm1",
-        headers={
-            "Authorization": "Bearer remote-secret",
-            "X-SCPI-CSRF": csrf,
-        },
-        json={"scenario": dmm_scenario()},
-    ).status_code == 200
+    assert (
+        client.put(
+            "/api/scenario/dmm1",
+            headers={"Authorization": "Bearer remote-secret"},
+            json={"scenario": dmm_scenario()},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.put(
+            "/api/scenario/dmm1",
+            headers={
+                "Authorization": "Bearer remote-secret",
+                "X-SCPI-CSRF": csrf,
+            },
+            json={"scenario": dmm_scenario()},
+        ).status_code
+        == 200
+    )

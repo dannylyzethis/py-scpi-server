@@ -4,9 +4,7 @@ from scpi_emulator.emulator import SCPIInstrument
 
 
 def vna(tmp_path, instrument_id="vna-2-port"):
-    return SCPIInstrument(
-        "Virtual VNA 2 Port", instrument_id, state_directory=tmp_path
-    )
+    return SCPIInstrument("Virtual VNA 2 Port", instrument_id, state_directory=tmp_path)
 
 
 def test_named_state_file_round_trip_persists_existence_only(tmp_path):
@@ -68,9 +66,7 @@ def test_recall_rejects_dangling_trace_atomically(tmp_path):
     payload = {
         "schema_version": 1,
         "channels": [{"number": 2, "measurements": []}],
-        "windows": [
-            {"number": 2, "traces": [{"number": 1, "measurement": "missing"}]}
-        ],
+        "windows": [{"number": 2, "traces": [{"number": 1, "measurement": "missing"}]}],
     }
     (directory / "dangling.sta").write_text(json.dumps(payload), encoding="utf-8")
 

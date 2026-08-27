@@ -6,7 +6,6 @@ import ipaddress
 import socket
 from dataclasses import dataclass
 
-
 HISLIP_SERVICE_TYPE = "_hislip._tcp.local."
 VXI11_SERVICE_TYPE = "_vxi-11._tcp.local."
 

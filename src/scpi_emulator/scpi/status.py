@@ -15,7 +15,6 @@ from .registry import (
     ParameterType,
 )
 
-
 EVENT_REGISTER_MASK = 0xFF
 STATUS_REGISTER_MASK = 0x7FFF
 
@@ -50,9 +49,7 @@ class StatusRegisterGroup:
         with self._lock:
             rising = ~self.condition & value & STATUS_REGISTER_MASK
             falling = self.condition & ~value & STATUS_REGISTER_MASK
-            self.event |= (rising & self.positive_transition) | (
-                falling & self.negative_transition
-            )
+            self.event |= (rising & self.positive_transition) | (falling & self.negative_transition)
             self.condition = value
 
     def read_condition(self) -> int:
@@ -200,9 +197,7 @@ class StatusSystem:
 def register_status_commands(registry: CommandRegistry, status: StatusSystem) -> None:
     """Register IEEE common and SCPI status commands on a typed registry."""
     integer_8 = (ParameterSpec(ParameterType.INTEGER, minimum=0, maximum=255),)
-    integer_15 = (
-        ParameterSpec(ParameterType.INTEGER, minimum=0, maximum=STATUS_REGISTER_MASK),
-    )
+    integer_15 = (ParameterSpec(ParameterType.INTEGER, minimum=0, maximum=STATUS_REGISTER_MASK),)
 
     def common(name: str, handler, *, query: bool = False, parameters=()) -> None:
         registry.register(

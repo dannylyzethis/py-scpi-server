@@ -11,7 +11,6 @@ from typing import Any
 
 from .registry import CommandRegistry, CommandSpec, HeaderNode, ParameterSpec, ParameterType
 
-
 DEFAULT_FREQUENCY_MINIMUM_HZ = 10_000_000
 DEFAULT_FREQUENCY_MAXIMUM_HZ = 50_000_000_000
 GENERIC_VNA_MODELS = ("vna-2-port", "vna-4-port")
@@ -65,7 +64,9 @@ class VNACapabilities:
             raise CapabilityError(f"unsupported VNA model {model!r}; choose {valid}")
         model_data = models[model]
         ports = model_data["ports"]
-        selected_sources = model_data["default_source_count"] if source_count is None else source_count
+        selected_sources = (
+            model_data["default_source_count"] if source_count is None else source_count
+        )
         if isinstance(selected_sources, bool) or not isinstance(selected_sources, int):
             raise CapabilityError("source_count must be an integer")
         if selected_sources not in (1, 2):
@@ -179,8 +180,10 @@ def _select_applications(
     source_count: int,
     hardware_features: frozenset[str],
 ) -> tuple[str, ...]:
-    normalized = ("all",) if requested is None else tuple(
-        dict.fromkeys(_normalize_identifier(value) for value in requested)
+    normalized = (
+        ("all",)
+        if requested is None
+        else tuple(dict.fromkeys(_normalize_identifier(value) for value in requested))
     )
     if "all" in normalized:
         if len(normalized) != 1:
@@ -299,9 +302,7 @@ def detect_vna_model(*values: str) -> str | None:
     return f"vna-{display_match.group(1)}-port" if display_match else None
 
 
-def register_capability_commands(
-    registry: CommandRegistry, capabilities: VNACapabilities
-) -> None:
+def register_capability_commands(registry: CommandRegistry, capabilities: VNACapabilities) -> None:
     """Register model identity and the core virtual capability catalogs."""
     _register_query(
         registry,
@@ -347,7 +348,9 @@ def register_capability_commands(
     _register_query(registry, (*source_ports, HeaderNode("COUNt")), lambda: str(capabilities.ports))
     source_internal = (*source_ports, HeaderNode("INTernal"))
     _register_query(registry, (*source_internal, HeaderNode("CATalog")), port_catalog)
-    _register_query(registry, (*source_internal, HeaderNode("COUNt")), lambda: str(capabilities.ports))
+    _register_query(
+        registry, (*source_internal, HeaderNode("COUNt")), lambda: str(capabilities.ports)
+    )
 
     _register_query(
         registry,
@@ -383,9 +386,7 @@ def register_capability_commands(
                     choices=("VALID", "ALL", "IGNORED"),
                 ),
             ),
-            handler=lambda invocation, selection: ",".join(
-                capabilities.license_catalog(selection)
-            ),
+            handler=lambda invocation, selection: ",".join(capabilities.license_catalog(selection)),
             query=True,
         )
     )
@@ -418,7 +419,10 @@ def _register_attenuator_queries(
         prefix = (*attenuator, HeaderNode(kind))
         for endpoint, response in (
             ("EXISts", lambda: _boolean(capabilities.has_attenuators)),
-            ("MAXimum", lambda maximum=maximum: str(maximum if capabilities.has_attenuators else 0)),
+            (
+                "MAXimum",
+                lambda maximum=maximum: str(maximum if capabilities.has_attenuators else 0),
+            ),
             ("STEP", lambda: "5" if capabilities.has_attenuators else "0"),
         ):
             registry.register(

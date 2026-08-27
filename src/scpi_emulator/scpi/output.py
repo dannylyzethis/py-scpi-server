@@ -156,9 +156,7 @@ class OutputQueue:
             self.status.set_output_queue_count(0)
 
 
-def register_format_commands(
-    registry: CommandRegistry, data_format: DataFormat
-) -> None:
+def register_format_commands(registry: CommandRegistry, data_format: DataFormat) -> None:
     format_path = (HeaderNode("FORMat"), HeaderNode("DATA"))
     registry.register(
         CommandSpec(
@@ -171,9 +169,7 @@ def register_format_commands(
                 ),
                 ParameterSpec(ParameterType.INTEGER, "width", required=False, default=None),
             ),
-            handler=lambda invocation, kind, bits: _configure_response(
-                data_format, kind, bits
-            ),
+            handler=lambda invocation, kind, bits: _configure_response(data_format, kind, bits),
         )
     )
     registry.register(
@@ -222,7 +218,5 @@ def _configure_response(data_format: DataFormat, kind: str, bits: int | None) ->
 
 
 def _border_response(data_format: DataFormat, value: str) -> str:
-    data_format.byte_order = (
-        ByteOrder.NORMAL if value in ("NORM", "NORMAL") else ByteOrder.SWAPPED
-    )
+    data_format.byte_order = ByteOrder.NORMAL if value in ("NORM", "NORMAL") else ByteOrder.SWAPPED
     return ""

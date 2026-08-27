@@ -214,8 +214,7 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
     def range_exists(inv):
         return (
             measurement_exists(inv)
-            and inv.indices.get("range", 1)
-            in state.channel(inv.indices.get("channel", 1)).ranges
+            and inv.indices.get("range", 1) in state.channel(inv.indices.get("channel", 1)).ranges
         )
 
     def segment_exists(inv):
@@ -234,149 +233,278 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
     )
     embedded_license = licensed("embedded_lo", "embedded-lo")
 
-    def add(path, handler, *, query=False, parameters=(), available=None,
-            exists=measurement_exists):
-        registry.register(CommandSpec(
-            tuple(path), handler, tuple(parameters), query=query,
-            available=available, exists=exists,
-        ))
+    def add(
+        path, handler, *, query=False, parameters=(), available=None, exists=measurement_exists
+    ):
+        registry.register(
+            CommandSpec(
+                tuple(path),
+                handler,
+                tuple(parameters),
+                query=query,
+                available=available,
+                exists=exists,
+            )
+        )
 
-    add((*fom, HeaderNode("STATe")),
+    add(
+        (*fom, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "fom_enabled", value),
-        parameters=(boolean,), available=fom_license)
-    add((*fom, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=fom_license,
+    )
+    add(
+        (*fom, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).fom_enabled),
-        query=True, available=fom_license)
-    add((*fom, HeaderNode("RANGe"), HeaderNode("COUNt")),
+        query=True,
+        available=fom_license,
+    )
+    add(
+        (*fom, HeaderNode("RANGe"), HeaderNode("COUNt")),
         lambda inv: str(len(state.channel(inv.indices["channel"]).ranges)),
-        query=True, available=fom_license)
-    add((*fom, range_node, HeaderNode("ADD")),
+        query=True,
+        available=fom_license,
+    )
+    add(
+        (*fom, range_node, HeaderNode("ADD")),
         lambda inv: state.add_range(inv.indices["channel"], inv.indices["range"]) or "",
-        available=fom_license)
-    add((*fom, range_node, HeaderNode("DELete")),
+        available=fom_license,
+    )
+    add(
+        (*fom, range_node, HeaderNode("DELete")),
         lambda inv: state.delete_range(inv.indices["channel"], inv.indices["range"]) or "",
-        available=fom_license, exists=range_exists)
+        available=fom_license,
+        exists=range_exists,
+    )
     for header, attribute in (("STARt", "start"), ("STOP", "stop")):
         path = (*fom, range_node, HeaderNode("FREQuency"), HeaderNode(header))
-        add(path, lambda inv, value, name=attribute: _set_range_frequency(state, inv, name, value),
-            parameters=(frequency,), available=fom_license, exists=range_exists)
-        add(path, lambda inv, name=attribute: str(getattr(
-            state.range(inv.indices["channel"], inv.indices["range"]), name)),
-            query=True, available=fom_license, exists=range_exists)
-    add((*fom, range_node, HeaderNode("ROLE")),
-        lambda inv, value: _set(state.range(inv.indices["channel"], inv.indices["range"]),
-                                "role", value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("INPut", "OUTPut", "LO")),),
-        available=fom_license, exists=range_exists)
-    add((*fom, range_node, HeaderNode("ROLE")),
+        add(
+            path,
+            lambda inv, value, name=attribute: _set_range_frequency(state, inv, name, value),
+            parameters=(frequency,),
+            available=fom_license,
+            exists=range_exists,
+        )
+        add(
+            path,
+            lambda inv, name=attribute: str(
+                getattr(state.range(inv.indices["channel"], inv.indices["range"]), name)
+            ),
+            query=True,
+            available=fom_license,
+            exists=range_exists,
+        )
+    add(
+        (*fom, range_node, HeaderNode("ROLE")),
+        lambda inv, value: _set(
+            state.range(inv.indices["channel"], inv.indices["range"]), "role", value
+        ),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("INPut", "OUTPut", "LO")),),
+        available=fom_license,
+        exists=range_exists,
+    )
+    add(
+        (*fom, range_node, HeaderNode("ROLE")),
         lambda inv: state.range(inv.indices["channel"], inv.indices["range"]).role,
-        query=True, available=fom_license, exists=range_exists)
+        query=True,
+        available=fom_license,
+        exists=range_exists,
+    )
 
-    add((*mixer, HeaderNode("STATe")),
+    add(
+        (*mixer, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "mixer_enabled", value),
-        parameters=(boolean,), available=converter_license)
-    add((*mixer, HeaderNode("STATe")),
+        parameters=(boolean,),
+        available=converter_license,
+    )
+    add(
+        (*mixer, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).mixer_enabled),
-        query=True, available=converter_license)
+        query=True,
+        available=converter_license,
+    )
     for header, attribute in (
-        ("FIXed", "fixed_frequency"), ("LO", "lo_frequency"), ("IF", "if_frequency")
+        ("FIXed", "fixed_frequency"),
+        ("LO", "lo_frequency"),
+        ("IF", "if_frequency"),
     ):
         path = (*mixer, HeaderNode("FREQuency"), HeaderNode(header))
-        add(path, lambda inv, value, name=attribute: _set_frequency(state, inv, name, value),
-            parameters=(frequency,), available=converter_license)
-        add(path, lambda inv, name=attribute: str(
-            getattr(state.channel(inv.indices["channel"]), name)),
-            query=True, available=converter_license)
-    add((*mixer, HeaderNode("MODE")),
+        add(
+            path,
+            lambda inv, value, name=attribute: _set_frequency(state, inv, name, value),
+            parameters=(frequency,),
+            available=converter_license,
+        )
+        add(
+            path,
+            lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
+            query=True,
+            available=converter_license,
+        )
+    add(
+        (*mixer, HeaderNode("MODE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "mode", value),
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("UPConverter", "DOWNconverter")),),
-        available=converter_license)
-    add((*mixer, HeaderNode("MODE")),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("UPConverter", "DOWNconverter")),),
+        available=converter_license,
+    )
+    add(
+        (*mixer, HeaderNode("MODE")),
         lambda inv: state.channel(inv.indices["channel"]).mode,
-        query=True, available=converter_license)
-    add((*mixer, HeaderNode("CONVerter"), HeaderNode("TYPE")),
+        query=True,
+        available=converter_license,
+    )
+    add(
+        (*mixer, HeaderNode("CONVerter"), HeaderNode("TYPE")),
         lambda inv, value: _set_converter_type(state, inv, value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("SCALar", "VECTor")),),
-        available=converter_license)
-    add((*mixer, HeaderNode("CONVerter"), HeaderNode("TYPE")),
+        available=converter_license,
+    )
+    add(
+        (*mixer, HeaderNode("CONVerter"), HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).converter_type,
-        query=True, available=converter_license)
-    add((*mixer, source_node, HeaderNode("ROLE")),
-        lambda inv, value: state.set_source_role(
-            inv.indices["channel"], inv.indices["source"], value) or "",
-        parameters=(ParameterSpec(ParameterType.ENUM,
-                                  choices=("RF", "LO", "IF", "OFF")),),
-        available=converter_license)
-    add((*mixer, source_node, HeaderNode("ROLE")),
+        query=True,
+        available=converter_license,
+    )
+    add(
+        (*mixer, source_node, HeaderNode("ROLE")),
+        lambda inv, value: (
+            state.set_source_role(inv.indices["channel"], inv.indices["source"], value) or ""
+        ),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("RF", "LO", "IF", "OFF")),),
+        available=converter_license,
+    )
+    add(
+        (*mixer, source_node, HeaderNode("ROLE")),
         lambda inv: state.source_role(inv.indices["channel"], inv.indices["source"]),
-        query=True, available=converter_license)
-    add((*mixer, HeaderNode("RECalculate")),
+        query=True,
+        available=converter_license,
+    )
+    add(
+        (*mixer, HeaderNode("RECalculate")),
         lambda inv: state.recalculate(inv.indices["channel"]) or "",
-        available=converter_license)
+        available=converter_license,
+    )
 
-    add((*mixer, HeaderNode("SEGMent"), HeaderNode("COUNt")),
+    add(
+        (*mixer, HeaderNode("SEGMent"), HeaderNode("COUNt")),
         lambda inv: str(len(state.channel(inv.indices["channel"]).segments)),
-        query=True, available=converter_license)
-    add((*mixer, segment_node, HeaderNode("ADD")),
+        query=True,
+        available=converter_license,
+    )
+    add(
+        (*mixer, segment_node, HeaderNode("ADD")),
         lambda inv: state.add_segment(inv.indices["channel"], inv.indices["segment"]) or "",
-        available=converter_license)
-    add((*mixer, segment_node, HeaderNode("DELete")),
+        available=converter_license,
+    )
+    add(
+        (*mixer, segment_node, HeaderNode("DELete")),
         lambda inv: state.delete_segment(inv.indices["channel"], inv.indices["segment"]) or "",
-        available=converter_license, exists=segment_exists)
-    add((*mixer, segment_node, HeaderNode("CALCulate")),
+        available=converter_license,
+        exists=segment_exists,
+    )
+    add(
+        (*mixer, segment_node, HeaderNode("CALCulate")),
         lambda inv: state.recalculate(inv.indices["channel"]) or "",
-        available=converter_license, exists=segment_exists)
+        available=converter_license,
+        exists=segment_exists,
+    )
     for header, attribute in (("STARt", "start"), ("STOP", "stop")):
         path = (*mixer, segment_node, HeaderNode("FREQuency"), HeaderNode(header))
-        add(path, lambda inv, value, name=attribute: _set_segment_frequency(
-            state, inv, name, value), parameters=(frequency,),
-            available=converter_license, exists=segment_exists)
-        add(path, lambda inv, name=attribute: str(getattr(
-            state.segment(inv.indices["channel"], inv.indices["segment"]), name)),
-            query=True, available=converter_license, exists=segment_exists)
-    add((*mixer, segment_node, HeaderNode("POWer")),
-        lambda inv, value: _set(state.segment(inv.indices["channel"], inv.indices["segment"]),
-                                "power", float(value.value)),
-        parameters=(ParameterSpec(ParameterType.NUMBER,
-                                  minimum=Decimal(-120), maximum=Decimal(50)),),
-        available=converter_license, exists=segment_exists)
-    add((*mixer, segment_node, HeaderNode("POWer")),
+        add(
+            path,
+            lambda inv, value, name=attribute: _set_segment_frequency(state, inv, name, value),
+            parameters=(frequency,),
+            available=converter_license,
+            exists=segment_exists,
+        )
+        add(
+            path,
+            lambda inv, name=attribute: str(
+                getattr(state.segment(inv.indices["channel"], inv.indices["segment"]), name)
+            ),
+            query=True,
+            available=converter_license,
+            exists=segment_exists,
+        )
+    add(
+        (*mixer, segment_node, HeaderNode("POWer")),
+        lambda inv, value: _set(
+            state.segment(inv.indices["channel"], inv.indices["segment"]),
+            "power",
+            float(value.value),
+        ),
+        parameters=(
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
+        ),
+        available=converter_license,
+        exists=segment_exists,
+    )
+    add(
+        (*mixer, segment_node, HeaderNode("POWer")),
         lambda inv: str(state.segment(inv.indices["channel"], inv.indices["segment"]).power),
-        query=True, available=converter_license, exists=segment_exists)
+        query=True,
+        available=converter_license,
+        exists=segment_exists,
+    )
     points_path = (*mixer, segment_node, HeaderNode("SWEep"), HeaderNode("POINts"))
-    add(points_path,
-        lambda inv, value: _set(state.segment(inv.indices["channel"], inv.indices["segment"]),
-                                "points", value),
+    add(
+        points_path,
+        lambda inv, value: _set(
+            state.segment(inv.indices["channel"], inv.indices["segment"]), "points", value
+        ),
         parameters=(ParameterSpec(ParameterType.INTEGER, minimum=2, maximum=100001),),
-        available=converter_license, exists=segment_exists)
-    add(points_path,
+        available=converter_license,
+        exists=segment_exists,
+    )
+    add(
+        points_path,
         lambda inv: str(state.segment(inv.indices["channel"], inv.indices["segment"]).points),
-        query=True, available=converter_license, exists=segment_exists)
+        query=True,
+        available=converter_license,
+        exists=segment_exists,
+    )
 
     elo = (*mixer, HeaderNode("ELO"))
-    add((*elo, HeaderNode("STATe")),
-        lambda inv, value: _set(state.channel(inv.indices["channel"]),
-                                "embedded_lo_enabled", value),
-        parameters=(boolean,), available=embedded_license)
-    add((*elo, HeaderNode("STATe")),
+    add(
+        (*elo, HeaderNode("STATe")),
+        lambda inv, value: _set(
+            state.channel(inv.indices["channel"]), "embedded_lo_enabled", value
+        ),
+        parameters=(boolean,),
+        available=embedded_license,
+    )
+    add(
+        (*elo, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).embedded_lo_enabled),
-        query=True, available=embedded_license)
-    for header, attribute in (("CENTer", "embedded_lo_center"),
-                              ("SPAN", "embedded_lo_span")):
-        add((*elo, HeaderNode(header)),
+        query=True,
+        available=embedded_license,
+    )
+    for header, attribute in (("CENTer", "embedded_lo_center"), ("SPAN", "embedded_lo_span")):
+        add(
+            (*elo, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_frequency(state, inv, name, value),
-            parameters=(frequency,), available=embedded_license)
-        add((*elo, HeaderNode(header)),
-            lambda inv, name=attribute: str(getattr(
-                state.channel(inv.indices["channel"]), name)),
-            query=True, available=embedded_license)
+            parameters=(frequency,),
+            available=embedded_license,
+        )
+        add(
+            (*elo, HeaderNode(header)),
+            lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
+            query=True,
+            available=embedded_license,
+        )
 
-    add((*mixer, HeaderNode("CALibration"), HeaderNode("STATe")),
-        lambda inv: "0", query=True, available=converter_license)
-    add((*fom, HeaderNode("CORRection"), HeaderNode("STATe")),
-        lambda inv: "0", query=True, available=fom_license)
+    add(
+        (*mixer, HeaderNode("CALibration"), HeaderNode("STATe")),
+        lambda inv: "0",
+        query=True,
+        available=converter_license,
+    )
+    add(
+        (*fom, HeaderNode("CORRection"), HeaderNode("STATe")),
+        lambda inv: "0",
+        query=True,
+        available=fom_license,
+    )
 
 
 def _set(target, name: str, value) -> str:
@@ -440,8 +568,7 @@ def _resample(samples: tuple[complex, ...], points: int) -> tuple[complex, ...]:
     if points == 1:
         return (samples[0],)
     return tuple(
-        samples[round(index * (len(samples) - 1) / (points - 1))]
-        for index in range(points)
+        samples[round(index * (len(samples) - 1) / (points - 1))] for index in range(points)
     )
 
 

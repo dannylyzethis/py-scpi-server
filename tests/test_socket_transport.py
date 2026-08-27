@@ -131,13 +131,7 @@ def test_bus_triggered_acquisition_drives_real_opc_handshake(running_server) -> 
         assert receive_lines(client, 1)[0].startswith("SCPI_Emulator,")
 
         client.sendall(
-            b"TRIG:SOUR BUS\n"
-            b"SENS:SWE:TIME 0.02\n"
-            b"*ESE 1\n"
-            b"*SRE 32\n"
-            b"INIT:IMM\n"
-            b"*OPC\n"
-            b"*STB?\n"
+            b"TRIG:SOUR BUS\nSENS:SWE:TIME 0.02\n*ESE 1\n*SRE 32\nINIT:IMM\n*OPC\n*STB?\n"
         )
         assert receive_lines(client, 1) == ["0"]
 
@@ -167,7 +161,7 @@ def test_framer_preserves_terminators_in_quotes_and_definite_blocks() -> None:
     assert framer.feed(b'DISP:TEXT "first\nsecond"\nMMEM:DATA #15a\r\nb') == (
         b'DISP:TEXT "first\nsecond"',
     )
-    assert framer.feed(b'c\n*IDN?\r\n') == (b'MMEM:DATA #15a\r\nbc', b'*IDN?')
+    assert framer.feed(b"c\n*IDN?\r\n") == (b"MMEM:DATA #15a\r\nbc", b"*IDN?")
 
 
 def test_framer_enforces_per_message_bound_without_rejecting_command_chains() -> None:

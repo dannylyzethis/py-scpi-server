@@ -11,8 +11,11 @@ from scpi_emulator.scenario import (
 
 def scalar_stream(values, *, advance=AdvancePolicy.READ, end=EndPolicy.ERROR):
     return ScenarioStream(
-        "voltage.dc", StreamKind.SCALAR,
-        tuple(ScenarioSample(value) for value in values), advance=advance, end=end,
+        "voltage.dc",
+        StreamKind.SCALAR,
+        tuple(ScenarioSample(value) for value in values),
+        advance=advance,
+        end=end,
     )
 
 
@@ -44,20 +47,29 @@ def test_fetch_returns_last_completed_value_without_advancing_queue() -> None:
 
 
 def test_measure_selects_function_stream_and_explicit_binding() -> None:
-    instrument = dmm_with(ScenarioStream(
-        "dut-current", StreamKind.SCALAR, (ScenarioSample(0.125),), end=EndPolicy.HOLD_LAST
-    ))
+    instrument = dmm_with(
+        ScenarioStream(
+            "dut-current", StreamKind.SCALAR, (ScenarioSample(0.125),), end=EndPolicy.HOLD_LAST
+        )
+    )
     instrument.scalar_data.bind("CURRent:DC", "dut-current")
 
     assert instrument.process_command("MEAS:CURR:DC?") == "+1.250000000000E-01"
     assert instrument.scalar_data.configuration.function == "CURRent:DC"
 
-    instrument.attach_scenario(ScenarioDefinition(
-        "overrange", (ScenarioStream(
-            "dut-current", StreamKind.SCALAR, (ScenarioSample(0.25),),
-            end=EndPolicy.HOLD_LAST,
-        ),),
-    ))
+    instrument.attach_scenario(
+        ScenarioDefinition(
+            "overrange",
+            (
+                ScenarioStream(
+                    "dut-current",
+                    StreamKind.SCALAR,
+                    (ScenarioSample(0.25),),
+                    end=EndPolicy.HOLD_LAST,
+                ),
+            ),
+        )
+    )
     assert instrument.process_command("MEAS:CURR:DC? 0.1,1e-6") == ""
     assert instrument.error_queue.pop().code == -222
 

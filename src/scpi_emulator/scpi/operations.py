@@ -198,9 +198,7 @@ class OperationManager:
             self._opc_fences = [fence for fence in self._opc_fences if fence.pending]
 
 
-def register_operation_commands(
-    registry: CommandRegistry, operations: OperationManager
-) -> None:
+def register_operation_commands(registry: CommandRegistry, operations: OperationManager) -> None:
     """Register OPC, OPC?, WAI, and ABORt against the typed command registry."""
     registry.register(
         CommandSpec(

@@ -48,9 +48,7 @@ class PowerSupplySystem:
 
     def reset(self) -> None:
         self.selected_output = 1
-        self.outputs = {
-            number: PowerSupplyOutput() for number in range(1, self.output_count + 1)
-        }
+        self.outputs = {number: PowerSupplyOutput() for number in range(1, self.output_count + 1)}
 
     def select(self, output: int) -> str:
         if output not in self.outputs:
@@ -134,6 +132,7 @@ def register_power_supply_commands(
             minimum=Decimal("0"),
             maximum=Decimal(maximum),
         )
+
     integer_output = ParameterSpec(
         ParameterType.INTEGER,
         name="output",
@@ -151,130 +150,178 @@ def register_power_supply_commands(
         choices=("LOW", "HIGH"),
     )
 
-    registry.register(CommandSpec(
-        (HeaderNode("INSTrument"), HeaderNode("NSELect")),
-        lambda inv, output: state.select(output),
-        (integer_output,),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("INSTrument"), HeaderNode("NSELect")),
-        lambda inv: str(state.selected_output),
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("INSTrument"), HeaderNode("SELect")),
-        lambda inv, output: state.select_name(output),
-        (output_name,),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("INSTrument"), HeaderNode("SELect")),
-        lambda inv: f"OUT{state.selected_output}",
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("INSTrument"), HeaderNode("CATalog")),
-        lambda inv: ",".join(f"OUT{number}" for number in state.outputs),
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("SYSTem"), HeaderNode("CHANnel"), HeaderNode("COUNt")),
-        lambda inv: str(state.output_count),
-        query=True,
-    ))
+    registry.register(
+        CommandSpec(
+            (HeaderNode("INSTrument"), HeaderNode("NSELect")),
+            lambda inv, output: state.select(output),
+            (integer_output,),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("INSTrument"), HeaderNode("NSELect")),
+            lambda inv: str(state.selected_output),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("INSTrument"), HeaderNode("SELect")),
+            lambda inv, output: state.select_name(output),
+            (output_name,),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("INSTrument"), HeaderNode("SELect")),
+            lambda inv: f"OUT{state.selected_output}",
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("INSTrument"), HeaderNode("CATalog")),
+            lambda inv: ",".join(f"OUT{number}" for number in state.outputs),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("SYSTem"), HeaderNode("CHANnel"), HeaderNode("COUNt")),
+            lambda inv: str(state.output_count),
+            query=True,
+        )
+    )
 
-    registry.register(CommandSpec(
-        (HeaderNode("OUTPut"),),
-        lambda inv, enabled: state.set_output(enabled),
-        (ParameterSpec(ParameterType.BOOLEAN, name="output state"),),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("OUTPut"),),
-        lambda inv: "1" if state.selected.enabled else "0",
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("OUTPut"), HeaderNode("PROTection"), HeaderNode("CLEar")),
-        lambda inv: state.clear_protection(),
-    ))
+    registry.register(
+        CommandSpec(
+            (HeaderNode("OUTPut"),),
+            lambda inv, enabled: state.set_output(enabled),
+            (ParameterSpec(ParameterType.BOOLEAN, name="output state"),),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("OUTPut"),),
+            lambda inv: "1" if state.selected.enabled else "0",
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("OUTPut"), HeaderNode("PROTection"), HeaderNode("CLEar")),
+            lambda inv: state.clear_protection(),
+        )
+    )
 
-    registry.register(CommandSpec(
-        (HeaderNode("VOLTage"),),
-        lambda inv, value: state.set_voltage(value),
-        (number("voltage", "30"),),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("VOLTage"),),
-        lambda inv: _format(state.selected.voltage),
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("CURRent"),),
-        lambda inv, value: state.set_current(value),
-        (number("current", "5"),),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("CURRent"),),
-        lambda inv: _format(state.selected.current),
-        query=True,
-    ))
+    registry.register(
+        CommandSpec(
+            (HeaderNode("VOLTage"),),
+            lambda inv, value: state.set_voltage(value),
+            (number("voltage", "30"),),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("VOLTage"),),
+            lambda inv: _format(state.selected.voltage),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("CURRent"),),
+            lambda inv, value: state.set_current(value),
+            (number("current", "5"),),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("CURRent"),),
+            lambda inv: _format(state.selected.current),
+            query=True,
+        )
+    )
 
-    registry.register(CommandSpec(
-        (HeaderNode("VOLTage"), HeaderNode("PROTection")),
-        lambda inv, value: state.set_voltage_protection(value),
-        (number("voltage protection", "32"),),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("VOLTage"), HeaderNode("PROTection")),
-        lambda inv: _format(state.selected.voltage_protection),
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("CURRent"), HeaderNode("PROTection")),
-        lambda inv, value: state.set_current_protection(value),
-        (number("current protection", "5.2"),),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("CURRent"), HeaderNode("PROTection")),
-        lambda inv: _format(state.selected.current_protection),
-        query=True,
-    ))
+    registry.register(
+        CommandSpec(
+            (HeaderNode("VOLTage"), HeaderNode("PROTection")),
+            lambda inv, value: state.set_voltage_protection(value),
+            (number("voltage protection", "32"),),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("VOLTage"), HeaderNode("PROTection")),
+            lambda inv: _format(state.selected.voltage_protection),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("CURRent"), HeaderNode("PROTection")),
+            lambda inv, value: state.set_current_protection(value),
+            (number("current protection", "5.2"),),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("CURRent"), HeaderNode("PROTection")),
+            lambda inv: _format(state.selected.current_protection),
+            query=True,
+        )
+    )
 
-    registry.register(CommandSpec(
-        (HeaderNode("VOLTage"), HeaderNode("RANGe")),
-        lambda inv, value: state.set_voltage_range(value),
-        (range_name,),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("VOLTage"), HeaderNode("RANGe")),
-        lambda inv: state.selected.voltage_range,
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("CURRent"), HeaderNode("RANGe")),
-        lambda inv, value: state.set_current_range(value),
-        (range_name,),
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("CURRent"), HeaderNode("RANGe")),
-        lambda inv: state.selected.current_range,
-        query=True,
-    ))
+    registry.register(
+        CommandSpec(
+            (HeaderNode("VOLTage"), HeaderNode("RANGe")),
+            lambda inv, value: state.set_voltage_range(value),
+            (range_name,),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("VOLTage"), HeaderNode("RANGe")),
+            lambda inv: state.selected.voltage_range,
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("CURRent"), HeaderNode("RANGe")),
+            lambda inv, value: state.set_current_range(value),
+            (range_name,),
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("CURRent"), HeaderNode("RANGe")),
+            lambda inv: state.selected.current_range,
+            query=True,
+        )
+    )
 
-    registry.register(CommandSpec(
-        (HeaderNode("MEASure"), HeaderNode("VOLTage")),
-        lambda inv: _format(state.measure_voltage()),
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("MEASure"), HeaderNode("CURRent")),
-        lambda inv: _format(state.measure_current()),
-        query=True,
-    ))
-    registry.register(CommandSpec(
-        (HeaderNode("MEASure"), HeaderNode("POWer")),
-        lambda inv: _format(state.measure_voltage() * state.measure_current()),
-        query=True,
-    ))
+    registry.register(
+        CommandSpec(
+            (HeaderNode("MEASure"), HeaderNode("VOLTage")),
+            lambda inv: _format(state.measure_voltage()),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("MEASure"), HeaderNode("CURRent")),
+            lambda inv: _format(state.measure_current()),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (HeaderNode("MEASure"), HeaderNode("POWer")),
+            lambda inv: _format(state.measure_voltage() * state.measure_current()),
+            query=True,
+        )
+    )
 
 
 def _format(value: Decimal) -> str:

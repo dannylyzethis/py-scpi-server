@@ -16,7 +16,6 @@ from .catalog import (
     TransportDescriptor,
 )
 
-
 CSV_DRIVER_ID = "csv-instruments"
 
 

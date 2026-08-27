@@ -132,9 +132,7 @@ class CSVCommandAdapter:
                     self.error_queue.push(error[0], error[1])
                     return ""
             value = args[0]
-            if validation and (
-                validation.startswith("enum:") or validation == "bool"
-            ):
+            if validation and (validation.startswith("enum:") or validation == "bool"):
                 value = value.upper()
             self.state[f"{base_name}_VALUE"] = value
             return "OK"
