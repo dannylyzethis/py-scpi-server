@@ -21,7 +21,9 @@ from scpi_emulator.emulator import build_parser as FacadeBuildParser
 from scpi_emulator.emulator import main as FacadeMain
 from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.raw_server import SCPIServer as DirectSCPIServer
+from scpi_emulator.runtime import SCPIEmulatorManager as DirectManager
 from scpi_emulator.emulator import SCPIServer as FacadeSCPIServer
+from scpi_emulator.interactive import InteractiveShell
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -34,6 +36,7 @@ def test_emulator_facade_preserves_instrument_and_configuration_imports() -> Non
     assert FacadeBuildParser is DirectBuildParser
     assert FacadeMain is DirectMain
     assert FacadeSCPIServer is DirectSCPIServer
+    assert SCPIEmulatorManager is DirectManager
 
 
 def test_configuration_module_loads_compatibility_instruments_directly() -> None:
@@ -56,3 +59,13 @@ def test_manager_construction_does_not_install_process_signal_handlers(monkeypat
     SCPIEmulatorManager()
 
     assert calls == []
+
+
+def test_manager_interactive_entry_delegates_to_shell(monkeypatch) -> None:
+    managers = []
+    monkeypatch.setattr(InteractiveShell, "run", lambda self: managers.append(self.manager))
+    manager = SCPIEmulatorManager()
+
+    manager.interactive_mode()
+
+    assert managers == [manager]

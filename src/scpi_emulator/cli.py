@@ -87,7 +87,7 @@ def _install_signal_handlers(manager):
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the command-line process."""
-    from .emulator import SCPIEmulatorManager
+    from .runtime import SCPIEmulatorManager
 
     args = build_parser().parse_args(argv)
     configure_logging(verbose=args.verbose, log_file=args.log_file)
