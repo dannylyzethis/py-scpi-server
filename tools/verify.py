@@ -88,7 +88,7 @@ def run_quality_profile() -> None:
     with tempfile.TemporaryDirectory(prefix="scpi-verify-") as temporary:
         root = Path(temporary)
         distribution = root / "dist"
-        run("-m", "build", "--no-isolation", "--outdir", str(distribution))
+        run("-m", "build", "--outdir", str(distribution))
         wheels = tuple(distribution.glob("*.whl"))
         if len(wheels) != 1:
             raise RuntimeError(f"expected one wheel, found {len(wheels)}")

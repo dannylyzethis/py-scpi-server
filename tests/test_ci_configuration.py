@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import tomllib
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -29,7 +27,9 @@ def test_release_guide_uses_the_same_quality_entry_point() -> None:
 def test_quality_profile_enforces_formatting_and_import_order() -> None:
     verification = (REPOSITORY_ROOT / "tools" / "verify.py").read_text(encoding="utf-8")
     assert 'run("-m", "ruff", "format", "--check", "src", "tests", "tools")' in verification
+    assert 'run("-m", "build", "--outdir", str(distribution))' in verification
+    assert "--no-isolation" not in verification
 
-    configuration = tomllib.loads((REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert "I" in configuration["tool"]["ruff"]["lint"]["select"]
+    configuration = (REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'select = ["E4", "E7", "E9", "F", "I"]' in configuration
     assert "*.py text eol=lf" in (REPOSITORY_ROOT / ".gitattributes").read_text(encoding="utf-8")

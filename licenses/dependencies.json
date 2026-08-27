@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_on": "2026-08-26",
+  "reviewed_on": "2026-08-27",
   "policy": {
     "requirements": {
       "commercial_enterprise_use": true,
@@ -13,7 +13,7 @@
   "packages": {
     "bidict": {"license": "MPL-2.0", "reviewed_versions": ["0.23.1", "0.24.1"], "scope": ["web-transitive"], "python_version_conditional": true},
     "blinker": {"license": "MIT", "reviewed_version": "1.9.0", "scope": ["web-transitive"]},
-    "build": {"license": "MIT", "reviewed_version": "1.5.0", "scope": ["development-direct"]},
+    "build": {"license": "MIT", "reviewed_versions": ["1.5.0", "1.6.0"], "scope": ["development-direct"]},
     "click": {"license": "BSD-3-Clause", "reviewed_versions": ["8.4.2", "8.5.0"], "scope": ["web-transitive"]},
     "colorama": {"license": "BSD-3-Clause", "reviewed_version": "0.4.6", "scope": ["development-transitive"], "platform_optional": true},
     "coverage": {"license": "Apache-2.0", "reviewed_version": "7.15.4", "scope": ["development-transitive"]},
@@ -38,7 +38,7 @@
     "python-socketio": {"license": "MIT", "reviewed_version": "5.16.4", "scope": ["web-transitive"]},
     "pyvisa": {"license": "MIT", "reviewed_version": "1.16.2", "scope": ["development-direct"]},
     "pyvisa-py": {"license": "MIT", "reviewed_version": "0.8.1", "scope": ["development-direct"]},
-    "ruff": {"license": "MIT", "reviewed_version": "0.16.4", "scope": ["development-direct"]},
+    "ruff": {"license": "MIT", "reviewed_versions": ["0.16.4", "0.16.5"], "scope": ["development-direct"]},
     "simple-websocket": {"license": "MIT", "reviewed_version": "1.1.0", "scope": ["web-transitive"]},
     "typing-extensions": {"license": "PSF-2.0", "reviewed_version": "4.16.0", "scope": ["discovery-transitive"]},
     "tomli": {"license": "MIT", "reviewed_version": "2.4.1", "scope": ["development-transitive"], "python_version_conditional": true},
