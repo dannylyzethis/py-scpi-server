@@ -5,9 +5,10 @@ import socket
 import pytest
 
 from scpi_emulator import __version__
-from scpi_emulator import emulator
+from scpi_emulator import cli
 from scpi_emulator.bench import BenchError, BenchRuntime
-from scpi_emulator.emulator import SCPIEmulatorManager, build_parser, main
+from scpi_emulator.cli import build_parser, main
+from scpi_emulator.emulator import SCPIEmulatorManager
 
 
 def test_package_version_is_exposed() -> None:
@@ -74,7 +75,7 @@ def test_directory_load_starts_all_csvs_and_prints_resources_and_dashboard(
         "start_web_dashboard",
         lambda self, host, port, auth_token=None: True,
     )
-    monkeypatch.setattr(emulator.time, "sleep", _interrupt_on_sleep)
+    monkeypatch.setattr(cli.time, "sleep", _interrupt_on_sleep)
 
     assert main(
         [
@@ -181,7 +182,7 @@ def test_bench_starts_unchanged_and_prints_precise_resource_and_dashboard(
         "start_web_dashboard",
         lambda self, host, port, auth_token=None: True,
     )
-    monkeypatch.setattr(emulator.time, "sleep", _interrupt_on_sleep)
+    monkeypatch.setattr(cli.time, "sleep", _interrupt_on_sleep)
 
     assert main(["--bench", str(bench), "--start", "--web"]) == 0
 
@@ -381,10 +382,10 @@ def test_running_bench_output_is_safe_for_ascii_only_windows_streams(
     bench = tmp_path / "bench.json"
     _interactive_bench(bench, 6403)
     monkeypatch.setattr(BenchRuntime, "start", lambda self: None)
-    monkeypatch.setattr(emulator.time, "sleep", _interrupt_on_sleep)
+    monkeypatch.setattr(cli.time, "sleep", _interrupt_on_sleep)
     raw_output = io.BytesIO()
     ascii_output = io.TextIOWrapper(raw_output, encoding="ascii", errors="strict")
-    monkeypatch.setattr(emulator.sys, "stdout", ascii_output)
+    monkeypatch.setattr(cli.sys, "stdout", ascii_output)
 
     assert main(["--bench", str(bench), "--start"]) == 0
 
