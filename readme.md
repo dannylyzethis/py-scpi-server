@@ -377,13 +377,13 @@ that bearer token. Mutating API requests also use a per-process CSRF token rende
 Run the automated checks:
 
 ```bash
-python -m pytest -ra
-ruff check src tests tools
-python tools/check_licenses.py
+python tools/verify.py test
+python tools/verify.py quality
 ```
 
-The strict expected failures in `tests/test_instrument_behavior.py` document known legacy parser
-defects. They should become passing tests as the replacement parser and IEEE core land.
+The `test` profile is the portable OS/Python behavior suite. The `quality` profile is the complete
+local release gate, including lint, commercial-license review, branch coverage, manifests, package
+contents, and installed-wheel CLI smoke tests.
 
 Repository layout:
 

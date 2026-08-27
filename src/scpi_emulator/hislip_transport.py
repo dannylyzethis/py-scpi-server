@@ -167,6 +167,7 @@ class HiSLIPServer:
         self._client_threads: set[threading.Thread] = set()
         self._srq_thread: threading.Thread | None = None
         self._srq_asserted = False
+        self._srq_pending_since: float | None = None
 
     def start(self) -> bool:
         try:
@@ -301,6 +302,7 @@ class HiSLIPServer:
             self._session = session
         self.instrument.visa_device_clear()
         self._srq_asserted = False
+        self._srq_pending_since = None
         send_message(
             connection,
             HiSLIPMessage(
@@ -421,6 +423,10 @@ class HiSLIPServer:
                 self.instrument.visa_device_clear()
                 self._async_send(session, HiSLIPMessage(ASYNC_DEVICE_CLEAR_ACKNOWLEDGE))
             elif message.message_type == ASYNC_STATUS_QUERY:
+                with self._lock:
+                    if self.instrument.status.requesting_service:
+                        self._srq_asserted = True
+                        self._srq_pending_since = None
                 self._async_send(
                     session,
                     HiSLIPMessage(
@@ -466,18 +472,24 @@ class HiSLIPServer:
             requesting = self.instrument.status.requesting_service
             with self._lock:
                 session = self._session
-            if requesting and not self._srq_asserted:
-                self._srq_asserted = True
-                if session is not None and session.ready.is_set() and not session.closed:
-                    self._async_send(
-                        session,
-                        HiSLIPMessage(
-                            ASYNC_SERVICE_REQUEST,
-                            control_code=self.instrument.status.status_byte,
-                        ),
-                    )
-            elif not requesting:
-                self._srq_asserted = False
+                now = time.monotonic()
+                if requesting and not self._srq_asserted:
+                    if self._srq_pending_since is None:
+                        self._srq_pending_since = now
+                    elif now - self._srq_pending_since >= 0.05:
+                        self._srq_asserted = True
+                        self._srq_pending_since = None
+                        if session is not None and session.ready.is_set() and not session.closed:
+                            self._async_send(
+                                session,
+                                HiSLIPMessage(
+                                    ASYNC_SERVICE_REQUEST,
+                                    control_code=self.instrument.status.status_byte,
+                                ),
+                            )
+                elif not requesting:
+                    self._srq_asserted = False
+                    self._srq_pending_since = None
             time.sleep(0.01)
 
     def _async_send(self, session: _Session, message: HiSLIPMessage) -> None:

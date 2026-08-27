@@ -9,15 +9,13 @@ From a clean checkout, create a virtual environment and run:
 
 ```powershell
 python -m pip install -e ".[all,dev]"
-python -m ruff check src tests tools
-python tools/check_licenses.py
-python -m pytest --cov --cov-report=term-missing --cov-fail-under=82
-python tools/vna_manifest.py --model vna-2-port --firmware E.1.0
-python tools/vna_manifest.py --model vna-4-port --firmware E.1.0
-python -m build
-python -m pip install --force-reinstall dist/*.whl
-scpi-emulator --version
+python tools/verify.py quality
 ```
+
+This is the same quality profile called by hosted CI. It runs Ruff, the reviewed commercial-license
+policy, the complete branch-coverage suite, both VNA manifests, an isolated wheel/sdist build,
+wheel-content checks, and installed-wheel CLI/bench smoke tests. For the portable behavior suite
+alone, use `python tools/verify.py test`; the OS/Python matrix calls that exact profile.
 
 The two manifest commands fail if the checked-in documented snapshot has an implementation gap.
 The tests also compare the generated model reports with the checked-in JSON reports, so stale
@@ -47,11 +45,12 @@ docker run --rm -p 5025:5025 `
 
 ## CI guarantees
 
-GitHub Actions runs the suite on Linux and Windows with the oldest and newest declared Python
-families, executes the real PyVISA-Py VXI-11 INSTR smoke test, enforces at least 82% branch-aware
-package coverage, validates both VNA manifests, builds and reinstalls the wheel, and queries the
-Docker image over a real raw-SCPI socket. Each operating-system/Python job also enforces the
-reviewed dependency-license policy.
+One GitHub Actions workflow runs each configured OS/Python combination once. Linux covers Python
+3.10–3.14 and Windows covers the oldest and newest versions; Linux 3.14 owns the `quality` profile
+instead of duplicating the portable suite in another job. The full matrix exercises the real
+PyVISA-Py VXI-11 INSTR behavior. The quality profile enforces at least 82% branch-aware coverage,
+licenses, manifests, and the built wheel. A separate container job queries the image over a real
+raw-SCPI socket.
 
 ## Release checklist
 

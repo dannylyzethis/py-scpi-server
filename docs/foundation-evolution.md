@@ -429,9 +429,8 @@ developer or build agent to have a costly instrument attached.
 
 As of 2026-08-27:
 
-- The complete automated suite passes on the supported CI matrix, with 2 strict expected failures
-  documenting the remaining CSV parser limitations.
-- Two known legacy-parser limitations are retained as explicit expected failures.
+- The complete automated suite has 380 passing tests and no expected failures; CSV compatibility
+  now preserves parameter case and quote-safe program-message boundaries.
 - The vna-2-port and vna-4-port manifests each report 393/393 documented commands in the current snapshot.
 - The maintainable foundation and IEEE/SCPI core milestones are complete.
 - The versioned VNA capability milestone is complete.
