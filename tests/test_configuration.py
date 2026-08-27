@@ -15,6 +15,13 @@ from scpi_emulator.scenario import (
 
 
 REPOSITORY_ROOT = Path(__file__).parents[1]
+CSV_EXAMPLES = REPOSITORY_ROOT / "examples" / "csv"
+SHIPPED_CATALOGS = (
+    (CSV_EXAMPLES / "basic" / "scpi_instruments_example.csv", 2),
+    (CSV_EXAMPLES / "catalog" / "detailed_instruments.csv", 9),
+    (CSV_EXAMPLES / "mixed" / "mixed-bench.csv", 1),
+    (CSV_EXAMPLES / "vna" / "vna-commands.csv", 1),
+)
 
 
 def test_csv_configuration_loads_multiple_instruments(tmp_path: Path) -> None:
@@ -82,17 +89,12 @@ def test_configuration_rejects_missing_required_columns(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    ("filename", "instrument_count"),
-    [
-        ("scpi_instruments_example.csv", 2),
-        ("detailed_instruments.csv", 9),
-        ("vna-commands.csv", 1),
-    ],
+    ("path", "instrument_count"),
+    SHIPPED_CATALOGS,
 )
 def test_shipped_catalogs_are_canonical_and_loadable(
-    filename: str, instrument_count: int
+    path: Path, instrument_count: int
 ) -> None:
-    path = REPOSITORY_ROOT / filename
     with path.open(encoding="utf-8-sig", newline="") as source:
         rows = list(csv.reader(source))
 
@@ -105,9 +107,29 @@ def test_shipped_catalogs_are_canonical_and_loadable(
     assert "```" not in manager.instruments
 
 
+@pytest.mark.parametrize(("path", "instrument_count"), SHIPPED_CATALOGS)
+def test_shipped_example_directories_are_directly_loadable(
+    path: Path, instrument_count: int
+) -> None:
+    manager = SCPIEmulatorManager()
+    assert manager.load_from_file(path.parent)
+    assert len(manager.instruments) == instrument_count
+
+
+def test_supported_examples_and_container_use_the_organized_layout() -> None:
+    assert not list(REPOSITORY_ROOT.glob("*.csv"))
+    assert not (REPOSITORY_ROOT / "legacy").exists()
+    assert not (REPOSITORY_ROOT / "test-server.py").exists()
+
+    dockerfile = (REPOSITORY_ROOT / "Dockerfile").read_text(encoding="utf-8")
+    example = "examples/csv/basic/scpi_instruments_example.csv"
+    assert f"COPY {example} ./examples/csv/basic/" in dockerfile
+    assert f'CMD ["--load", "{example}"' in dockerfile
+
+
 def test_vna_identity_response_is_not_truncated() -> None:
     manager = SCPIEmulatorManager()
-    assert manager.load_from_file(REPOSITORY_ROOT / "vna-commands.csv")
+    assert manager.load_from_file(CSV_EXAMPLES / "vna" / "vna-commands.csv")
 
     vna = manager.instruments["virtual_vna_2_port_csv_static"]["instrument"]
     assert vna.process_command("*IDN?") == (
@@ -184,7 +206,7 @@ def test_spilled_csv_fields_are_rejected_with_actionable_error(
 
 def test_failed_reload_preserves_active_configuration(tmp_path: Path) -> None:
     manager = SCPIEmulatorManager()
-    assert manager.load_from_file(REPOSITORY_ROOT / "scpi_instruments_example.csv")
+    assert manager.load_from_file(CSV_EXAMPLES / "basic" / "scpi_instruments_example.csv")
     original_ids = set(manager.instruments)
 
     invalid = tmp_path / "invalid.csv"

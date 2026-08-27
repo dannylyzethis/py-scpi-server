@@ -6,7 +6,7 @@ the state owned by each instrument rather than maintaining a separate UI-only st
 Start a local dashboard with:
 
 ```powershell
-scpi-emulator --load detailed_instruments.csv --start --web
+scpi-emulator --load examples/csv/catalog --start --web
 ```
 
 The default address is `http://127.0.0.1:8081`. A non-loopback bind requires an authentication

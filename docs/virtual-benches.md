@@ -158,16 +158,16 @@ engine as the VNA and DMM drivers.
 
 ## Mixed built-in and CSV example
 
-`examples/mixed-bench.json` composes two instances of the built-in `virtual-ps` driver and
-one `csv-instruments` model declared by `examples/mixed-bench.csv`. The two supplies share the same
+`examples/csv/mixed/mixed-bench.json` composes two instances of the built-in `virtual-ps` driver and one
+`csv-instruments` model declared by its adjacent `mixed-bench.csv`. The two supplies share the same
 model but have unique `id`, `serial_number`, and `resource.port` values. Because the CSV is beside
 the JSON, the CLI catalogs its `Fixture Controller` equipment block as model `fixture_controller`.
 
 Validate the composition without opening ports, or start all three instruments:
 
 ```powershell
-scpi-emulator --bench .\examples\mixed-bench.json
-scpi-emulator --bench .\examples\mixed-bench.json --start
+scpi-emulator --bench .\examples\csv\mixed\mixed-bench.json
+scpi-emulator --bench .\examples\csv\mixed\mixed-bench.json --start
 ```
 
 See [Generic power-supply emulator](power-supply.md) for its independent-output state and

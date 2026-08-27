@@ -34,7 +34,8 @@ docker build -t scpi-emulator .
 docker run --rm -p 5555:5555 -p 5559:5559 scpi-emulator
 ```
 
-The default image runs the two instruments in `scpi_instruments_example.csv` as a non-root user.
+The default image runs the two instruments in `examples/csv/basic/scpi_instruments_example.csv` as a
+non-root user.
 Override the command and mount a read-only profile to run another bench:
 
 ```powershell

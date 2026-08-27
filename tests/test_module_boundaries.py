@@ -44,7 +44,7 @@ def test_emulator_facade_preserves_instrument_and_configuration_imports() -> Non
 
 def test_configuration_module_loads_compatibility_instruments_directly() -> None:
     loaded, command_count = load_compatibility_instruments(
-        REPOSITORY_ROOT / "scpi_instruments_example.csv"
+        REPOSITORY_ROOT / "examples" / "csv" / "basic" / "scpi_instruments_example.csv"
     )
 
     assert set(loaded) == {"virtual_dmm_csv_example", "debug_test_instrument"}

@@ -82,12 +82,12 @@ def test_every_catalog_json_example_is_copyable_and_readme_links_catalog() -> No
     assert "docs/instrument-catalog.md" in readme
 
 
-def test_user_catalog_inventories_every_bundled_root_csv_equipment_model() -> None:
+def test_user_catalog_inventories_every_bundled_csv_equipment_model() -> None:
     document = CATALOG_DOCUMENT.read_text(encoding="utf-8")
     equipment_blocks = 0
     model_ids: set[str] = set()
 
-    for source in REPOSITORY_ROOT.glob("*.csv"):
+    for source in (REPOSITORY_ROOT / "examples" / "csv").rglob("*.csv"):
         with source.open(newline="", encoding="utf-8-sig") as handle:
             for row in csv.DictReader(handle):
                 equipment = (row.get("Equipment") or "").strip()
@@ -99,6 +99,6 @@ def test_user_catalog_inventories_every_bundled_root_csv_equipment_model() -> No
                 assert f"`{equipment}`" in document
                 assert f"`{model_id}`" in document
 
-    assert equipment_blocks == 12
-    assert len(model_ids) == 12
-    assert "7 built-in models plus 12 bundled CSV model" in document
+    assert equipment_blocks == 13
+    assert len(model_ids) == 13
+    assert "7 built-in models plus 13 bundled CSV model" in document

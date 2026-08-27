@@ -4,7 +4,7 @@ This is the complete inventory of repository-owned instrument profiles. Version 
 generic project-owned selectors and requires bench schema version 2. External JSON and CSV files may
 provide their own reported identity without changing the selected behavior profile.
 
-The built-in catalog contains 7 built-in models plus 12 bundled CSV model IDs.
+The built-in catalog contains 7 built-in models plus 13 bundled CSV model IDs.
 
 ## Built-in drivers
 
@@ -141,6 +141,7 @@ do not claim distinct stateful capabilities.
 | `Virtual DMM CSV Example` | `virtual_dmm_csv_example` |
 | `Debug Test Instrument` | `debug_test_instrument` |
 | `Virtual VNA 2 Port CSV Static` | `virtual_vna_2_port_csv_static` |
+| `Fixture Controller` | `fixture_controller` |
 
 External CSV equipment names remain user-controlled. When selected through `csv-instruments`, a
 bench-level `reported_model` can override only the second `*IDN?` field.

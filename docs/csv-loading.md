@@ -190,3 +190,15 @@ or directory involved. Common causes are:
 - a validation rule is malformed or placed on a non-parameterized command.
 
 Run `scpi-emulator --create-example` to generate a small working CSV in the current directory.
+
+## Shipped starting points
+
+Copy or run the maintained samples under `examples/csv`:
+
+- `basic/` contains the two-instrument Docker default;
+- `catalog/` contains nine generic static instrument profiles;
+- `vna/` contains one static generic two-port VNA profile;
+- `mixed/` contains an adjacent CSV and JSON bench that combine CSV and built-in drivers.
+
+Each subfolder is independently valid for its documented command. The parent `examples/csv` folder
+is an organizer, not a single bench, because separate examples intentionally reuse port numbers.

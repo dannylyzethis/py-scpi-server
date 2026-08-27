@@ -100,8 +100,8 @@ instruments possible.
 ### 1. A maintainable Python package
 
 The supported code now lives under `src/scpi_emulator`, with project metadata, a command-line entry
-point, optional dependency groups, tests, and CI configuration. Earlier implementations are retained
-under `legacy/` for reference instead of competing with the active package.
+point, optional dependency groups, tests, and CI configuration. Unsupported standalone
+implementations were removed from the working tree once Git history made a second archive redundant.
 
 The transport-neutral instrument implementation now lives in `instrument.py`. CSV/XLSX reading,
 validation, identifier normalization, and compatibility-instrument construction live in

@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ready-to-run DMM and VNA scenario examples, including JSON content saved with a `.txt` extension.
 - A dependency-ordered repository cleanup and modularization backlog under Beads epic `scpi-38a`.
 
+### Changed
+
+- Grouped supported CSV fixtures under independently loadable `examples/csv` subfolders and
+  removed unsupported standalone implementations already preserved in Git history.
+
 ### Fixed
 
 - CI license review now recognizes the reviewed BSD-3-Clause Click 8.5.0 release.
@@ -69,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the project-owned vocabulary with no legacy aliases.
 - Interactive and long-running CLI status output now uses console-safe text so redirected Windows
   processes do not terminate with a code-page `UnicodeEncodeError`.
-- The legacy single-context PSU block in `detailed_instruments.csv` is now labeled generically
+- The legacy single-context PSU block in `examples/csv/catalog/detailed_instruments.csv` is now labeled generically
   instead of claiming to be a stateful built-in power-supply profile.
 - ZIP installation documentation now explains environment activation and stale executable detection.
 

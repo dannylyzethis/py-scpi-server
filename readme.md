@@ -206,7 +206,7 @@ scpi-emulator --bench examples/virtual-bench.json --start
 The familiar single-file form is unchanged:
 
 ```bash
-scpi-emulator --load scpi_instruments_example.csv --start
+scpi-emulator --load examples/csv/basic --start
 ```
 
 Quotes around the `--load` path are required only when the path contains spaces. For example,
@@ -234,7 +234,7 @@ Other useful entry forms:
 python -m scpi_emulator --help
 scpi-emulator --version
 scpi-emulator --interactive
-scpi-emulator --load detailed_instruments.csv --start --verbose --log-file emulator.log
+scpi-emulator --load examples/csv/catalog --start --verbose --log-file emulator.log
 ```
 
 With no flags, the interactive manager can load either simple CSV definitions or a precise bench
@@ -344,10 +344,11 @@ the active configuration unchanged.
 
 The repository includes:
 
-- `scpi_instruments_example.csv` — two small development instruments.
-- `detailed_instruments.csv` — nine generic static instrument command profiles, including DMM,
+- `examples/csv/basic/scpi_instruments_example.csv` — two small development instruments.
+- `examples/csv/catalog/detailed_instruments.csv` — nine generic static instrument command profiles, including DMM,
   one-output PSU, Oscilloscope Type A/B, signal-generator, and VNA examples.
-- `vna-commands.csv` — a static generic two-port VNA CSV catalog.
+- `examples/csv/vna/vna-commands.csv` — a static generic two-port VNA CSV catalog.
+- `examples/csv/mixed/mixed-bench.json` and its adjacent CSV — a copyable mixed built-in/CSV bench.
 
 ## CLI reference
 
@@ -390,8 +391,8 @@ Repository layout:
 ```text
 src/scpi_emulator/       Supported package and CLI
 tests/                   Regression and integration tests
+examples/csv/            Independently loadable CSV examples and a mixed bench
 tools/                   Configuration migration utilities
-legacy/                  Archived pre-package implementations
 .beads/issues.jsonl      Exported implementation backlog
 ```
 

@@ -55,5 +55,5 @@ Every output independently owns voltage/current settings, enable state, protecti
 range selections, trip state, and voltage/current/power measurements. `*CLS` clears status and
 errors without changing configured outputs. `*RST` resets all available outputs and selects output 1.
 
-The `Virtual PS 1 Output` block in `detailed_instruments.csv` is a static compatibility profile; it
-does not provide the independent state implemented by the built-in driver.
+The `Virtual PS 1 Output` block in `examples/csv/catalog/detailed_instruments.csv` is a static compatibility
+profile; it does not provide the independent state implemented by the built-in driver.

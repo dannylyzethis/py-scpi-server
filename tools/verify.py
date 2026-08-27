@@ -62,7 +62,7 @@ def _verify_wheel(wheel: Path, environment: Path) -> None:
     for bench in (
         "examples/virtual-bench.json",
         "examples/generic-vna-bench.json",
-        "examples/mixed-bench.json",
+        "examples/csv/mixed/mixed-bench.json",
     ):
         run("--bench", bench, executable=cli)
 
