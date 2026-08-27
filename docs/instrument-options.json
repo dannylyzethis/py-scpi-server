@@ -1,42 +1,180 @@
 {
-  "schema_version": 2,
-  "description": "Project-owned generic instrument profile, topology, hardware feature, and application identifiers.",
-  "drivers": {
-    "virtual-dmm": {
-      "models": {
-        "dmm": {"reported_model": "Virtual DMM"}
-      }
-    },
-    "virtual-ps": {
-      "models": {
-        "ps-1-output": {"outputs": 1, "reported_model": "Virtual PS 1 Output"},
-        "ps-2-output": {"outputs": 2, "reported_model": "Virtual PS 2 Output"},
-        "ps-3-output": {"outputs": 3, "reported_model": "Virtual PS 3 Output"},
-        "ps-4-output": {"outputs": 4, "reported_model": "Virtual PS 4 Output"}
-      }
-    },
-    "virtual-vna": {
-      "defaults": {
-        "frequency_minimum_hz": 10000000,
-        "frequency_maximum_hz": 50000000000,
-        "hardware_features": ["all"],
-        "applications": ["all"]
-      },
-      "hardware_features": [
-        "bias_tees",
-        "direct_receiver_access",
-        "internal_combiner",
-        "internal_rf_switches",
-        "noise_receiver",
-        "pulse_control",
-        "receiver_attenuators",
-        "source_attenuators"
+  "schema_version": 3,
+  "description": "Generated from built-in runtime instrument driver descriptors.",
+  "drivers": [
+    {
+      "id": "virtual-dmm",
+      "display_name": "Virtual DMM",
+      "version": "4.0.0",
+      "maturity": "alpha",
+      "transports": [
+        {
+          "name": "raw-socket",
+          "resource_template": "TCPIP::{host}::{port}::SOCKET",
+          "support": "implemented"
+        },
+        {
+          "name": "vxi-11",
+          "resource_template": "TCPIP::{host}::INSTR",
+          "support": "implemented"
+        },
+        {
+          "name": "hislip",
+          "resource_template": "TCPIP::{host}::hislip0,{port}::INSTR",
+          "support": "implemented"
+        }
       ],
-      "models": {
-        "vna-2-port": {
-          "ports": 2,
-          "default_source_count": 1,
-          "applications": [
+      "scenario_inputs": [
+        {
+          "kind": "scalar-reading",
+          "support": "implemented",
+          "description": "Sequential voltage, current, resistance, capacitance, frequency, or period values."
+        }
+      ],
+      "models": [
+        {
+          "model": "dmm",
+          "display_name": "Virtual DMM",
+          "instrument_class": "DMM",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [],
+          "available_applications": [],
+          "configuration_fields": []
+        }
+      ],
+      "command_coverage": []
+    },
+    {
+      "id": "virtual-ps",
+      "display_name": "Virtual power supply",
+      "version": "4.0.0",
+      "maturity": "alpha",
+      "transports": [
+        {
+          "name": "raw-socket",
+          "resource_template": "TCPIP::{host}::{port}::SOCKET",
+          "support": "implemented"
+        },
+        {
+          "name": "vxi-11",
+          "resource_template": "TCPIP::{host}::INSTR",
+          "support": "implemented"
+        },
+        {
+          "name": "hislip",
+          "resource_template": "TCPIP::{host}::hislip0,{port}::INSTR",
+          "support": "implemented"
+        }
+      ],
+      "scenario_inputs": [],
+      "models": [
+        {
+          "model": "ps-1-output",
+          "display_name": "Virtual PS 1 Output",
+          "instrument_class": "PSU",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [],
+          "available_applications": [],
+          "configuration_fields": []
+        },
+        {
+          "model": "ps-2-output",
+          "display_name": "Virtual PS 2 Output",
+          "instrument_class": "PSU",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [],
+          "available_applications": [],
+          "configuration_fields": []
+        },
+        {
+          "model": "ps-3-output",
+          "display_name": "Virtual PS 3 Output",
+          "instrument_class": "PSU",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [],
+          "available_applications": [],
+          "configuration_fields": []
+        },
+        {
+          "model": "ps-4-output",
+          "display_name": "Virtual PS 4 Output",
+          "instrument_class": "PSU",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [],
+          "available_applications": [],
+          "configuration_fields": []
+        }
+      ],
+      "command_coverage": []
+    },
+    {
+      "id": "virtual-vna",
+      "display_name": "Virtual Vector Network Analyzer",
+      "version": "4.0.0",
+      "maturity": "alpha",
+      "transports": [
+        {
+          "name": "raw-socket",
+          "resource_template": "TCPIP::{host}::{port}::SOCKET",
+          "support": "implemented"
+        },
+        {
+          "name": "vxi-11",
+          "resource_template": "TCPIP::{host}::INSTR",
+          "support": "implemented"
+        },
+        {
+          "name": "hislip",
+          "resource_template": "TCPIP::{host}::hislip0,{port}::INSTR",
+          "support": "implemented"
+        }
+      ],
+      "scenario_inputs": [
+        {
+          "kind": "complex-trace",
+          "support": "implemented",
+          "description": "Complex receiver or corrected trace samples with an optional stimulus axis."
+        },
+        {
+          "kind": "scalar-result",
+          "support": "implemented",
+          "description": "Application summaries such as gain-compression results."
+        },
+        {
+          "kind": "event",
+          "support": "planned",
+          "description": "Deterministic trigger, status, and fault events."
+        }
+      ],
+      "models": [
+        {
+          "model": "vna-2-port",
+          "display_name": "Virtual VNA 2 Port",
+          "instrument_class": "VNA",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [
+            "bias_tees",
+            "direct_receiver_access",
+            "internal_combiner",
+            "internal_rf_switches",
+            "noise_receiver",
+            "pulse_control",
+            "receiver_attenuators",
+            "source_attenuators"
+          ],
+          "available_applications": [
             "arbitrary_waveform_generation",
             "basic_pulsed_rf",
             "embedded_lo",
@@ -58,12 +196,110 @@
             "spectrum_analysis",
             "time_domain",
             "wideband_iq"
+          ],
+          "configuration_fields": [
+            {
+              "name": "source_count",
+              "value_type": "integer",
+              "description": "Number of independent stimulus sources.",
+              "default": 1,
+              "choices": [],
+              "minimum": 1,
+              "maximum": 2
+            },
+            {
+              "name": "hardware_features",
+              "value_type": "string-list",
+              "description": "Project-owned simulated hardware capabilities.",
+              "default": [
+                "all"
+              ],
+              "choices": [
+                "all",
+                "bias_tees",
+                "direct_receiver_access",
+                "internal_combiner",
+                "internal_rf_switches",
+                "noise_receiver",
+                "pulse_control",
+                "receiver_attenuators",
+                "source_attenuators"
+              ],
+              "minimum": null,
+              "maximum": null
+            },
+            {
+              "name": "applications",
+              "value_type": "string-list",
+              "description": "Project-owned functional application capabilities.",
+              "default": [
+                "all"
+              ],
+              "choices": [
+                "all",
+                "arbitrary_waveform_generation",
+                "basic_pulsed_rf",
+                "embedded_lo",
+                "enhanced_time_domain",
+                "fast_cw",
+                "fixture_removal",
+                "frequency_converter",
+                "frequency_offset",
+                "gain_compression",
+                "integrated_pulsed_rf",
+                "intermodulation_distortion",
+                "measurement_uncertainty",
+                "modulation_distortion",
+                "n_port",
+                "noise_figure",
+                "performance_test",
+                "phase_noise",
+                "scalar_mixer",
+                "spectrum_analysis",
+                "time_domain",
+                "wideband_iq"
+              ],
+              "minimum": null,
+              "maximum": null
+            },
+            {
+              "name": "frequency_minimum_hz",
+              "value_type": "number",
+              "description": "Emulated instrument minimum frequency in hertz.",
+              "default": 10000000,
+              "choices": [],
+              "minimum": 1e-12,
+              "maximum": null
+            },
+            {
+              "name": "frequency_maximum_hz",
+              "value_type": "number",
+              "description": "Emulated instrument maximum frequency in hertz.",
+              "default": 50000000000,
+              "choices": [],
+              "minimum": 1e-12,
+              "maximum": null
+            }
           ]
         },
-        "vna-4-port": {
-          "ports": 4,
-          "default_source_count": 2,
-          "applications": [
+        {
+          "model": "vna-4-port",
+          "display_name": "Virtual VNA 4 Port",
+          "instrument_class": "VNA",
+          "firmware_snapshots": [
+            "E.1.0"
+          ],
+          "available_hardware_features": [
+            "bias_tees",
+            "direct_receiver_access",
+            "internal_combiner",
+            "internal_rf_switches",
+            "noise_receiver",
+            "pulse_control",
+            "receiver_attenuators",
+            "source_attenuators"
+          ],
+          "available_applications": [
             "active_hot_parameters",
             "arbitrary_waveform_generation",
             "basic_pulsed_rf",
@@ -89,9 +325,117 @@
             "time_domain",
             "true_mode_stimulus",
             "wideband_iq"
+          ],
+          "configuration_fields": [
+            {
+              "name": "source_count",
+              "value_type": "integer",
+              "description": "Number of independent stimulus sources.",
+              "default": 2,
+              "choices": [],
+              "minimum": 1,
+              "maximum": 2
+            },
+            {
+              "name": "hardware_features",
+              "value_type": "string-list",
+              "description": "Project-owned simulated hardware capabilities.",
+              "default": [
+                "all"
+              ],
+              "choices": [
+                "all",
+                "bias_tees",
+                "direct_receiver_access",
+                "internal_combiner",
+                "internal_rf_switches",
+                "noise_receiver",
+                "pulse_control",
+                "receiver_attenuators",
+                "source_attenuators"
+              ],
+              "minimum": null,
+              "maximum": null
+            },
+            {
+              "name": "applications",
+              "value_type": "string-list",
+              "description": "Project-owned functional application capabilities.",
+              "default": [
+                "all"
+              ],
+              "choices": [
+                "all",
+                "active_hot_parameters",
+                "arbitrary_waveform_generation",
+                "basic_pulsed_rf",
+                "differential_iq",
+                "embedded_lo",
+                "enhanced_time_domain",
+                "fast_cw",
+                "fixture_removal",
+                "frequency_converter",
+                "frequency_offset",
+                "gain_compression",
+                "integrated_pulsed_rf",
+                "intermodulation_distortion",
+                "measurement_uncertainty",
+                "modulation_distortion",
+                "n_port",
+                "noise_figure",
+                "performance_test",
+                "phase_noise",
+                "scalar_mixer",
+                "source_phase_control",
+                "spectrum_analysis",
+                "time_domain",
+                "true_mode_stimulus",
+                "wideband_iq"
+              ],
+              "minimum": null,
+              "maximum": null
+            },
+            {
+              "name": "frequency_minimum_hz",
+              "value_type": "number",
+              "description": "Emulated instrument minimum frequency in hertz.",
+              "default": 10000000,
+              "choices": [],
+              "minimum": 1e-12,
+              "maximum": null
+            },
+            {
+              "name": "frequency_maximum_hz",
+              "value_type": "number",
+              "description": "Emulated instrument maximum frequency in hertz.",
+              "default": 50000000000,
+              "choices": [],
+              "minimum": 1e-12,
+              "maximum": null
+            }
           ]
         }
-      }
+      ],
+      "command_coverage": [
+        {
+          "model": "vna-2-port",
+          "firmware": "E.1.0",
+          "manifest": "profiles/vna_commands.v1.json",
+          "report": "reports/vna-coverage-vna-2-port-E.1.0.json",
+          "documented": 393,
+          "implemented": 393,
+          "percent": 100.0
+        },
+        {
+          "model": "vna-4-port",
+          "firmware": "E.1.0",
+          "manifest": "profiles/vna_commands.v1.json",
+          "report": "reports/vna-coverage-vna-4-port-E.1.0.json",
+          "documented": 393,
+          "implemented": 393,
+          "percent": 100.0
+        }
+      ]
     }
-  }
+  ]
 }

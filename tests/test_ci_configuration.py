@@ -21,4 +21,5 @@ def test_release_guide_uses_the_same_quality_entry_point() -> None:
     guide = (REPOSITORY_ROOT / "docs" / "release.md").read_text(encoding="utf-8")
     assert "python tools/verify.py quality" in guide
     assert "python tools/verify.py test" in guide
+    assert "python tools/generate_catalog.py --write" in guide
     assert "tools/ci_pytest.py" not in guide

@@ -17,6 +17,17 @@ policy, the complete branch-coverage suite, both VNA manifests, an isolated whee
 wheel-content checks, and installed-wheel CLI/bench smoke tests. For the portable behavior suite
 alone, use `python tools/verify.py test`; the OS/Python matrix calls that exact profile.
 
+Built-in driver descriptors are the source of truth for the catalog JSON and generated Markdown
+reference. After changing a driver model, firmware, transport, scenario input, configuration field,
+hardware feature, application, or coverage row, regenerate and verify the artifacts with:
+
+```powershell
+python tools/generate_catalog.py --write
+python tools/generate_catalog.py --check
+```
+
+The `quality` profile runs the check form and fails when either checked-in artifact is stale.
+
 The two manifest commands fail if the checked-in documented snapshot has an implementation gap.
 The tests also compare the generated model reports with the checked-in JSON reports, so stale
 compatibility claims fail CI.

@@ -4,12 +4,14 @@ import csv
 from pathlib import Path
 
 from scpi_emulator.drivers import build_driver_catalog
+from tools.generate_catalog import check_catalog_artifacts
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CATALOG_DOCUMENT = REPOSITORY_ROOT / "docs" / "instrument-catalog.md"
 OPTION_DOCUMENT = REPOSITORY_ROOT / "docs" / "instrument-options.json"
-PROFILE = REPOSITORY_ROOT / "src" / "scpi_emulator" / "profiles" / "vna_capabilities.v1.json"
+def test_generated_catalog_artifacts_match_runtime_descriptors() -> None:
+    assert check_catalog_artifacts() == ()
 
 
 def test_user_catalog_lists_every_runtime_driver_model_firmware_and_transport() -> None:
@@ -28,20 +30,13 @@ def test_user_catalog_lists_every_runtime_driver_model_firmware_and_transport() 
 
 def test_user_catalog_lists_every_vna_hardware_and_application_token() -> None:
     document = CATALOG_DOCUMENT.read_text(encoding="utf-8")
-    profile = json.loads(PROFILE.read_text(encoding="utf-8"))
     options = json.loads(OPTION_DOCUMENT.read_text(encoding="utf-8"))
-    documented_driver = options["drivers"]["virtual-vna"]
-    documented_models = options["drivers"]["virtual-vna"]["models"]
+    vna = next(driver for driver in options["drivers"] if driver["id"] == "virtual-vna")
 
-    assert set(documented_driver["hardware_features"]) == set(profile["hardware_features"])
-    for feature in profile["hardware_features"]:
-        assert f"`{feature}`" in document
-    for model_name, model in profile["models"].items():
-        documented = documented_models[model_name]
-        assert documented["ports"] == model["ports"]
-        assert documented["default_source_count"] == model["default_source_count"]
-        assert set(documented["applications"]) <= set(profile["applications"])
-        for application in documented["applications"]:
+    for model in vna["models"]:
+        for feature in model["available_hardware_features"]:
+            assert f"`{feature}`" in document
+        for application in model["available_applications"]:
             assert f"`{application}`" in document
     assert "instrument-options.json" in document
 
@@ -101,4 +96,4 @@ def test_user_catalog_inventories_every_bundled_csv_equipment_model() -> None:
 
     assert equipment_blocks == 13
     assert len(model_ids) == 13
-    assert "7 built-in models plus 13 bundled CSV model" in document
+    assert "13 bundled CSV model IDs" in document
