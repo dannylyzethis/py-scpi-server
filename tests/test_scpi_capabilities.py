@@ -1,6 +1,6 @@
 import pytest
 
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.scpi import CapabilityError, CommandSpec, HeaderNode, VNACapabilities
 
 

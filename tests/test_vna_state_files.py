@@ -1,6 +1,6 @@
 import json
 
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 
 
 def vna(tmp_path, instrument_id="vna-2-port"):

@@ -1,7 +1,7 @@
 import pytest
 
-from scpi_emulator.emulator import SCPIInstrument
 from scpi_emulator.hislip_transport import HiSLIPServer
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.lxi_discovery import (
     HISLIP_SERVICE_TYPE,
     VXI11_SERVICE_TYPE,

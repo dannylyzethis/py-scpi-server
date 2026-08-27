@@ -108,9 +108,9 @@ validation, identifier normalization, and compatibility-instrument construction 
 `configuration.py`. Raw TCP session lifecycle and framing integration live in `raw_server.py`, and
 the executable process lifecycle lives in `cli.py`. Compatibility and composed-runtime selection
 live in `runtime.py`, while interactive command parsing and live scenario controls live in
-`interactive.py`. Drivers, bench composition, and the CLI import these focused modules directly;
-`emulator.py` temporarily re-exports their public names so existing library imports continue to
-work during modularization.
+`interactive.py`. Drivers, bench composition, the CLI, tests, and library users import these focused
+modules directly. The transitional `emulator.py` re-export facade was removed before the first
+tagged 4.0 release so the clean module boundaries are the supported API from the start.
 
 Configuration loading is transactional and strict. It rejects malformed headers, spilled CSV
 fields, invalid ports, duplicate instruments or commands, and unsupported validation rules. If a

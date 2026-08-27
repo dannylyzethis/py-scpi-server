@@ -3,7 +3,7 @@ from threading import Thread
 
 import pytest
 
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.scpi import OutputQueue
 
 

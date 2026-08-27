@@ -29,7 +29,7 @@ implemented; the server negotiates version 1.0 for broad compatibility.
 ## Direct use
 
 ```python
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.hislip_transport import HiSLIPServer
 
 instrument = SCPIInstrument("Virtual DMM", "dmm-1")

@@ -4,7 +4,7 @@ import threading
 
 import pytest
 
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.scpi import TriggerSource
 from scpi_emulator.vxi11_transport import (
     DEVICE_ASYNC_PROGRAM,

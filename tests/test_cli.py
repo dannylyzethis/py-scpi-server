@@ -7,7 +7,7 @@ import pytest
 from scpi_emulator import __version__, cli
 from scpi_emulator.bench import BenchError, BenchRuntime
 from scpi_emulator.cli import build_parser, main
-from scpi_emulator.emulator import SCPIEmulatorManager
+from scpi_emulator.runtime import SCPIEmulatorManager
 
 
 def test_package_version_is_exposed() -> None:

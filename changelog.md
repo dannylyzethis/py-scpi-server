@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grouped supported CSV fixtures under independently loadable `examples/csv` subfolders and
   removed unsupported standalone implementations already preserved in Git history.
 - Normalized Python formatting/import order and made both deterministic hosted/local quality gates.
+- Removed the transitional `scpi_emulator.emulator` re-export facade before the first tagged 4.0
+  release; library users now import each public type from its focused owning module.
 
 ### Fixed
 

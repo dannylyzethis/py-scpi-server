@@ -47,6 +47,8 @@ def _verify_wheel(wheel: Path, environment: Path) -> None:
     missing = required - names
     if missing:
         raise RuntimeError(f"wheel is missing packaged assets: {sorted(missing)}")
+    if "scpi_emulator/emulator.py" in names:
+        raise RuntimeError("wheel still contains the removed compatibility facade")
     license_names = {name for name in names if ".dist-info/licenses/" in name}
     for filename in ("LICENSE.md", "THIRD_PARTY_NOTICES.md", "dependencies.json"):
         if not any(name.endswith(filename) for name in license_names):

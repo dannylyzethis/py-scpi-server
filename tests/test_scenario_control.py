@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 from scpi_emulator.dashboard import HAS_FLASK, WebDashboard
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 
 pytestmark = pytest.mark.skipif(not HAS_FLASK, reason="web extras are not installed")
 

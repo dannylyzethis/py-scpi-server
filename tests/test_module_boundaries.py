@@ -1,44 +1,39 @@
 from pathlib import Path
 
-from scpi_emulator.cli import build_parser as DirectBuildParser
-from scpi_emulator.cli import main as DirectMain
+from scpi_emulator.cli import build_parser, main
 from scpi_emulator.configuration import (
     ConfigurationError,
     ExcelReader,
     load_compatibility_instruments,
 )
-from scpi_emulator.dashboard import WebDashboard as DirectDashboard
-from scpi_emulator.emulator import (
-    ConfigurationError as FacadeConfigurationError,
-)
-from scpi_emulator.emulator import (
-    ExcelReader as FacadeExcelReader,
-)
-from scpi_emulator.emulator import SCPIEmulatorManager
-from scpi_emulator.emulator import (
-    SCPIInstrument as FacadeSCPIInstrument,
-)
-from scpi_emulator.emulator import SCPIServer as FacadeSCPIServer
-from scpi_emulator.emulator import WebDashboard as FacadeDashboard
-from scpi_emulator.emulator import build_parser as FacadeBuildParser
-from scpi_emulator.emulator import main as FacadeMain
+from scpi_emulator.dashboard import WebDashboard
 from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.interactive import InteractiveShell
-from scpi_emulator.raw_server import SCPIServer as DirectSCPIServer
-from scpi_emulator.runtime import SCPIEmulatorManager as DirectManager
+from scpi_emulator.raw_server import SCPIServer
+from scpi_emulator.runtime import SCPIEmulatorManager
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_emulator_facade_preserves_instrument_and_configuration_imports() -> None:
-    assert FacadeSCPIInstrument is SCPIInstrument
-    assert FacadeConfigurationError is ConfigurationError
-    assert FacadeExcelReader is ExcelReader
-    assert FacadeBuildParser is DirectBuildParser
-    assert FacadeMain is DirectMain
-    assert FacadeSCPIServer is DirectSCPIServer
-    assert SCPIEmulatorManager is DirectManager
-    assert FacadeDashboard is DirectDashboard
+def test_transitional_emulator_facade_is_removed() -> None:
+    assert not (REPOSITORY_ROOT / "src" / "scpi_emulator" / "emulator.py").exists()
+    prohibited_import = "scpi_emulator." + "emulator"
+    for directory in ("src", "tests", "tools"):
+        for path in (REPOSITORY_ROOT / directory).rglob("*.py"):
+            assert prohibited_import not in path.read_text(encoding="utf-8")
+    assert all(
+        item is not None
+        for item in (
+            ConfigurationError,
+            ExcelReader,
+            SCPIInstrument,
+            SCPIEmulatorManager,
+            SCPIServer,
+            WebDashboard,
+            build_parser,
+            main,
+        )
+    )
 
 
 def test_configuration_module_loads_compatibility_instruments_directly() -> None:

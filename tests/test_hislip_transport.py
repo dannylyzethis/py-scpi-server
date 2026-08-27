@@ -3,7 +3,6 @@ import struct
 
 import pytest
 
-from scpi_emulator.emulator import SCPIInstrument
 from scpi_emulator.hislip_transport import (
     ASYNC_DEVICE_CLEAR,
     ASYNC_DEVICE_CLEAR_ACKNOWLEDGE,
@@ -35,6 +34,7 @@ from scpi_emulator.hislip_transport import (
     receive_message,
     send_message,
 )
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.scpi import TriggerSource
 
 

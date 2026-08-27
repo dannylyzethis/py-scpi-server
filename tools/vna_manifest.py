@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from scpi_emulator.emulator import SCPIInstrument
+from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.scpi import (
     coverage_report,
     load_command_manifest,

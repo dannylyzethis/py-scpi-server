@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from scpi_emulator.emulator import SCPIEmulatorManager
+from scpi_emulator.runtime import SCPIEmulatorManager
 from scpi_emulator.scenario import (
     AdvancePolicy,
     EndPolicy,

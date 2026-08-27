@@ -386,6 +386,10 @@ The `test` profile is the portable OS/Python behavior suite. The `quality` profi
 local release gate, including formatting, import order, lint, commercial-license review, branch
 coverage, manifests, package contents, and installed-wheel CLI smoke tests.
 
+Library users should import instrument, runtime, transport, dashboard, configuration, and CLI types
+from their focused modules. See the [library API and migration guide](docs/library-api.md) for exact
+paths. The old transitional `scpi_emulator.emulator` facade is not part of the 4.0 API.
+
 Repository layout:
 
 ```text
