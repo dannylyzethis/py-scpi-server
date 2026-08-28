@@ -17,7 +17,14 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 def run(*arguments: str, executable: Path | None = None) -> None:
     command = [str(executable or sys.executable), *arguments]
     print(f"\n> {' '.join(command)}", flush=True)
-    subprocess.run(command, cwd=REPOSITORY_ROOT, check=True)
+    result = subprocess.run(command, cwd=REPOSITORY_ROOT, check=False)
+    if result.returncode:
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            rendered = (
+                " ".join(command).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            )
+            print(f"::error title=Verification command failed::{rendered}", flush=True)
+        result.check_returncode()
 
 
 def run_test_profile() -> None:
