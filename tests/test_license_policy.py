@@ -39,3 +39,8 @@ def test_license_inventory_is_complete_and_explicit() -> None:
 
 def test_no_unused_socketio_bundle_is_tracked() -> None:
     assert not (REPOSITORY_ROOT / "socket.io.min.js").exists()
+
+
+def test_license_failures_emit_hosted_ci_annotations() -> None:
+    checker = (REPOSITORY_ROOT / "tools" / "check_licenses.py").read_text(encoding="utf-8")
+    assert "::error title=License policy failed::" in checker

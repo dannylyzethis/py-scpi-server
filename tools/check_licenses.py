@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 from collections import deque
 from importlib import metadata
 from pathlib import Path
@@ -121,6 +122,9 @@ def main() -> int:
         print("\nLicense policy failed:")
         for error in errors:
             print(f"- {error}")
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                rendered = error.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                print(f"::error title=License policy failed::{rendered}")
         return 1
     print(
         f"\nRoyalty-free commercial/enterprise license policy passed for "
