@@ -7,12 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-08-28
+
 ### Added
 
 - Live scenario load/status/start/pause/reset/step commands in the interactive manager.
 - Per-instrument dashboard scenario-file loading with optional immediate start.
 - Ready-to-run DMM and VNA scenario examples, including JSON content saved with a `.txt` extension.
-- A dependency-ordered repository cleanup and modularization backlog under Beads epic `scpi-38a`.
+- Completed dependency-ordered repository cleanup and modularization work tracked under Beads epic
+  `scpi-38a`.
+- Bench schema version 2 with an optional validated `reported_model` identity override.
+- Stateful one-, two-, three-, and four-output generic power-supply profiles.
+- Generic static CSV identities for DMM Type A/B, Oscilloscope Type A/B, a one-output supply,
+  a signal generator, and topology-described VNA profiles.
 
 ### Changed
 
@@ -21,27 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Normalized Python formatting/import order and made both deterministic hosted/local quality gates.
 - Removed the transitional `scpi_emulator.emulator` re-export facade before the first tagged 4.0
   release; library users now import each public type from its focused owning module.
-
-### Fixed
-
-- CI license review now recognizes the reviewed BSD-3-Clause Click 8.5.0 release.
-- The container smoke test now validates the actual bundled generic CSV instrument identity.
-
-## [4.0.0] - 2026-08-26
-
-### Added
-
-- Bench schema version 2 with an optional validated `reported_model` identity override.
-- Stateful one-, two-, three-, and four-output generic power-supply profiles.
-- Generic static CSV identities for DMM Type A/B, Oscilloscope Type A/B, a one-output supply,
-  a signal generator, and topology-described VNA profiles.
-
-### Changed
-
 - Replaced all repository-owned instrument model identifiers with project-owned generic profile
   selectors and readable virtual identities.
 - Separated catalog behavior selection from the model text returned by `*IDN?`.
 - Removed prior built-in selector aliases; version-1 bench files must be rewritten as schema 2.
+
+### Fixed
+
+- CI license review recognizes the reviewed BSD-3-Clause Click 8.5.0 release and the reviewed
+  MIT-licensed Build 1.6.0 and Ruff 0.16.5 releases.
+- Clean-environment verification uses isolated PEP 517 builds and remains compatible with Python
+  3.10.
+- The container smoke test validates the actual bundled generic CSV instrument identity.
 
 ## [3.0.0] - 2026-08-25
 
