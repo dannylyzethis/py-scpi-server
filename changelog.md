@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Ruff 0.16.5, and LGPL-2.1-or-later Zeroconf 0.150.1 releases.
 - Clean-environment verification uses isolated PEP 517 builds and remains compatible with Python
   3.10.
+- The optional direct LGPL discovery dependency is pinned to the reviewed Zeroconf 0.150.1 release
+  for reproducible license verification across package indexes.
 - The container smoke test validates the actual bundled generic CSV instrument identity.
 
 ## [3.0.0] - 2026-08-25
