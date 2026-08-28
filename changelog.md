@@ -35,8 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- CI license review recognizes the reviewed BSD-3-Clause Click 8.5.0 release and the reviewed
-  MIT-licensed Build 1.6.0 and Ruff 0.16.5 releases.
+- CI license review recognizes the reviewed BSD-3-Clause Click 8.5.0, MIT-licensed Build 1.6.0 and
+  Ruff 0.16.5, and LGPL-2.1-or-later Zeroconf 0.150.1 releases.
 - Clean-environment verification uses isolated PEP 517 builds and remains compatible with Python
   3.10.
 - The container smoke test validates the actual bundled generic CSV instrument identity.
