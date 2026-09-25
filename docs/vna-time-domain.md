@@ -30,5 +30,7 @@ parse Touchstone fixture networks or reproduce physical-instrument fixture algor
 filename and enable workflows are realistic enough to exercise configuration, branching, recall,
 error handling, and downstream data processing without claiming measurement accuracy.
 
-The existence-only files behind `MMEM:STOR:STAT` remain intentionally narrow: they do not serialize
-time-domain, gate, fixture, sweep, scenario, hardware, or calibration state.
+The state files behind `MMEM:STOR:STAT` remain intentionally narrow: they serialize composition,
+source power start/stop and per-port levels, and gain-compression power start/stop/linear threshold.
+They do not serialize time-domain, gate, fixture, non-power sweep, scenario, hardware, or
+calibration state.

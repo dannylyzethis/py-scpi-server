@@ -7,15 +7,28 @@ def vna(tmp_path, instrument_id="vna-2-port"):
     return SCPIInstrument("Virtual VNA 2 Port", instrument_id, state_directory=tmp_path)
 
 
-def test_named_state_file_round_trip_persists_existence_only(tmp_path):
+def test_named_state_file_round_trip_persists_composition_and_power(tmp_path):
     instrument = vna(tmp_path)
     instrument.process_command('CALC2:PAR:DEF:EXT "Gain","S21"')
     instrument.process_command('DISP:WIND2:TRAC3:FEED "Gain"')
     instrument.process_command("SENS2:FREQ:STAR 2GHz")
+    instrument.process_command("SOUR2:POW1 -17.5")
+    instrument.process_command("SOUR2:POW:STAR -25")
+    instrument.process_command("SOUR2:POW:STOP -5")
+    instrument.process_command("SENS2:GCOM:POW:STAR -35")
+    instrument.process_command("SENS2:GCOM:POW:STOP 5")
+    instrument.process_command("SENS2:GCOM:COMP:POW -3.5")
     instrument.process_command('MMEM:STOR:STAT "bench.sta"')
 
     saved = json.loads((tmp_path / "vna-2-port" / "bench.sta").read_text())
-    assert set(saved) == {"schema_version", "channels", "windows"}
+    assert set(saved) == {
+        "schema_version",
+        "channels",
+        "windows",
+        "power",
+        "compression_power",
+    }
+    assert saved["schema_version"] == 2
     assert "frequency" not in json.dumps(saved).lower()
     assert instrument.process_command("MMEM:CAT?") == '"bench.sta"'
 
@@ -25,6 +38,31 @@ def test_named_state_file_round_trip_persists_existence_only(tmp_path):
     assert instrument.process_command("CALC2:PAR:CAT?") == '"Gain,S21"'
     assert instrument.process_command("DISP:WIND2:TRAC3:FEED?") == "Gain"
     assert instrument.process_command("SENS2:FREQ:STAR?") == "10000000"
+    assert instrument.process_command("SOUR2:POW1?") == "-17.5"
+    assert instrument.process_command("SOUR2:POW:STAR?") == "-25.0"
+    assert instrument.process_command("SOUR2:POW:STOP?") == "-5.0"
+    assert instrument.process_command("SENS2:GCOM:POW:STAR?") == "-35.0"
+    assert instrument.process_command("SENS2:GCOM:POW:STOP?") == "5.0"
+    assert instrument.process_command("SENS2:GCOM:COMP:POW?") == "-3.5"
+
+
+def test_version_one_state_files_remain_loadable_and_leave_power_unchanged(tmp_path):
+    instrument = vna(tmp_path)
+    directory = tmp_path / "vna-2-port"
+    directory.mkdir(parents=True)
+    payload = {
+        "schema_version": 1,
+        "channels": [{"number": 2, "measurements": [{"name": "Gain", "parameter": "S21"}]}],
+        "windows": [],
+    }
+    (directory / "legacy.sta").write_text(json.dumps(payload), encoding="utf-8")
+    instrument.process_command('CALC2:PAR:DEF:EXT "Before","S11"')
+    instrument.process_command("SOUR2:POW1 -12")
+
+    instrument.process_command('MMEM:LOAD:STAT "legacy.sta"')
+
+    assert instrument.process_command("CALC2:PAR:CAT?") == '"Gain,S21"'
+    assert instrument.process_command("SOUR2:POW1?") == "-12.0"
 
 
 def test_catalog_delete_and_instrument_isolation(tmp_path):

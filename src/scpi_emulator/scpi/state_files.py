@@ -1,13 +1,15 @@
-"""Existence-only VNA composition persistence through named MMEM files."""
+"""VNA composition and selected power persistence through named MMEM files."""
 
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 from pathlib import Path
 from typing import Any
 
+from .active_device import VNAActiveDeviceSystem
 from .measurements import MAX_CHANNEL, MAX_TRACE, MAX_WINDOW, VNAMeasurementSystem
 from .registry import (
     CommandRegistry,
@@ -17,27 +19,32 @@ from .registry import (
     ParameterType,
     SCPICommandError,
 )
+from .sweeps import VNASweepSystem
 
 _SAFE_COMPONENT = re.compile(r"[A-Za-z0-9_. -]{1,128}\Z")
 
 
 class VNAStateFileStore:
-    """Save and recall only channel, measurement, window, and trace existence."""
+    """Save composition plus source and gain-compression power settings."""
 
     def __init__(
         self,
         measurements: VNAMeasurementSystem,
+        sweeps: VNASweepSystem,
+        active_device: VNAActiveDeviceSystem,
         instrument_id: str,
         root: str | Path | None = None,
     ) -> None:
         self.measurements = measurements
+        self.sweeps = sweeps
+        self.active_device = active_device
         base = Path(root) if root is not None else Path.cwd() / ".scpi-state"
         self.directory = base / _safe_instrument_id(instrument_id)
 
     def store(self, filename: str) -> None:
         path = self._path(filename)
         path.parent.mkdir(parents=True, exist_ok=True)
-        payload = _serialize(self.measurements)
+        payload = _serialize(self.measurements, self.sweeps, self.active_device)
         temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
         try:
             temporary.write_text(
@@ -56,8 +63,8 @@ class VNAStateFileStore:
             raise SCPICommandError(-256, f"File name not found; {filename}") from exc
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise SCPICommandError(-257, f"File name error; invalid state file {filename}") from exc
-        composition = _validate(raw)
-        _restore(self.measurements, composition)
+        composition = _validate(raw, self.sweeps.capabilities.ports)
+        _restore(self.measurements, self.sweeps, self.active_device, composition)
 
     def catalog(self) -> str:
         if not self.directory.exists():
@@ -112,9 +119,13 @@ def register_state_file_commands(registry: CommandRegistry, store: VNAStateFileS
     )
 
 
-def _serialize(state: VNAMeasurementSystem) -> dict[str, Any]:
+def _serialize(
+    state: VNAMeasurementSystem,
+    sweeps: VNASweepSystem,
+    active_device: VNAActiveDeviceSystem,
+) -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "channels": [
             {
                 "number": channel.number,
@@ -135,13 +146,40 @@ def _serialize(state: VNAMeasurementSystem) -> dict[str, Any]:
             }
             for window in sorted(state.windows.values(), key=lambda item: item.number)
         ],
+        "power": [
+            {
+                "channel": channel.number,
+                "start": channel.power_start,
+                "stop": channel.power_stop,
+                "ports": [
+                    {"port": port, "level": level}
+                    for port, level in sorted(channel.port_power.items())
+                ],
+            }
+            for channel in sorted(sweeps.channels.values(), key=lambda item: item.number)
+        ],
+        "compression_power": [
+            {
+                "channel": channel,
+                "start": settings.power_start,
+                "stop": settings.power_stop,
+                "linear": settings.compression_power,
+            }
+            for channel, settings in sorted(active_device.gain_channels.items())
+        ],
     }
 
 
-def _validate(raw: Any) -> dict[str, Any]:
-    _object(raw, {"schema_version", "channels", "windows"}, "root")
-    if raw["schema_version"] != 1:
+def _validate(raw: Any, maximum_port: int) -> dict[str, Any]:
+    if not isinstance(raw, dict):
+        _invalid("invalid root fields")
+    version = raw.get("schema_version")
+    expected = {"schema_version", "channels", "windows"}
+    if version == 2:
+        expected |= {"power", "compression_power"}
+    elif version != 1:
         _invalid("unsupported schema version")
+    _object(raw, expected, "root")
     channels = _list(raw["channels"], "channels")
     windows = _list(raw["windows"], "windows")
     names: set[str] = set()
@@ -185,10 +223,68 @@ def _validate(raw: Any) -> dict[str, Any]:
             trace_numbers.add(trace_number)
             normalized_traces.append({"number": trace_number, "measurement": measurement})
         normalized_windows.append({"number": number, "traces": normalized_traces})
-    return {"channels": normalized_channels, "windows": normalized_windows}
+    normalized_power = []
+    normalized_compression = []
+    if version == 2:
+        power_channels: set[int] = set()
+        for power in _list(raw["power"], "power"):
+            _object(power, {"channel", "start", "stop", "ports"}, "power")
+            channel = _number(power["channel"], 1, MAX_CHANNEL, "power channel")
+            if channel in power_channels:
+                _invalid("duplicate power channel")
+            power_channels.add(channel)
+            ports = []
+            port_numbers: set[int] = set()
+            for port in _list(power["ports"], "power ports"):
+                _object(port, {"port", "level"}, "port power")
+                number = _number(port["port"], 1, maximum_port, "port")
+                if number in port_numbers:
+                    _invalid("duplicate power port")
+                port_numbers.add(number)
+                ports.append({"port": number, "level": _power(port["level"], "port power")})
+            normalized_power.append(
+                {
+                    "channel": channel,
+                    "start": _power(power["start"], "power start"),
+                    "stop": _power(power["stop"], "power stop"),
+                    "ports": ports,
+                }
+            )
+
+        compression_channels: set[int] = set()
+        for compression in _list(raw["compression_power"], "compression power"):
+            _object(compression, {"channel", "start", "stop", "linear"}, "compression power")
+            channel = _number(compression["channel"], 1, MAX_CHANNEL, "compression channel")
+            if channel in compression_channels:
+                _invalid("duplicate compression channel")
+            compression_channels.add(channel)
+            start = _power(compression["start"], "compression power start")
+            stop = _power(compression["stop"], "compression power stop")
+            if start > stop:
+                _invalid("compression power start exceeds stop")
+            normalized_compression.append(
+                {
+                    "channel": channel,
+                    "start": start,
+                    "stop": stop,
+                    "linear": _power(compression["linear"], "compression linear power"),
+                }
+            )
+    return {
+        "schema_version": version,
+        "channels": normalized_channels,
+        "windows": normalized_windows,
+        "power": normalized_power,
+        "compression_power": normalized_compression,
+    }
 
 
-def _restore(state: VNAMeasurementSystem, composition: dict[str, Any]) -> None:
+def _restore(
+    state: VNAMeasurementSystem,
+    sweeps: VNASweepSystem,
+    active_device: VNAActiveDeviceSystem,
+    composition: dict[str, Any],
+) -> None:
     with state._lock:
         state.channels.clear()
         state.windows.clear()
@@ -206,6 +302,25 @@ def _restore(state: VNAMeasurementSystem, composition: dict[str, Any]) -> None:
             state.active_window = min(state.windows)
             window = state.windows[state.active_window]
             window.active_trace = min(window.traces, default=None)
+    if composition["schema_version"] == 1:
+        return
+    with sweeps._lock:
+        sweeps.channels.clear()
+        for power in composition["power"]:
+            channel = sweeps.channel(power["channel"])
+            channel.power_start = power["start"]
+            channel.power_stop = power["stop"]
+            channel.port_power = {item["port"]: item["level"] for item in power["ports"]}
+            sweeps._synchronize(channel.number)
+        if not sweeps.channels:
+            sweeps.channel(1)
+            sweeps._synchronize(1)
+    active_device.gain_channels.clear()
+    for compression in composition["compression_power"]:
+        settings = active_device.gain(compression["channel"])
+        settings.power_start = compression["start"]
+        settings.power_stop = compression["stop"]
+        settings.compression_power = compression["linear"]
 
 
 def _safe_instrument_id(value: str) -> str:
@@ -228,6 +343,17 @@ def _number(value: Any, minimum: int, maximum: int, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
         _invalid(f"invalid {label} number")
     return value
+
+
+def _power(value: Any, label: str) -> float:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
+        or not -120 <= value <= 50
+    ):
+        _invalid(f"invalid {label}")
+    return float(value)
 
 
 def _text(value: Any, label: str) -> str:

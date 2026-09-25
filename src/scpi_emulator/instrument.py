@@ -144,7 +144,11 @@ class SCPIInstrument:
             self.vna_data.add_application(self.vna_time_domain)
             register_time_domain_commands(self.core_registry, self.vna_time_domain)
             self.vna_state_files = VNAStateFileStore(
-                self.vna_measurements, str(instrument_id), state_directory
+                self.vna_measurements,
+                self.vna_sweeps,
+                self.vna_active_device,
+                str(instrument_id),
+                state_directory,
             )
             register_state_file_commands(self.core_registry, self.vna_state_files)
             self.acquisition.add_trigger_listener(self.vna_data.notify_trigger)

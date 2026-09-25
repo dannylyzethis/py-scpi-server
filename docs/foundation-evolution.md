@@ -441,7 +441,10 @@ As of 2026-08-27:
   IF bandwidth, and dwell determine the acquisition duration used by OPC/status handshakes.
 - Selected measurements and receiver/SNP queries consume named complex traces from the generic
   scenario player with shared read, trigger, operation, end, seed, timing, and reset policies.
-- Named MMEM save/recall files persist only channel, measurement, window, and trace existence.
+- Named MMEM save/recall files persist channel, measurement, window, and trace existence together
+  with source power start/stop, per-port levels, and gain-compression power start/stop/linear
+  threshold. Frequency, calibration, and hardware state remain outside this deliberately narrow
+  format.
   Registry predicates reject nonexistent addressed objects before their handlers can run, while
   malformed files are rejected before any live composition is changed.
 - Profile-gated time-domain transforms, time gates, fixture file references, per-port de-embedding, and
