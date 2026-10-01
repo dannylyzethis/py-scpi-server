@@ -40,7 +40,13 @@ scenario-control changes are reflected through the same authoritative state API.
 The browser polls `/api/status` and `/api/commands` once per second. It retains open instrument
 details and unsent fault/noise control values while cards refresh. This same-origin polling model
 works without a CDN or browser WebSocket library and reconnects automatically after a temporary
-server interruption.
+server interruption. The live command stream shows the latest 50 observed commands, updates within
+one polling interval, and follows the newest entry unless you have scrolled upward to inspect older
+traffic.
+
+Routine dashboard HTTP access lines are suppressed so the emulator console is not flooded by the
+two polling requests each second. Run with `--verbose` when those request lines are useful for
+diagnostics; startup, warning, and error messages remain visible during normal operation.
 
 Dashboard startup binds the HTTP listener before reporting success. Runtime shutdown explicitly
 stops the listener, joins its thread, and detaches instrument observers, which makes repeated

@@ -13,13 +13,23 @@ from .scenario import ScenarioControlError, ScenarioError, loads_scenario
 try:
     from flask import Flask, jsonify, render_template, request
     from flask_socketio import SocketIO
-    from werkzeug.serving import make_server
+    from werkzeug.serving import WSGIRequestHandler, make_server
 
     HAS_FLASK = True
 except ImportError:
     HAS_FLASK = False
 
 logger = logging.getLogger(__name__)
+
+
+if HAS_FLASK:
+
+    class DashboardRequestHandler(WSGIRequestHandler):
+        """Expose HTTP access lines only when application debug logging is enabled."""
+
+        def log_request(self, code="-", size="-"):
+            if logger.isEnabledFor(logging.DEBUG):
+                super().log_request(code, size)
 
 
 class CommandLogger:
@@ -495,7 +505,13 @@ class WebDashboard:
                 return True
             try:
                 self._attach_instrument_observers()
-                self._server = make_server(self.host, self.port, self.app, threaded=True)
+                self._server = make_server(
+                    self.host,
+                    self.port,
+                    self.app,
+                    threaded=True,
+                    request_handler=DashboardRequestHandler,
+                )
                 self.port = self._server.server_port
                 self._thread = threading.Thread(
                     target=self._server.serve_forever,

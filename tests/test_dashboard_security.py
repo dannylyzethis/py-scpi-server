@@ -220,6 +220,11 @@ def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> 
     assert "snapshot.identity.reported_model" in javascript
     assert "captureInstrumentUi" in javascript
     assert "restoreInstrumentUi" in javascript
+    assert "renderCommandStream(commandsData)" in javascript
+    assert "program.textContent=command.command" in javascript
+    assert "document.createTextNode" in javascript
+    assert "panel.replaceChildren(fragment)" in javascript
+    assert "No SCPI commands recorded." in javascript
     assert response.headers["Content-Security-Policy"].startswith("default-src 'self'")
     assert "script-src 'self'" in response.headers["Content-Security-Policy"]
     assert "style-src 'self'" in response.headers["Content-Security-Policy"]
@@ -255,6 +260,39 @@ def test_dashboard_start_is_ready_immediately_and_stop_is_clean() -> None:
     server.instrument.process_command("*IDN?")
     assert len(dashboard.command_logger.get_recent_entries()) == logged
     dashboard.stop()
+
+
+def test_dashboard_access_log_is_verbose_only(caplog) -> None:
+    import logging
+    import urllib.request
+
+    dashboard, _ = make_dashboard()
+    dashboard.port = 0
+    assert dashboard.start() is True
+    try:
+        caplog.set_level(logging.INFO, logger="scpi_emulator.dashboard")
+        caplog.set_level(logging.INFO, logger="werkzeug")
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{dashboard.port}/api/status", timeout=2
+        ) as response:
+            assert response.status == 200
+        assert not any(
+            record.name == "werkzeug" and "/api/status" in record.getMessage()
+            for record in caplog.records
+        )
+
+        caplog.clear()
+        caplog.set_level(logging.DEBUG, logger="scpi_emulator.dashboard")
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{dashboard.port}/api/status", timeout=2
+        ) as response:
+            assert response.status == 200
+        assert any(
+            record.name == "werkzeug" and "/api/status" in record.getMessage()
+            for record in caplog.records
+        )
+    finally:
+        dashboard.stop()
 
 
 def test_status_snapshot_is_detailed_and_non_destructive() -> None:
