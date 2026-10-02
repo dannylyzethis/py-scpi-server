@@ -7,6 +7,12 @@ not create a separate VNA-specific data source.
 
 ## Gain compression
 
+Create and activate a gain-compression measurement through the normal custom-measurement path:
+
+```text
+CALC1:CUST:DEF 'gain_comp','Gain Compression','S21'
+```
+
 `SENS:GC` commands configure a per-channel input-power sweep, point count, compression threshold,
 reference, and application state. When enabled, the power sweep becomes the selected trace's X
 axis and the normal `CALC:DATA?` path uses the same gain data as the application.
@@ -21,6 +27,9 @@ configured compression-sweep point count. A wrong shape produces SCPI error `-23
 silently inventing or truncating data.
 
 ## Noise figure
+
+`CALC1:CUST:DEF 'noise','Noise Figure','NF'` creates, selects, and activates a noise-figure
+measurement through the same application-aware path.
 
 `SENS:NOIS` commands configure source power, measurement bandwidth, averaging count, temperature,
 and application state. `CALC:NOIS:DATA?` returns noise figure, gain, Y-factor, or effective

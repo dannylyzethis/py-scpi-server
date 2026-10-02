@@ -20,30 +20,38 @@ from .scpi import (
     SCPIParseError,
     StatusSystem,
     VNAActiveDeviceSystem,
+    VNAActiveSourceSystem,
     VNAAdvancedSystem,
+    VNAAnalysisApplicationSystem,
     VNACapabilities,
     VNADataSystem,
     VNAMeasurementSystem,
     VNAMixerSystem,
+    VNANPortSystem,
     VNAPulseSystem,
     VNAStateFileStore,
+    VNAStimulusApplicationSystem,
     VNASweepSystem,
     VNATimeDomainSystem,
     detect_vna_model,
     parse_program_message,
     register_acquisition_commands,
     register_active_device_commands,
+    register_active_source_commands,
     register_advanced_commands,
+    register_analysis_application_commands,
     register_capability_commands,
     register_common_commands,
     register_format_commands,
     register_measurement_commands,
     register_mixer_commands,
+    register_nport_commands,
     register_operation_commands,
     register_pulse_commands,
     register_scalar_commands,
     register_state_file_commands,
     register_status_commands,
+    register_stimulus_application_commands,
     register_sweep_commands,
     register_time_domain_commands,
     register_vna_data_commands,
@@ -87,10 +95,14 @@ class SCPIInstrument:
         self.vna_data = None
         self.vna_pulse = None
         self.vna_active_device = None
+        self.vna_active_source = None
         self.vna_advanced = None
+        self.vna_analysis_apps = None
         self.vna_state_files = None
+        self.vna_stimulus_apps = None
         self.vna_time_domain = None
         self.vna_mixer = None
+        self.vna_nport = None
         self.scalar_data = None
         self.power_supply = None
         if self.vna_capabilities is None and model is not None:
@@ -132,10 +144,39 @@ class SCPIInstrument:
             self.vna_active_device = VNAActiveDeviceSystem(self.vna_measurements, self.data_format)
             self.vna_data.add_application(self.vna_active_device)
             register_active_device_commands(self.core_registry, self.vna_active_device)
+            self.vna_active_source = VNAActiveSourceSystem(
+                self.vna_measurements,
+                self.data_format,
+                self.vna_capabilities.source_count,
+            )
+            self.vna_data.add_application(self.vna_active_source)
+            register_active_source_commands(self.core_registry, self.vna_active_source)
+            self.vna_stimulus_apps = VNAStimulusApplicationSystem(
+                self.vna_measurements,
+                float(self.vna_capabilities.frequency_minimum),
+                float(self.vna_capabilities.frequency_maximum),
+            )
+            self.vna_data.add_application(self.vna_stimulus_apps)
+            register_stimulus_application_commands(self.core_registry, self.vna_stimulus_apps)
+            self.vna_analysis_apps = VNAAnalysisApplicationSystem(
+                self.vna_measurements, self.data_format
+            )
+            self.vna_data.add_application(self.vna_analysis_apps)
+            register_analysis_application_commands(self.core_registry, self.vna_analysis_apps)
+            self.vna_nport = VNANPortSystem(
+                self.vna_measurements, self.data_format, self.vna_capabilities.ports
+            )
+            self.vna_data.add_application(self.vna_nport)
+            register_nport_commands(self.core_registry, self.vna_nport)
             self.vna_pulse = VNAPulseSystem(self.vna_measurements)
             self.vna_data.add_application(self.vna_pulse)
             register_pulse_commands(self.core_registry, self.vna_pulse)
-            self.vna_advanced = VNAAdvancedSystem(self.vna_measurements, self.data_format)
+            self.vna_advanced = VNAAdvancedSystem(
+                self.vna_measurements,
+                self.data_format,
+                active_device=self.vna_active_device,
+                mixer=self.vna_mixer,
+            )
             self.vna_data.add_application(self.vna_advanced)
             register_advanced_commands(self.core_registry, self.vna_advanced)
             self.vna_time_domain = VNATimeDomainSystem(
@@ -197,10 +238,14 @@ class SCPIInstrument:
             self.vna_sweeps,
             self.vna_data,
             self.vna_active_device,
+            self.vna_active_source,
+            self.vna_stimulus_apps,
             self.vna_pulse,
             self.vna_advanced,
+            self.vna_analysis_apps,
             self.vna_time_domain,
             self.vna_mixer,
+            self.vna_nport,
             self.scalar_data,
             self.power_supply,
         ):

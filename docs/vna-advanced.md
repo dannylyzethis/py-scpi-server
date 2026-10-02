@@ -8,7 +8,8 @@ error queue, and reset rules as the rest of the VNA emulator.
 ## Creating an application measurement
 
 Real VNA programs normally create these measurement classes with `CALC:CUST:DEF`. The emulator
-supports that entry point and selects the new measurement immediately. For example:
+supports that entry point, selects the new measurement immediately, and routes every implemented
+measurement class to its application engine. For example:
 
 ```text
 CALC:CUST:DEF 'sa_meas','Spectrum Analyzer','B'
@@ -17,10 +18,10 @@ SENS:SA:DET:FUNC PEAK
 CALC:SA:DATA? TRACE
 ```
 
-The accepted class names are `Spectrum Analyzer`, `Swept IMD`, `Intermodulation Distortion`,
-`Modulation Distortion`, `Modulation Distortion Converters`, `Phase Noise`, `Differential I/Q`, and
-`Wideband I/Q`. The relevant model option must be present. A disabled class reports `-113`; an
-unknown class reports `-224`.
+The accepted class names cover Spectrum Analyzer, Swept IMD, Intermodulation Distortion,
+Modulation Distortion, Phase Noise, Differential I/Q, Wideband I/Q, Gain Compression, Noise
+Figure, Scalar Mixer/Converter, and Vector Mixer/Converter workflows. The relevant model option
+must be present. A disabled class reports `-113`; an unknown class reports `-224`.
 
 `SENS:<class>:STAT` is also available as an emulator convenience for compact scenario tests. It is
 not presented as a replacement for the VNA's documented custom-measurement creation command. A VNA

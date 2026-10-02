@@ -5,6 +5,16 @@ the same scenario trace as ordinary S-parameter reads, then applies frequency-of
 segment, source-role, and embedded-LO configuration. It can compose with time-domain processing;
 no application owns a private trace generator.
 
+Create, select, and activate converter measurements through the normal custom-measurement path:
+
+```text
+CALC1:CUST:DEF 'scalar_mix','Scalar Mixer/Converter','S21'
+CALC1:CUST:DEF 'vector_mix','Vector Mixer/Converter','S21'
+```
+
+The scalar form selects scalar conversion; the vector form selects vector conversion and requires
+the frequency-converter application capability.
+
 ## Supported workflows
 
 - `SENS:FOM:STAT` and numbered `RANG` commands create/delete ranges, set input/output/LO roles,

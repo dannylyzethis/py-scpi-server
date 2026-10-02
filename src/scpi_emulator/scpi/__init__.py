@@ -15,7 +15,19 @@ from .active_device import (
     VNAActiveDeviceSystem,
     register_active_device_commands,
 )
+from .active_source import (
+    ActiveSourceChannel,
+    SourcePhaseState,
+    VNAActiveSourceSystem,
+    register_active_source_commands,
+)
 from .advanced import AdvancedChannel, AdvancedMarker, VNAAdvancedSystem, register_advanced_commands
+from .analysis_apps import (
+    AnalysisApplicationChannel,
+    VNAAnalysisApplicationSystem,
+    register_analysis_application_commands,
+)
+from .application_contracts import VNA_APPLICATION_CONTRACTS, ApplicationContract
 from .capabilities import (
     CapabilityError,
     VNACapabilities,
@@ -58,6 +70,7 @@ from .mixer import (
     VNAMixerSystem,
     register_mixer_commands,
 )
+from .nport import NPortChannel, VNANPortSystem, register_nport_commands
 from .operations import (
     OperationHandle,
     OperationManager,
@@ -109,19 +122,33 @@ from .status import (
     StatusSystem,
     register_status_commands,
 )
+from .stimulus_apps import (
+    StimulusApplicationChannel,
+    VNAStimulusApplicationSystem,
+    register_stimulus_application_commands,
+)
 from .sweeps import VNASweepChannel, VNASweepSystem, register_sweep_commands
 from .time_domain import TimeDomainChannel, VNATimeDomainSystem, register_time_domain_commands
 from .vna_data import VNADataSystem, register_vna_data_commands
 
 __all__ = [
+    "ApplicationContract",
+    "AnalysisApplicationChannel",
+    "ActiveSourceChannel",
     "GainCompressionState",
     "AdvancedChannel",
     "AdvancedMarker",
     "NoiseFigureState",
+    "NPortChannel",
     "VNAActiveDeviceSystem",
+    "VNAActiveSourceSystem",
+    "VNA_APPLICATION_CONTRACTS",
     "VNAAdvancedSystem",
+    "VNAAnalysisApplicationSystem",
     "register_active_device_commands",
+    "register_active_source_commands",
     "register_advanced_commands",
+    "register_analysis_application_commands",
     "BinaryBlock",
     "BinaryResponse",
     "ByteOrder",
@@ -167,9 +194,11 @@ __all__ = [
     "VNAPulseSystem",
     "VNAMeasurementSystem",
     "VNAMixerSystem",
+    "VNANPortSystem",
     "VNASweepChannel",
     "VNASweepSystem",
     "VNAStateFileStore",
+    "VNAStimulusApplicationSystem",
     "VNATimeDomainSystem",
     "ProgramMessage",
     "PulseChannel",
@@ -187,6 +216,8 @@ __all__ = [
     "StatusByteBit",
     "StatusRegisterGroup",
     "StatusSystem",
+    "StimulusApplicationChannel",
+    "SourcePhaseState",
     "SweepMode",
     "TriggerSource",
     "TraceState",
@@ -209,11 +240,13 @@ __all__ = [
     "register_format_commands",
     "register_measurement_commands",
     "register_mixer_commands",
+    "register_nport_commands",
     "register_vna_data_commands",
     "register_pulse_commands",
     "register_scalar_commands",
     "register_sweep_commands",
     "register_state_file_commands",
+    "register_stimulus_application_commands",
     "register_time_domain_commands",
     "standard_error",
 ]
