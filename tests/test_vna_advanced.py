@@ -100,7 +100,8 @@ def test_every_supported_custom_measurement_class_is_connected(
     assert instrument.process_command(command) == ""
     assert instrument.process_command("SYST:ERR?") == '0,"No error"'
     assert instrument.process_command(state_query) == "1"
-    assert instrument.process_command("SYST:ACT:MEAS?") == "routed"
+    assert instrument.process_command("CALC1:PAR:MNUM?") == "2"
+    assert "routed" in instrument.process_command("CALC1:PAR:CAT:EXT?")
 
 
 def test_custom_measurement_registry_covers_every_engine() -> None:
