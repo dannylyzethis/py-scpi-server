@@ -27,6 +27,7 @@ from .analysis_apps import (
     VNAAnalysisApplicationSystem,
     register_analysis_application_commands,
 )
+from .application_contracts import VNA_APPLICATION_CONTRACTS, ApplicationContract
 from .capabilities import (
     CapabilityError,
     VNACapabilities,
@@ -131,6 +132,7 @@ from .time_domain import TimeDomainChannel, VNATimeDomainSystem, register_time_d
 from .vna_data import VNADataSystem, register_vna_data_commands
 
 __all__ = [
+    "ApplicationContract",
     "AnalysisApplicationChannel",
     "ActiveSourceChannel",
     "GainCompressionState",
@@ -140,6 +142,7 @@ __all__ = [
     "NPortChannel",
     "VNAActiveDeviceSystem",
     "VNAActiveSourceSystem",
+    "VNA_APPLICATION_CONTRACTS",
     "VNAAdvancedSystem",
     "VNAAnalysisApplicationSystem",
     "register_active_device_commands",
