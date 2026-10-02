@@ -22,6 +22,11 @@ from .active_source import (
     register_active_source_commands,
 )
 from .advanced import AdvancedChannel, AdvancedMarker, VNAAdvancedSystem, register_advanced_commands
+from .analysis_apps import (
+    AnalysisApplicationChannel,
+    VNAAnalysisApplicationSystem,
+    register_analysis_application_commands,
+)
 from .capabilities import (
     CapabilityError,
     VNACapabilities,
@@ -125,6 +130,7 @@ from .time_domain import TimeDomainChannel, VNATimeDomainSystem, register_time_d
 from .vna_data import VNADataSystem, register_vna_data_commands
 
 __all__ = [
+    "AnalysisApplicationChannel",
     "ActiveSourceChannel",
     "GainCompressionState",
     "AdvancedChannel",
@@ -133,9 +139,11 @@ __all__ = [
     "VNAActiveDeviceSystem",
     "VNAActiveSourceSystem",
     "VNAAdvancedSystem",
+    "VNAAnalysisApplicationSystem",
     "register_active_device_commands",
     "register_active_source_commands",
     "register_advanced_commands",
+    "register_analysis_application_commands",
     "BinaryBlock",
     "BinaryResponse",
     "ByteOrder",
