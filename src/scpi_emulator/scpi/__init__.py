@@ -15,6 +15,12 @@ from .active_device import (
     VNAActiveDeviceSystem,
     register_active_device_commands,
 )
+from .active_source import (
+    ActiveSourceChannel,
+    SourcePhaseState,
+    VNAActiveSourceSystem,
+    register_active_source_commands,
+)
 from .advanced import AdvancedChannel, AdvancedMarker, VNAAdvancedSystem, register_advanced_commands
 from .capabilities import (
     CapabilityError,
@@ -114,13 +120,16 @@ from .time_domain import TimeDomainChannel, VNATimeDomainSystem, register_time_d
 from .vna_data import VNADataSystem, register_vna_data_commands
 
 __all__ = [
+    "ActiveSourceChannel",
     "GainCompressionState",
     "AdvancedChannel",
     "AdvancedMarker",
     "NoiseFigureState",
     "VNAActiveDeviceSystem",
+    "VNAActiveSourceSystem",
     "VNAAdvancedSystem",
     "register_active_device_commands",
+    "register_active_source_commands",
     "register_advanced_commands",
     "BinaryBlock",
     "BinaryResponse",
@@ -187,6 +196,7 @@ __all__ = [
     "StatusByteBit",
     "StatusRegisterGroup",
     "StatusSystem",
+    "SourcePhaseState",
     "SweepMode",
     "TriggerSource",
     "TraceState",

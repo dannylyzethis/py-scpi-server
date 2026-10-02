@@ -20,6 +20,7 @@ from .scpi import (
     SCPIParseError,
     StatusSystem,
     VNAActiveDeviceSystem,
+    VNAActiveSourceSystem,
     VNAAdvancedSystem,
     VNACapabilities,
     VNADataSystem,
@@ -33,6 +34,7 @@ from .scpi import (
     parse_program_message,
     register_acquisition_commands,
     register_active_device_commands,
+    register_active_source_commands,
     register_advanced_commands,
     register_capability_commands,
     register_common_commands,
@@ -87,6 +89,7 @@ class SCPIInstrument:
         self.vna_data = None
         self.vna_pulse = None
         self.vna_active_device = None
+        self.vna_active_source = None
         self.vna_advanced = None
         self.vna_state_files = None
         self.vna_time_domain = None
@@ -132,6 +135,13 @@ class SCPIInstrument:
             self.vna_active_device = VNAActiveDeviceSystem(self.vna_measurements, self.data_format)
             self.vna_data.add_application(self.vna_active_device)
             register_active_device_commands(self.core_registry, self.vna_active_device)
+            self.vna_active_source = VNAActiveSourceSystem(
+                self.vna_measurements,
+                self.data_format,
+                self.vna_capabilities.source_count,
+            )
+            self.vna_data.add_application(self.vna_active_source)
+            register_active_source_commands(self.core_registry, self.vna_active_source)
             self.vna_pulse = VNAPulseSystem(self.vna_measurements)
             self.vna_data.add_application(self.vna_pulse)
             register_pulse_commands(self.core_registry, self.vna_pulse)
@@ -202,6 +212,7 @@ class SCPIInstrument:
             self.vna_sweeps,
             self.vna_data,
             self.vna_active_device,
+            self.vna_active_source,
             self.vna_pulse,
             self.vna_advanced,
             self.vna_time_domain,
