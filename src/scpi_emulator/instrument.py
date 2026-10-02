@@ -28,6 +28,7 @@ from .scpi import (
     VNAMixerSystem,
     VNAPulseSystem,
     VNAStateFileStore,
+    VNAStimulusApplicationSystem,
     VNASweepSystem,
     VNATimeDomainSystem,
     detect_vna_model,
@@ -46,6 +47,7 @@ from .scpi import (
     register_scalar_commands,
     register_state_file_commands,
     register_status_commands,
+    register_stimulus_application_commands,
     register_sweep_commands,
     register_time_domain_commands,
     register_vna_data_commands,
@@ -92,6 +94,7 @@ class SCPIInstrument:
         self.vna_active_source = None
         self.vna_advanced = None
         self.vna_state_files = None
+        self.vna_stimulus_apps = None
         self.vna_time_domain = None
         self.vna_mixer = None
         self.scalar_data = None
@@ -142,6 +145,13 @@ class SCPIInstrument:
             )
             self.vna_data.add_application(self.vna_active_source)
             register_active_source_commands(self.core_registry, self.vna_active_source)
+            self.vna_stimulus_apps = VNAStimulusApplicationSystem(
+                self.vna_measurements,
+                float(self.vna_capabilities.frequency_minimum),
+                float(self.vna_capabilities.frequency_maximum),
+            )
+            self.vna_data.add_application(self.vna_stimulus_apps)
+            register_stimulus_application_commands(self.core_registry, self.vna_stimulus_apps)
             self.vna_pulse = VNAPulseSystem(self.vna_measurements)
             self.vna_data.add_application(self.vna_pulse)
             register_pulse_commands(self.core_registry, self.vna_pulse)
@@ -213,6 +223,7 @@ class SCPIInstrument:
             self.vna_data,
             self.vna_active_device,
             self.vna_active_source,
+            self.vna_stimulus_apps,
             self.vna_pulse,
             self.vna_advanced,
             self.vna_time_domain,

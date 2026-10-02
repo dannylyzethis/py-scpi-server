@@ -115,6 +115,11 @@ from .status import (
     StatusSystem,
     register_status_commands,
 )
+from .stimulus_apps import (
+    StimulusApplicationChannel,
+    VNAStimulusApplicationSystem,
+    register_stimulus_application_commands,
+)
 from .sweeps import VNASweepChannel, VNASweepSystem, register_sweep_commands
 from .time_domain import TimeDomainChannel, VNATimeDomainSystem, register_time_domain_commands
 from .vna_data import VNADataSystem, register_vna_data_commands
@@ -179,6 +184,7 @@ __all__ = [
     "VNASweepChannel",
     "VNASweepSystem",
     "VNAStateFileStore",
+    "VNAStimulusApplicationSystem",
     "VNATimeDomainSystem",
     "ProgramMessage",
     "PulseChannel",
@@ -196,6 +202,7 @@ __all__ = [
     "StatusByteBit",
     "StatusRegisterGroup",
     "StatusSystem",
+    "StimulusApplicationChannel",
     "SourcePhaseState",
     "SweepMode",
     "TriggerSource",
@@ -224,6 +231,7 @@ __all__ = [
     "register_scalar_commands",
     "register_sweep_commands",
     "register_state_file_commands",
+    "register_stimulus_application_commands",
     "register_time_domain_commands",
     "standard_error",
 ]
