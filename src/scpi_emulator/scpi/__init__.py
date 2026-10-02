@@ -69,6 +69,7 @@ from .mixer import (
     VNAMixerSystem,
     register_mixer_commands,
 )
+from .nport import NPortChannel, VNANPortSystem, register_nport_commands
 from .operations import (
     OperationHandle,
     OperationManager,
@@ -136,6 +137,7 @@ __all__ = [
     "AdvancedChannel",
     "AdvancedMarker",
     "NoiseFigureState",
+    "NPortChannel",
     "VNAActiveDeviceSystem",
     "VNAActiveSourceSystem",
     "VNAAdvancedSystem",
@@ -189,6 +191,7 @@ __all__ = [
     "VNAPulseSystem",
     "VNAMeasurementSystem",
     "VNAMixerSystem",
+    "VNANPortSystem",
     "VNASweepChannel",
     "VNASweepSystem",
     "VNAStateFileStore",
@@ -234,6 +237,7 @@ __all__ = [
     "register_format_commands",
     "register_measurement_commands",
     "register_mixer_commands",
+    "register_nport_commands",
     "register_vna_data_commands",
     "register_pulse_commands",
     "register_scalar_commands",

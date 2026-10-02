@@ -27,6 +27,7 @@ from .scpi import (
     VNADataSystem,
     VNAMeasurementSystem,
     VNAMixerSystem,
+    VNANPortSystem,
     VNAPulseSystem,
     VNAStateFileStore,
     VNAStimulusApplicationSystem,
@@ -44,6 +45,7 @@ from .scpi import (
     register_format_commands,
     register_measurement_commands,
     register_mixer_commands,
+    register_nport_commands,
     register_operation_commands,
     register_pulse_commands,
     register_scalar_commands,
@@ -100,6 +102,7 @@ class SCPIInstrument:
         self.vna_stimulus_apps = None
         self.vna_time_domain = None
         self.vna_mixer = None
+        self.vna_nport = None
         self.scalar_data = None
         self.power_supply = None
         if self.vna_capabilities is None and model is not None:
@@ -160,6 +163,11 @@ class SCPIInstrument:
             )
             self.vna_data.add_application(self.vna_analysis_apps)
             register_analysis_application_commands(self.core_registry, self.vna_analysis_apps)
+            self.vna_nport = VNANPortSystem(
+                self.vna_measurements, self.data_format, self.vna_capabilities.ports
+            )
+            self.vna_data.add_application(self.vna_nport)
+            register_nport_commands(self.core_registry, self.vna_nport)
             self.vna_pulse = VNAPulseSystem(self.vna_measurements)
             self.vna_data.add_application(self.vna_pulse)
             register_pulse_commands(self.core_registry, self.vna_pulse)
@@ -237,6 +245,7 @@ class SCPIInstrument:
             self.vna_analysis_apps,
             self.vna_time_domain,
             self.vna_mixer,
+            self.vna_nport,
             self.scalar_data,
             self.power_supply,
         ):
