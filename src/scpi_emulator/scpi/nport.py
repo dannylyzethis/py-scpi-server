@@ -110,6 +110,7 @@ class VNANPortSystem:
 def register_nport_commands(registry: CommandRegistry, state: VNANPortSystem) -> None:
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     calculate = HeaderNode("CALCulate", index="channel", index_default=1)
+
     def available(invocation) -> bool:
         return bool({"n_port", "n-port"} & invocation.capabilities)
 
