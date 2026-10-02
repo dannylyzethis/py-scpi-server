@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
 
@@ -19,6 +20,43 @@ from .registry import (
     ParameterType,
     SCPICommandError,
 )
+
+if TYPE_CHECKING:
+    from .active_device import VNAActiveDeviceSystem
+    from .mixer import VNAMixerSystem
+
+
+CUSTOM_MEASUREMENT_CLASSES = {
+    "spectrum analyzer": "spectrum",
+    "swept imd": "imd",
+    "intermodulation distortion": "imd",
+    "modulation distortion": "distortion",
+    "modulation distortion converters": "distortion",
+    "phase noise": "phase_noise",
+    "differential i q": "diq",
+    "wideband i q": "wideband_iq",
+    "gain compression": "gain_compression",
+    "noise figure": "noise_figure",
+    "scalar mixer": "scalar_converter",
+    "scalar mixer converter": "scalar_converter",
+    "vector mixer": "vector_converter",
+    "vector mixer converter": "vector_converter",
+    "frequency converter": "vector_converter",
+    "converter": "vector_converter",
+}
+
+CUSTOM_MEASUREMENT_REQUIREMENTS = {
+    "spectrum": {"spectrum_analysis", "spectrum-analysis"},
+    "imd": {"intermodulation_distortion", "intermodulation-distortion"},
+    "distortion": {"modulation_distortion", "modulation-distortion"},
+    "phase_noise": {"phase_noise", "phase-noise"},
+    "diq": {"differential_iq", "differential-iq"},
+    "wideband_iq": {"wideband_iq", "wideband-iq"},
+    "gain_compression": {"gain_compression", "gain-compression"},
+    "noise_figure": {"noise_figure", "noise-figure"},
+    "scalar_converter": {"scalar_mixer", "scalar-mixer"},
+    "vector_converter": {"frequency_converter", "frequency-converter"},
+}
 
 
 @dataclass
@@ -76,9 +114,18 @@ class VNAAdvancedSystem:
         "wideband_iq": "wideband_iq",
     }
 
-    def __init__(self, measurements: VNAMeasurementSystem, data_format: DataFormat) -> None:
+    def __init__(
+        self,
+        measurements: VNAMeasurementSystem,
+        data_format: DataFormat,
+        *,
+        active_device: VNAActiveDeviceSystem | None = None,
+        mixer: VNAMixerSystem | None = None,
+    ) -> None:
         self.measurements = measurements
         self.data_format = data_format
+        self.active_device = active_device
+        self.mixer = mixer
         self.channels: dict[int, AdvancedChannel] = {}
         self.player: ScenarioPlayer | None = None
 
@@ -583,35 +630,49 @@ def _register_markers(add, calc, calc_node, application, available, state) -> No
     )
 
 
-def _custom_define(state, invocation, name: str, measurement_class: str, parameter: str) -> str:
+def _custom_define(
+    state: VNAAdvancedSystem,
+    invocation,
+    name: str,
+    measurement_class: str,
+    parameter: str,
+) -> str:
     normalized = " ".join(measurement_class.replace("/", " ").replace("-", " ").split()).casefold()
-    classes = {
-        "spectrum analyzer": "spectrum",
-        "swept imd": "imd",
-        "intermodulation distortion": "imd",
-        "modulation distortion": "distortion",
-        "modulation distortion converters": "distortion",
-        "phase noise": "phase_noise",
-        "differential i q": "diq",
-        "wideband i q": "wideband_iq",
-    }
-    application = classes.get(normalized)
+    application = CUSTOM_MEASUREMENT_CLASSES.get(normalized)
     if application is None:
         raise SCPICommandError(-224, "Illegal parameter value; measurement class")
-    required = {
-        "spectrum": {"spectrum_analysis", "spectrum-analysis"},
-        "imd": {"intermodulation_distortion", "intermodulation-distortion"},
-        "distortion": {"modulation_distortion", "modulation-distortion"},
-        "phase_noise": {"phase_noise", "phase-noise"},
-        "diq": {"differential_iq", "differential-iq"},
-        "wideband_iq": {"wideband_iq", "wideband-iq"},
-    }[application]
+    required = CUSTOM_MEASUREMENT_REQUIREMENTS[application]
     if not required.intersection(invocation.capabilities):
+        raise SCPICommandError(-113, "Command unavailable for configured options")
+    if application in {"gain_compression", "noise_figure"} and state.active_device is None:
+        raise SCPICommandError(-113, "Command unavailable for configured options")
+    if application in {"scalar_converter", "vector_converter"} and state.mixer is None:
         raise SCPICommandError(-113, "Command unavailable for configured options")
     channel = invocation.indices["channel"]
     measurement = state.measurements.define(channel, name, parameter)
     state.measurements.channel(channel).selected = measurement.name
+    _deactivate_custom_measurement_engines(state, channel)
+    if application == "gain_compression":
+        state.active_device.gain(channel).enabled = True
+        return ""
+    if application == "noise_figure":
+        state.active_device.noise(channel).enabled = True
+        return ""
+    if application in {"scalar_converter", "vector_converter"}:
+        mixer = state.mixer.channel(channel)
+        mixer.converter_type = "SCALar" if application == "scalar_converter" else "VECTor"
+        mixer.mixer_enabled = True
+        return ""
     return state.enable(channel, application, True)
+
+
+def _deactivate_custom_measurement_engines(state: VNAAdvancedSystem, channel: int) -> None:
+    state.channel(channel).active = None
+    if state.active_device is not None:
+        state.active_device.gain(channel).enabled = False
+        state.active_device.noise(channel).enabled = False
+    if state.mixer is not None:
+        state.mixer.channel(channel).mixer_enabled = False
 
 
 def _register_value(add, root, path, attribute, parameter, available, state) -> None:

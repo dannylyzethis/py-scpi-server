@@ -10,6 +10,10 @@ from scpi_emulator.scenario import (
     StreamKind,
 )
 from scpi_emulator.scpi import VNACapabilities
+from scpi_emulator.scpi.advanced import (
+    CUSTOM_MEASUREMENT_CLASSES,
+    CUSTOM_MEASUREMENT_REQUIREMENTS,
+)
 
 
 def trace(name, *values, advance=AdvancePolicy.READ):
@@ -70,6 +74,81 @@ def test_custom_measurement_definition_selects_and_activates_real_vna_class() ->
     assert instrument.process_command("SENS:SA:STAT?") == "1"
     assert "sa_meas" in instrument.process_command("CALC:PAR:CAT:EXT?")
     assert values(instrument.process_command("CALC:SA:DATA? TRACE")) == (-80, -20, -50, -60)
+
+
+@pytest.mark.parametrize(
+    ("measurement_class", "parameter", "state_query"),
+    (
+        ("Spectrum Analyzer", "B", "SENS1:SA:STAT?"),
+        ("Swept IMD", "IM3", "SENS1:IMD:STAT?"),
+        ("Modulation Distortion", "EVM", "SENS1:DIST:STAT?"),
+        ("Phase Noise", "PN", "SENS1:PN:STAT?"),
+        ("Differential I/Q", "DIQ", "SENS1:DIQ:STAT?"),
+        ("Wideband I/Q", "IQ", "SENS1:IQ:STAT?"),
+        ("Gain Compression", "S21", "SENS1:GC:STAT?"),
+        ("Noise Figure", "NF", "SENS1:NOIS:STAT?"),
+        ("Scalar Mixer/Converter", "S21", "SENS1:MIX:STAT?"),
+        ("Vector Mixer/Converter", "S21", "SENS1:MIX:STAT?"),
+    ),
+)
+def test_every_supported_custom_measurement_class_is_connected(
+    measurement_class: str, parameter: str, state_query: str
+) -> None:
+    instrument = advanced_vna()
+    command = f"CALC1:CUST:DEF 'routed','{measurement_class}','{parameter}'"
+
+    assert instrument.process_command(command) == ""
+    assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+    assert instrument.process_command(state_query) == "1"
+    assert instrument.process_command("SYST:ACT:MEAS?") == "routed"
+
+
+def test_custom_measurement_registry_covers_every_engine() -> None:
+    expected = {
+        "spectrum",
+        "imd",
+        "distortion",
+        "phase_noise",
+        "diq",
+        "wideband_iq",
+        "gain_compression",
+        "noise_figure",
+        "scalar_converter",
+        "vector_converter",
+    }
+    assert set(CUSTOM_MEASUREMENT_CLASSES.values()) == expected
+    assert set(CUSTOM_MEASUREMENT_REQUIREMENTS) == expected
+
+
+def test_custom_converter_definition_selects_scalar_and_vector_modes() -> None:
+    instrument = advanced_vna()
+
+    instrument.process_command("CALC1:CUST:DEF 'gain','Gain Compression','S21'")
+    assert instrument.process_command("SENS1:GC:STAT?") == "1"
+
+    instrument.process_command("CALC1:CUST:DEF 'scalar_mix','Scalar Mixer/Converter','S21'")
+    assert instrument.process_command("SENS1:GC:STAT?") == "0"
+    assert instrument.process_command("SENS1:MIX:CONV:TYPE?") == "SCALar"
+
+    instrument.process_command("CALC1:CUST:DEF 'vector_mix','Vector Mixer/Converter','S21'")
+    assert instrument.process_command("SENS1:MIX:CONV:TYPE?") == "VECTor"
+
+
+def test_custom_application_definition_reports_license_and_class_errors() -> None:
+    strict = SCPIInstrument(
+        "Virtual VNA 2 Port",
+        "strict-custom",
+        vna_capabilities=VNACapabilities.create("vna-2-port", applications=()),
+    )
+    assert strict.process_command("CALC:CUST:DEF 'gain','Gain Compression','S21'") == ""
+    assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
+    assert "gain" not in strict.process_command("CALC:PAR:CAT:EXT?")
+
+    instrument = advanced_vna()
+    assert instrument.process_command("CALC:CUST:DEF 'bad','Unknown Class','S21'") == ""
+    assert instrument.process_command("SYST:ERR?").startswith(
+        '-224,"Illegal parameter value; measurement class'
+    )
 
 
 def test_imd_setup_and_deterministic_results() -> None:

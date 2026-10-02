@@ -135,7 +135,12 @@ class SCPIInstrument:
             self.vna_pulse = VNAPulseSystem(self.vna_measurements)
             self.vna_data.add_application(self.vna_pulse)
             register_pulse_commands(self.core_registry, self.vna_pulse)
-            self.vna_advanced = VNAAdvancedSystem(self.vna_measurements, self.data_format)
+            self.vna_advanced = VNAAdvancedSystem(
+                self.vna_measurements,
+                self.data_format,
+                active_device=self.vna_active_device,
+                mixer=self.vna_mixer,
+            )
             self.vna_data.add_application(self.vna_advanced)
             register_advanced_commands(self.core_registry, self.vna_advanced)
             self.vna_time_domain = VNATimeDomainSystem(
