@@ -224,14 +224,14 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             in state.channel(inv.indices.get("channel", 1)).segments
         )
 
-    def licensed(*names):
+    def option_enabled(*names):
         return lambda inv: bool(set(names) & inv.capabilities)
 
-    fom_license = licensed("frequency_offset", "frequency-offset")
-    converter_license = licensed(
+    fom_option = option_enabled("frequency_offset", "frequency-offset")
+    converter_option = option_enabled(
         "scalar_mixer", "scalar-mixer", "frequency_converter", "frequency-converter"
     )
-    embedded_license = licensed("embedded_lo", "embedded-lo")
+    embedded_option = option_enabled("embedded_lo", "embedded-lo")
 
     def add(
         path, handler, *, query=False, parameters=(), available=None, exists=measurement_exists
@@ -251,29 +251,29 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
         (*fom, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "fom_enabled", value),
         parameters=(boolean,),
-        available=fom_license,
+        available=fom_option,
     )
     add(
         (*fom, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).fom_enabled),
         query=True,
-        available=fom_license,
+        available=fom_option,
     )
     add(
         (*fom, HeaderNode("RANGe"), HeaderNode("COUNt")),
         lambda inv: str(len(state.channel(inv.indices["channel"]).ranges)),
         query=True,
-        available=fom_license,
+        available=fom_option,
     )
     add(
         (*fom, range_node, HeaderNode("ADD")),
         lambda inv: state.add_range(inv.indices["channel"], inv.indices["range"]) or "",
-        available=fom_license,
+        available=fom_option,
     )
     add(
         (*fom, range_node, HeaderNode("DELete")),
         lambda inv: state.delete_range(inv.indices["channel"], inv.indices["range"]) or "",
-        available=fom_license,
+        available=fom_option,
         exists=range_exists,
     )
     for header, attribute in (("STARt", "start"), ("STOP", "stop")):
@@ -282,7 +282,7 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             path,
             lambda inv, value, name=attribute: _set_range_frequency(state, inv, name, value),
             parameters=(frequency,),
-            available=fom_license,
+            available=fom_option,
             exists=range_exists,
         )
         add(
@@ -291,7 +291,7 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
                 getattr(state.range(inv.indices["channel"], inv.indices["range"]), name)
             ),
             query=True,
-            available=fom_license,
+            available=fom_option,
             exists=range_exists,
         )
     add(
@@ -300,14 +300,14 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             state.range(inv.indices["channel"], inv.indices["range"]), "role", value
         ),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("INPut", "OUTPut", "LO")),),
-        available=fom_license,
+        available=fom_option,
         exists=range_exists,
     )
     add(
         (*fom, range_node, HeaderNode("ROLE")),
         lambda inv: state.range(inv.indices["channel"], inv.indices["range"]).role,
         query=True,
-        available=fom_license,
+        available=fom_option,
         exists=range_exists,
     )
 
@@ -315,13 +315,13 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
         (*mixer, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "mixer_enabled", value),
         parameters=(boolean,),
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).mixer_enabled),
         query=True,
-        available=converter_license,
+        available=converter_option,
     )
     for header, attribute in (
         ("FIXed", "fixed_frequency"),
@@ -333,37 +333,37 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             path,
             lambda inv, value, name=attribute: _set_frequency(state, inv, name, value),
             parameters=(frequency,),
-            available=converter_license,
+            available=converter_option,
         )
         add(
             path,
             lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
             query=True,
-            available=converter_license,
+            available=converter_option,
         )
     add(
         (*mixer, HeaderNode("MODE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "mode", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("UPConverter", "DOWNconverter")),),
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, HeaderNode("MODE")),
         lambda inv: state.channel(inv.indices["channel"]).mode,
         query=True,
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, HeaderNode("CONVerter"), HeaderNode("TYPE")),
         lambda inv, value: _set_converter_type(state, inv, value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("SCALar", "VECTor")),),
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, HeaderNode("CONVerter"), HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).converter_type,
         query=True,
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, source_node, HeaderNode("ROLE")),
@@ -371,41 +371,41 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             state.set_source_role(inv.indices["channel"], inv.indices["source"], value) or ""
         ),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("RF", "LO", "IF", "OFF")),),
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, source_node, HeaderNode("ROLE")),
         lambda inv: state.source_role(inv.indices["channel"], inv.indices["source"]),
         query=True,
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, HeaderNode("RECalculate")),
         lambda inv: state.recalculate(inv.indices["channel"]) or "",
-        available=converter_license,
+        available=converter_option,
     )
 
     add(
         (*mixer, HeaderNode("SEGMent"), HeaderNode("COUNt")),
         lambda inv: str(len(state.channel(inv.indices["channel"]).segments)),
         query=True,
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, segment_node, HeaderNode("ADD")),
         lambda inv: state.add_segment(inv.indices["channel"], inv.indices["segment"]) or "",
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*mixer, segment_node, HeaderNode("DELete")),
         lambda inv: state.delete_segment(inv.indices["channel"], inv.indices["segment"]) or "",
-        available=converter_license,
+        available=converter_option,
         exists=segment_exists,
     )
     add(
         (*mixer, segment_node, HeaderNode("CALCulate")),
         lambda inv: state.recalculate(inv.indices["channel"]) or "",
-        available=converter_license,
+        available=converter_option,
         exists=segment_exists,
     )
     for header, attribute in (("STARt", "start"), ("STOP", "stop")):
@@ -414,7 +414,7 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             path,
             lambda inv, value, name=attribute: _set_segment_frequency(state, inv, name, value),
             parameters=(frequency,),
-            available=converter_license,
+            available=converter_option,
             exists=segment_exists,
         )
         add(
@@ -423,7 +423,7 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
                 getattr(state.segment(inv.indices["channel"], inv.indices["segment"]), name)
             ),
             query=True,
-            available=converter_license,
+            available=converter_option,
             exists=segment_exists,
         )
     add(
@@ -436,14 +436,14 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
         parameters=(
             ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
         ),
-        available=converter_license,
+        available=converter_option,
         exists=segment_exists,
     )
     add(
         (*mixer, segment_node, HeaderNode("POWer")),
         lambda inv: str(state.segment(inv.indices["channel"], inv.indices["segment"]).power),
         query=True,
-        available=converter_license,
+        available=converter_option,
         exists=segment_exists,
     )
     points_path = (*mixer, segment_node, HeaderNode("SWEep"), HeaderNode("POINts"))
@@ -453,14 +453,14 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             state.segment(inv.indices["channel"], inv.indices["segment"]), "points", value
         ),
         parameters=(ParameterSpec(ParameterType.INTEGER, minimum=2, maximum=100001),),
-        available=converter_license,
+        available=converter_option,
         exists=segment_exists,
     )
     add(
         points_path,
         lambda inv: str(state.segment(inv.indices["channel"], inv.indices["segment"]).points),
         query=True,
-        available=converter_license,
+        available=converter_option,
         exists=segment_exists,
     )
 
@@ -471,39 +471,39 @@ def register_mixer_commands(registry: CommandRegistry, state: VNAMixerSystem) ->
             state.channel(inv.indices["channel"]), "embedded_lo_enabled", value
         ),
         parameters=(boolean,),
-        available=embedded_license,
+        available=embedded_option,
     )
     add(
         (*elo, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).embedded_lo_enabled),
         query=True,
-        available=embedded_license,
+        available=embedded_option,
     )
     for header, attribute in (("CENTer", "embedded_lo_center"), ("SPAN", "embedded_lo_span")):
         add(
             (*elo, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_frequency(state, inv, name, value),
             parameters=(frequency,),
-            available=embedded_license,
+            available=embedded_option,
         )
         add(
             (*elo, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
             query=True,
-            available=embedded_license,
+            available=embedded_option,
         )
 
     add(
         (*mixer, HeaderNode("CALibration"), HeaderNode("STATe")),
         lambda inv: "0",
         query=True,
-        available=converter_license,
+        available=converter_option,
     )
     add(
         (*fom, HeaderNode("CORRection"), HeaderNode("STATe")),
         lambda inv: "0",
         query=True,
-        available=fom_license,
+        available=fom_option,
     )
 
 
@@ -520,7 +520,7 @@ def _set_frequency(state, invocation, attribute: str, value: NumericValue) -> st
 def _set_converter_type(state, invocation, value: str) -> str:
     vector_capabilities = {"frequency_converter", "frequency-converter"}
     if value == "VECTor" and not vector_capabilities & invocation.capabilities:
-        raise SCPICommandError(-224, "Illegal parameter value; vector converter is not licensed")
+        raise SCPICommandError(-224, "Illegal parameter value; vector converter is not enabled")
     return _set(state.channel(invocation.indices["channel"]), "converter_type", value)
 
 

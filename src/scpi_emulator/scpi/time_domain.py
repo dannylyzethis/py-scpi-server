@@ -136,7 +136,7 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
         channel = state.measurements.channels.get(inv.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(*names):
+    def option_enabled(*names):
         return lambda inv: bool(set(names) & inv.capabilities)
 
     def add(path, handler, *, query=False, parameters=(), available=None):
@@ -151,20 +151,20 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
             )
         )
 
-    time_license = licensed("time_domain", "time-domain", "enhanced_time_domain")
-    fixture_license = licensed("fixture_removal", "fixture-removal")
+    time_option = option_enabled("time_domain", "time-domain", "enhanced_time_domain")
+    fixture_option = option_enabled("fixture_removal", "fixture-removal")
 
     add(
         (*transform, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "transform_enabled", value),
         parameters=(boolean,),
-        available=time_license,
+        available=time_option,
     )
     add(
         (*transform, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).transform_enabled),
         query=True,
-        available=time_license,
+        available=time_option,
     )
     add(
         (*transform, HeaderNode("TYPE")),
@@ -172,76 +172,76 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
         parameters=(
             ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "LOWPass", "IMPulse", "STEP")),
         ),
-        available=time_license,
+        available=time_option,
     )
     add(
         (*transform, HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).transform_type,
         query=True,
-        available=time_license,
+        available=time_option,
     )
     add(
         (*transform, HeaderNode("WINDow")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "window", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("MINimum", "NORMal", "MAXimum")),),
-        available=time_license,
+        available=time_option,
     )
     add(
         (*transform, HeaderNode("WINDow")),
         lambda inv: state.channel(inv.indices["channel"]).window,
         query=True,
-        available=time_license,
+        available=time_option,
     )
 
     add(
         (*gate, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_enabled", value),
         parameters=(boolean,),
-        available=time_license,
+        available=time_option,
     )
     add(
         (*gate, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).gate_enabled),
         query=True,
-        available=time_license,
+        available=time_option,
     )
     for header, attribute in (("STARt", "gate_start"), ("STOP", "gate_stop")):
         add(
             (*gate, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_gate(state, inv, name, value),
             parameters=(ParameterSpec(ParameterType.NUMBER, units=frozenset({"S"})),),
-            available=time_license,
+            available=time_option,
         )
         add(
             (*gate, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
             query=True,
-            available=time_license,
+            available=time_option,
         )
     add(
         (*gate, HeaderNode("TYPE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_type", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "NOTCh")),),
-        available=time_license,
+        available=time_option,
     )
     add(
         (*gate, HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).gate_type,
         query=True,
-        available=time_license,
+        available=time_option,
     )
 
     add(
         (*fixture, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "fixture_enabled", value),
         parameters=(boolean,),
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*fixture, HeaderNode("STATe")),
         lambda inv: _bool(state.channel(inv.indices["channel"]).fixture_enabled),
         query=True,
-        available=fixture_license,
+        available=fixture_option,
     )
     fixture_port = (*fixture, HeaderNode("SEND"), HeaderNode("DEEMbed"), port)
     add(
@@ -250,13 +250,13 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
             state.set_fixture_file(inv.indices["channel"], inv.indices["port"], value) or ""
         ),
         parameters=(ParameterSpec(ParameterType.STRING),),
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*fixture_port, HeaderNode("USER"), HeaderNode("FILename")),
         lambda inv: state.fixture_file(inv.indices["channel"], inv.indices["port"]),
         query=True,
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*fixture_port, HeaderNode("STATe")),
@@ -264,13 +264,13 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
             state.set_fixture_port(inv.indices["channel"], inv.indices["port"], value) or ""
         ),
         parameters=(boolean,),
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*fixture_port, HeaderNode("STATe")),
         lambda inv: _bool(state.fixture_port(inv.indices["channel"], inv.indices["port"])),
         query=True,
-        available=fixture_license,
+        available=fixture_option,
     )
     embedding_port = (*fixture, HeaderNode("SEND"), HeaderNode("EMBed"), port)
     add(
@@ -279,13 +279,13 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
             state.set_embedding_file(inv.indices["channel"], inv.indices["port"], value) or ""
         ),
         parameters=(ParameterSpec(ParameterType.STRING),),
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*embedding_port, HeaderNode("USER"), HeaderNode("FILename")),
         lambda inv: state.embedding_file(inv.indices["channel"], inv.indices["port"]),
         query=True,
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*embedding_port, HeaderNode("STATe")),
@@ -293,13 +293,13 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
             state.set_embedding_port(inv.indices["channel"], inv.indices["port"], value) or ""
         ),
         parameters=(boolean,),
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*embedding_port, HeaderNode("STATe")),
         lambda inv: _bool(state.embedding_port(inv.indices["channel"], inv.indices["port"])),
         query=True,
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*fixture, HeaderNode("BALanced"), HeaderNode("TOPology")),
@@ -307,13 +307,13 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
         parameters=(
             ParameterSpec(ParameterType.ENUM, choices=("NONE", "BBALanced", "SBALanced", "MIXed")),
         ),
-        available=fixture_license,
+        available=fixture_option,
     )
     add(
         (*fixture, HeaderNode("BALanced"), HeaderNode("TOPology")),
         lambda inv: state.channel(inv.indices["channel"]).topology,
         query=True,
-        available=fixture_license,
+        available=fixture_option,
     )
 
 

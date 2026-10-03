@@ -49,7 +49,7 @@ instrument = catalog.create(
 
 The VNA descriptor is generated from the packaged project-owned capability profile. Its coverage records are
 checked against the versioned reports, and its factory uses the same `VNACapabilities` object that
-drives identity, option, license, hardware, and command-availability behavior.
+drives identity, option, hardware, and command-availability behavior.
 
 ## Adding an external driver
 
@@ -59,8 +59,7 @@ A driver implements only two members:
 class MyDriver:
     descriptor = DriverDescriptor(...)
 
-    def create_instrument(self, request: InstrumentRequest) -> object:
-        ...
+    def create_instrument(self, request: InstrumentRequest) -> object: ...
 ```
 
 It can be registered directly with `DriverCatalog.register()`, or published through the standard

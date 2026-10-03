@@ -55,9 +55,9 @@ def test_nport_is_option_gated_and_must_be_enabled() -> None:
     strict = instrument("vna-4-port", applications=())
     assert strict.process_command("SENS:NPORT:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
-    licensed = instrument("vna-4-port")
-    assert licensed.process_command("CALC:NPORT:DATA? 1,1") == ""
-    assert licensed.process_command("SYST:ERR?").startswith('-221,"Settings conflict')
+    option_enabled = instrument("vna-4-port")
+    assert option_enabled.process_command("CALC:NPORT:DATA? 1,1") == ""
+    assert option_enabled.process_command("SYST:ERR?").startswith('-221,"Settings conflict')
 
 
 def test_nport_state_survives_cls_and_resets_with_rst() -> None:

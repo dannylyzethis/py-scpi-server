@@ -49,8 +49,12 @@ For this bench entry:
 
 `*IDN?` returns `SCPI Emulator,Virtual VNA 4 Port,EMU-VNA-001,E.1.0` by default. An optional
 bench `reported_model` changes only the second identity field. `*OPT?` and the
-capability/license catalogs return readable semantic tokens derived from the same immutable profile.
+capability and option catalogs return readable semantic tokens derived from the same immutable profile.
 The dashboard reports the same model, source count, hardware features, applications, and range.
+
+Use `SYST:CAP:OPT:CAT? ALL` to list enabled application options,
+`SYST:CAP:OPT:FEAT:CAT?` to list their feature names, and
+`SYST:CAP:OPT:FEAT:ENAB? "APP-TIME-DOMAIN"` to query one option.
 
 ## Command coverage
 

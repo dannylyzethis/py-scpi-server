@@ -32,7 +32,7 @@ Dashboard state visibility and scenario/fault controls are documented in
 - Active `*CLS`, `*OPC`, `*OPC?`, `*WAI`, ESE/SRE/status-byte, trigger, and acquisition behavior.
 - Output queues with MAV, partial reads, query errors, and IEEE binary blocks.
 - Project-owned `vna-2-port` and `vna-4-port` profiles with semantic source, hardware,
-  application, identity, option, and license reporting. Defaults enable every compatible capability.
+  application, identity, and option reporting. Defaults enable every compatible capability.
 - Bench-defined VNA minimum/maximum frequency limits defaulting to 10 MHz–50 GHz, with explicit
   wider ranges supported because no physical product ceiling is imposed.
 - Stateful VNA channel, measurement, display-window, trace, format, math, marker, limit, and

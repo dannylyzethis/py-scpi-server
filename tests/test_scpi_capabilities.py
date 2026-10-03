@@ -51,7 +51,7 @@ def test_invalid_frequency_limits_are_rejected(kwargs: dict, message: str) -> No
         VNACapabilities.create("vna-2-port", **kwargs)
 
 
-def test_semantic_hardware_application_option_and_license_reporting() -> None:
+def test_semantic_hardware_application_and_option_reporting() -> None:
     profile = VNACapabilities.create(
         "vna-4-port",
         source_count=2,
@@ -74,11 +74,11 @@ def test_semantic_hardware_application_option_and_license_reporting() -> None:
         "HW-SOURCE-ATTENUATORS,APP-ENHANCED-TIME-DOMAIN,APP-SPECTRUM-ANALYSIS,"
         "APP-TIME-DOMAIN"
     )
-    assert instrument.process_command("SYST:CAP:LIC:CAT? ALL") == (
+    assert instrument.process_command("SYST:CAP:OPT:CAT? ALL") == (
         "APP-ENHANCED-TIME-DOMAIN,APP-SPECTRUM-ANALYSIS,APP-TIME-DOMAIN"
     )
-    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "APP-TIME-DOMAIN"') == "1"
-    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "APP-NOISE-FIGURE"') == "0"
+    assert instrument.process_command('SYST:CAP:OPT:FEAT:ENAB? "APP-TIME-DOMAIN"') == "1"
+    assert instrument.process_command('SYST:CAP:OPT:FEAT:ENAB? "APP-NOISE-FIGURE"') == "0"
 
 
 @pytest.mark.parametrize(
@@ -110,12 +110,12 @@ def test_omitted_applications_enable_every_compatible_application() -> None:
     assert four_port.feature_enabled("active hot parameters") is True
 
 
-def test_capability_query_validates_port_and_license_selection() -> None:
+def test_capability_query_validates_port_and_option_selection() -> None:
     instrument = SCPIInstrument("Virtual VNA 2 Port", "vna")
 
     assert instrument.process_command("SYST:CAP:HARD:ATT:REC:EXIS? 3") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
-    assert instrument.process_command("SYST:CAP:LIC:CAT? UNKNOWN") == ""
+    assert instrument.process_command("SYST:CAP:OPT:CAT? UNKNOWN") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
 
 

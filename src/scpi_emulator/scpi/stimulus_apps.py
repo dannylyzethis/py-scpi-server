@@ -103,7 +103,7 @@ def register_stimulus_application_commands(
         channel = state.measurements.channels.get(invocation.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(name: str):
+    def option_enabled(name: str):
         names = {name, name.replace("_", "-")}
         return lambda invocation: bool(names & invocation.capabilities)
 
@@ -121,18 +121,18 @@ def register_stimulus_application_commands(
 
     boolean = ParameterSpec(ParameterType.BOOLEAN)
     fast_cw = (sense, HeaderNode("FCW"))
-    fast_license = licensed("fast_cw")
+    fast_option = option_enabled("fast_cw")
     add(
         (*fast_cw, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "fast_cw_enabled", value),
         parameters=(boolean,),
-        available=fast_license,
+        available=fast_option,
     )
     add(
         (*fast_cw, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).fast_cw_enabled),
         query=True,
-        available=fast_license,
+        available=fast_option,
     )
     for header, attribute, minimum, maximum in (
         ("FREQuency", "cw_frequency", state.minimum, state.maximum),
@@ -156,7 +156,7 @@ def register_stimulus_application_commands(
             path,
             lambda inv, value, name=attribute: _set_channel_number(state, inv, name, value),
             parameters=(parameter,),
-            available=fast_license,
+            available=fast_option,
         )
         add(
             path,
@@ -164,22 +164,22 @@ def register_stimulus_application_commands(
                 getattr(state.channel(inv.indices["channel"]), name)
             ),
             query=True,
-            available=fast_license,
+            available=fast_option,
         )
 
     waveform = (sense, HeaderNode("AWGeneration"))
-    waveform_license = licensed("arbitrary_waveform_generation")
+    waveform_option = option_enabled("arbitrary_waveform_generation")
     add(
         (*waveform, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "waveform_enabled", value),
         parameters=(boolean,),
-        available=waveform_license,
+        available=waveform_option,
     )
     add(
         (*waveform, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).waveform_enabled),
         query=True,
-        available=waveform_license,
+        available=waveform_option,
     )
     for header, attribute in (("SCALe", "waveform_scale"), ("OFFSet", "waveform_offset")):
         path = (*waveform, HeaderNode(header))
@@ -189,7 +189,7 @@ def register_stimulus_application_commands(
                 state.channel(inv.indices["channel"]), name, value
             ),
             parameters=(ParameterSpec(ParameterType.NUMBER),),
-            available=waveform_license,
+            available=waveform_option,
         )
         add(
             path,
@@ -197,7 +197,7 @@ def register_stimulus_application_commands(
                 getattr(state.channel(inv.indices["channel"]), name)
             ),
             query=True,
-            available=waveform_license,
+            available=waveform_option,
         )
 
 

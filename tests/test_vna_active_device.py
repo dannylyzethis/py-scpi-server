@@ -106,7 +106,7 @@ def test_active_device_state_survives_cls_and_resets_with_rst() -> None:
     assert instrument.process_command("SENS:GC:CAL:STAT?") == "0"
 
 
-def test_application_commands_enforce_license_and_address_existence() -> None:
+def test_application_commands_enforce_option_and_address_existence() -> None:
     strict = SCPIInstrument(
         "Virtual VNA 2 Port",
         "strict",
@@ -115,9 +115,9 @@ def test_application_commands_enforce_license_and_address_existence() -> None:
     assert strict.process_command("SENS:GC:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    licensed = active_device_vna()
-    assert licensed.process_command("SENS2:GC:STAT?") == ""
-    assert licensed.process_command("SYST:ERR?").startswith('-200,"Execution error')
+    option_enabled = active_device_vna()
+    assert option_enabled.process_command("SENS2:GC:STAT?") == ""
+    assert option_enabled.process_command("SYST:ERR?").startswith('-200,"Execution error')
 
 
 def test_trigger_policy_advances_shared_gain_result_stream() -> None:

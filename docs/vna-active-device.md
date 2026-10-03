@@ -44,7 +44,7 @@ fallback from the selected trace so basic control programs can still run.
 
 - The same read, trigger, operation-complete, end-of-stream, and reset policies used by all other
   scenarios apply to active-device results.
-- Commands are available only when the model and selected application licenses permit them.
+- Commands are available only when the model and selected application options permit them.
 - Channel-addressed commands pass through the registry existence gate before execution.
 - `*CLS` clears status and errors but preserves application configuration and scenario data.
 - `*RST` restores disabled application defaults.

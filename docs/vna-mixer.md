@@ -1,6 +1,6 @@
 # VNA frequency-offset and converter behavior
 
-The converter layer is a licensed, per-channel processor in the shared VNA data pipeline. It uses
+The converter layer is an option-enabled, per-channel processor in the shared VNA data pipeline. It uses
 the same scenario trace as ordinary S-parameter reads, then applies frequency-offset, mixer,
 segment, source-role, and embedded-LO configuration. It can compose with time-domain processing;
 no application owns a private trace generator.
@@ -21,7 +21,7 @@ the frequency-converter application capability.
   and define coherent start/stop axes.
 - `SENS:MIX:STAT`, `FREQ:FIX`, `FREQ:LO`, `FREQ:IF`, and `MODE` model up/down conversion.
 - `SENS:MIX:CONV:TYPE` distinguishes scalar and vector conversion. Vector mode requires the vector
-  converter application license; unsupported combinations report a SCPI error.
+  converter application option; unsupported combinations report a SCPI error.
 - Numbered mixer segments have start/stop frequency, power, point count, add/delete/calculate, and
   catalog-count behavior. Scenario traces are deterministically resampled so returned data and axes
   always contain matching point counts.
@@ -36,7 +36,7 @@ the frequency-converter application capability.
 
 `*CLS` preserves converter configuration. `*RST` restores disabled application defaults. Commands
 are unavailable without the appropriate frequency-offset, scalar/vector converter, or embedded-LO
-license. Nonexistent channel/measurement and segment/range addresses are rejected before their
+option. Nonexistent channel/measurement and segment/range addresses are rejected before their
 handlers execute.
 
 The arithmetic is deterministic behavioral emulation intended to exercise ATE control flow, data

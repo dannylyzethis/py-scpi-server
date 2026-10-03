@@ -70,9 +70,9 @@ def test_analysis_options_are_gated_and_require_enable() -> None:
     for command in ("SENS:UNC:STAT?", "SENS:PERF:STAT?"):
         assert strict.process_command(command) == ""
         assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
-    licensed = instrument()
-    assert licensed.process_command("CALC:UNC:DATA?") == ""
-    assert licensed.process_command("SYST:ERR?").startswith('-221,"Settings conflict')
+    option_enabled = instrument()
+    assert option_enabled.process_command("CALC:UNC:DATA?") == ""
+    assert option_enabled.process_command("SYST:ERR?").startswith('-221,"Settings conflict')
 
 
 def test_analysis_state_survives_cls_and_resets_with_rst() -> None:

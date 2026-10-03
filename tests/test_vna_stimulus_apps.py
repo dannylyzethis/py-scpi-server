@@ -66,9 +66,9 @@ def test_stimulus_applications_are_option_gated_and_validate_frequency() -> None
         assert strict.process_command(command) == ""
         assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    licensed = instrument()
-    assert licensed.process_command("SENS:FCW:FREQ 100kHz") == ""
-    assert licensed.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+    option_enabled = instrument()
+    assert option_enabled.process_command("SENS:FCW:FREQ 100kHz") == ""
+    assert option_enabled.process_command("SYST:ERR?").startswith('-222,"Data out of range')
 
 
 def test_stimulus_application_state_survives_cls_and_resets_with_rst() -> None:

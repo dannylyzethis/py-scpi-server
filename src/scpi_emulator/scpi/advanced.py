@@ -290,16 +290,16 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         channel = state.measurements.channels.get(inv.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(*names):
+    def option_enabled(*names):
         return lambda inv: bool(set(names) & inv.capabilities)
 
-    licenses = {
-        "spectrum": licensed("spectrum_analysis", "spectrum-analysis"),
-        "imd": licensed("intermodulation_distortion", "intermodulation-distortion"),
-        "distortion": licensed("modulation_distortion", "modulation-distortion"),
-        "phase_noise": licensed("phase_noise", "phase-noise"),
-        "diq": licensed("differential_iq", "differential-iq"),
-        "wideband_iq": licensed("wideband_iq", "wideband-iq"),
+    options = {
+        "spectrum": option_enabled("spectrum_analysis", "spectrum-analysis"),
+        "imd": option_enabled("intermodulation_distortion", "intermodulation-distortion"),
+        "distortion": option_enabled("modulation_distortion", "modulation-distortion"),
+        "phase_noise": option_enabled("phase_noise", "phase-noise"),
+        "diq": option_enabled("differential_iq", "differential-iq"),
+        "wideband_iq": option_enabled("wideband_iq", "wideband-iq"),
     }
 
     def add(path, handler, *, query=False, parameters=(), available=None):
@@ -332,7 +332,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
     }
     for application, (sense_node, calc_node) in families.items():
         root = (sense, sense_node)
-        available = licenses[application]
+        available = options[application]
         add(
             (*root, HeaderNode("STATe")),
             lambda inv, value, app=application: state.enable(inv.indices["channel"], app, value),
@@ -365,14 +365,14 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         ((HeaderNode("BANDwidth"), HeaderNode("RESolution")), "resolution_bandwidth"),
         ((HeaderNode("BANDwidth"), HeaderNode("VIDeo")), "video_bandwidth"),
     ):
-        _register_value(add, sa, path, attribute, frequency, licenses["spectrum"], state)
+        _register_value(add, sa, path, attribute, frequency, options["spectrum"], state)
     _register_value(
         add,
         sa,
         (HeaderNode("AVERage"), HeaderNode("COUNt")),
         "average_count",
         positive_integer,
-        licenses["spectrum"],
+        options["spectrum"],
         state,
     )
     _register_value(
@@ -381,7 +381,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("REFerence"), HeaderNode("LEVel")),
         "reference_level",
         number,
-        licenses["spectrum"],
+        options["spectrum"],
         state,
     )
     _register_value(
@@ -392,7 +392,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         ParameterSpec(
             ParameterType.ENUM, choices=("AVERage", "SAMPle", "PEAK", "NORMal", "NEGPeak")
         ),
-        licenses["spectrum"],
+        options["spectrum"],
         state,
     )
 
@@ -405,7 +405,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         ParameterSpec(
             ParameterType.ENUM, choices=("FCENter", "DFRequency", "POWer", "CW", "SEGMent")
         ),
-        licenses["imd"],
+        options["imd"],
         state,
     )
     for leaf, attribute in (("CENTer", "center"), ("SPAN", "span")):
@@ -415,7 +415,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
             (HeaderNode("FREQuency"), HeaderNode("FCENter"), HeaderNode(leaf)),
             attribute,
             frequency,
-            licenses["imd"],
+            options["imd"],
             state,
         )
     _register_value(
@@ -424,7 +424,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("FREQuency"), HeaderNode("DFRequency")),
         "delta_frequency",
         frequency,
-        licenses["imd"],
+        options["imd"],
         state,
     )
     tone = HeaderNode("F", index="tone", index_default=1)
@@ -432,13 +432,13 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (*imd, HeaderNode("TPOWer"), tone),
         lambda inv, value: _set_imd_tone_power(state, inv, value),
         parameters=(number,),
-        available=licenses["imd"],
+        available=options["imd"],
     )
     add(
         (*imd, HeaderNode("TPOWer"), tone),
         lambda inv: str(_imd_tone_power(state, inv)),
         query=True,
-        available=licenses["imd"],
+        available=options["imd"],
     )
     for tone in ("MAIN", "IMTone"):
         _register_value(
@@ -447,10 +447,10 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
             (HeaderNode("IFBWidth"), HeaderNode(tone)),
             "imd_bandwidth",
             frequency,
-            licenses["imd"],
+            options["imd"],
             state,
         )
-    add((*imd, HeaderNode("HOPRoduct")), lambda inv: "9", query=True, available=licenses["imd"])
+    add((*imd, HeaderNode("HOPRoduct")), lambda inv: "9", query=True, available=options["imd"])
 
     distortion = (sense, HeaderNode("DISTortion"))
     _register_value(
@@ -459,7 +459,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("SWEep"), HeaderNode("TYPE")),
         "sweep_type",
         ParameterSpec(ParameterType.ENUM, choices=("FIXed", "POWer")),
-        licenses["distortion"],
+        options["distortion"],
         state,
     )
     _register_value(
@@ -468,7 +468,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("SWEep"), HeaderNode("CARRier"), HeaderNode("FREQuency")),
         "carrier_frequency",
         frequency,
-        licenses["distortion"],
+        options["distortion"],
         state,
     )
     _register_value(
@@ -477,7 +477,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("SWEep"), HeaderNode("CARRier"), HeaderNode("LEVel")),
         "carrier_power",
         number,
-        licenses["distortion"],
+        options["distortion"],
         state,
     )
     _register_value(
@@ -486,7 +486,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("MEASure"), HeaderNode("FILTer"), HeaderNode("SRATe")),
         "symbol_rate",
         frequency,
-        licenses["distortion"],
+        options["distortion"],
         state,
     )
 
@@ -497,7 +497,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("NTYPe"),),
         "noise_type",
         ParameterSpec(ParameterType.ENUM, choices=("PNOise", "RESidual")),
-        licenses["phase_noise"],
+        options["phase_noise"],
         state,
     )
     _register_value(
@@ -506,7 +506,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("SWEep"), HeaderNode("CARRier"), HeaderNode("FREQuency")),
         "carrier_frequency",
         frequency,
-        licenses["phase_noise"],
+        options["phase_noise"],
         state,
     )
     for leaf, attribute in (("STARt", "offset_start"), ("STOP", "offset_stop")):
@@ -516,7 +516,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
             (HeaderNode("OFFSet"), HeaderNode(leaf)),
             attribute,
             frequency,
-            licenses["phase_noise"],
+            options["phase_noise"],
             state,
         )
     _register_value(
@@ -525,7 +525,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         (HeaderNode("AVERage"), HeaderNode("COUNt")),
         "average_count",
         positive_integer,
-        licenses["phase_noise"],
+        options["phase_noise"],
         state,
     )
 
@@ -534,36 +534,36 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
     add(
         (*diq, HeaderNode("FREQuency"), HeaderNode("RANGe"), HeaderNode("ADD")),
         lambda inv: _diq_add(state, inv),
-        available=licenses["diq"],
+        available=options["diq"],
     )
     add(
         (*diq, HeaderNode("FREQuency"), HeaderNode("RANGe"), HeaderNode("COUNt")),
         lambda inv: str(len(state.channel(inv.indices["channel"]).diq_ranges)),
         query=True,
-        available=licenses["diq"],
+        available=options["diq"],
     )
     add(
         (*diq, HeaderNode("FREQuency"), range_node, HeaderNode("DELete")),
         lambda inv: _diq_delete(state, inv),
-        available=licenses["diq"],
+        available=options["diq"],
     )
     for leaf, offset in (("STARt", 0), ("STOP", 1), ("IFBW", 2)):
         add(
             (*diq, HeaderNode("FREQuency"), range_node, HeaderNode(leaf)),
             lambda inv, value, item=offset: _diq_set(state, inv, item, value),
             parameters=(frequency,),
-            available=licenses["diq"],
+            available=options["diq"],
         )
         add(
             (*diq, HeaderNode("FREQuency"), range_node, HeaderNode(leaf)),
             lambda inv, item=offset: str(_diq_range(state, inv)[item]),
             query=True,
-            available=licenses["diq"],
+            available=options["diq"],
         )
 
     iq = (sense, HeaderNode("IQ"))
     _register_value(
-        add, iq, (HeaderNode("SRATe"),), "sample_rate", frequency, licenses["wideband_iq"], state
+        add, iq, (HeaderNode("SRATe"),), "sample_rate", frequency, options["wideband_iq"], state
     )
     _register_value(
         add,
@@ -573,7 +573,7 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         ParameterSpec(
             ParameterType.NUMBER, minimum=Decimal(0), units=frozenset({"S", "MS", "US", "NS"})
         ),
-        licenses["wideband_iq"],
+        options["wideband_iq"],
         state,
     )
 

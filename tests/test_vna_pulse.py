@@ -146,7 +146,7 @@ def test_pulse_timing_and_scenario_shape_errors_are_scpi_errors() -> None:
     assert instrument.process_command("SYST:ERR?").startswith('-230,"Data corrupt or stale')
 
 
-def test_pulse_license_hardware_address_and_reset_semantics() -> None:
+def test_pulse_option_hardware_address_and_reset_semantics() -> None:
     with pytest.raises(CapabilityError, match="requires hardware features"):
         VNACapabilities.create(
             "vna-2-port",

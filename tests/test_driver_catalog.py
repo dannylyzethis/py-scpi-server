@@ -240,7 +240,7 @@ def test_catalog_creates_a_configured_vna_through_the_driver_contract() -> None:
 
     assert instrument.process_command("*IDN?") == ("SCPI Emulator,User Four Port VNA,VNA-001,E.1.0")
     assert instrument.process_command("SYST:CAP:HARD:PORT:COUN?") == "4"
-    assert instrument.process_command('SYST:CAP:LIC:FEAT:ENAB? "Noise Figure"') == "1"
+    assert instrument.process_command('SYST:CAP:OPT:FEAT:ENAB? "Noise Figure"') == "1"
 
 
 def test_vna_driver_applies_a_narrowed_frequency_capability_everywhere() -> None:

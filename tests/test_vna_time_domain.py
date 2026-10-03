@@ -9,7 +9,7 @@ from scpi_emulator.scenario import (
 from scpi_emulator.scpi import VNACapabilities
 
 
-def licensed_vna() -> SCPIInstrument:
+def option_enabled_vna() -> SCPIInstrument:
     capabilities = VNACapabilities.create(
         "vna-2-port", applications=("time_domain", "fixture_removal")
     )
@@ -27,7 +27,7 @@ def licensed_vna() -> SCPIInstrument:
 
 
 def test_time_transform_round_trips_and_changes_data_and_axis() -> None:
-    instrument = licensed_vna()
+    instrument = option_enabled_vna()
     frequency_data = instrument.process_command("CALC:DATA? SDAT")
     frequency_axis = instrument.process_command("CALC:MEAS:DATA:X?")
 
@@ -47,7 +47,7 @@ def test_time_transform_round_trips_and_changes_data_and_axis() -> None:
 
 
 def test_time_gate_alters_same_scenario_trace_and_round_trips() -> None:
-    instrument = licensed_vna()
+    instrument = option_enabled_vna()
     instrument.process_command("CALC:TRAN:TIME:WIND MIN")
     instrument.process_command("CALC:TRAN:TIME:STAT ON")
     ungated = instrument.process_command("CALC:DATA? SDAT")
@@ -64,7 +64,7 @@ def test_time_gate_alters_same_scenario_trace_and_round_trips() -> None:
 
 
 def test_fixture_file_port_and_balanced_topology_change_results() -> None:
-    instrument = licensed_vna()
+    instrument = option_enabled_vna()
     original = instrument.process_command("CALC:DATA? SDAT")
 
     instrument.process_command('CALC:FSIM:SEND:DEEM:PORT1:USER:FIL "fixture-port-1.s2p"')
@@ -88,7 +88,7 @@ def test_fixture_file_port_and_balanced_topology_change_results() -> None:
 
 
 def test_application_state_survives_cls_and_resets_with_rst() -> None:
-    instrument = licensed_vna()
+    instrument = option_enabled_vna()
     instrument.process_command("CALC:TRAN:TIME:STAT ON")
     instrument.process_command("CALC:FSIM:STAT ON")
     instrument.process_command("*CLS")
@@ -100,7 +100,7 @@ def test_application_state_survives_cls_and_resets_with_rst() -> None:
     assert instrument.process_command("CALC:FSIM:STAT?") == "0"
 
 
-def test_unlicensed_and_nonexistent_application_commands_are_rejected() -> None:
+def test_option_disabled_and_nonexistent_application_commands_are_rejected() -> None:
     strict = SCPIInstrument(
         "Virtual VNA 2 Port",
         "strict",
@@ -109,15 +109,15 @@ def test_unlicensed_and_nonexistent_application_commands_are_rejected() -> None:
     assert strict.process_command("CALC:TRAN:TIME:STAT?") == ""
     assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    licensed = licensed_vna()
-    assert licensed.process_command("CALC2:TRAN:TIME:STAT?") == ""
-    assert licensed.process_command("SYST:ERR?").startswith(
+    option_enabled = option_enabled_vna()
+    assert option_enabled.process_command("CALC2:TRAN:TIME:STAT?") == ""
+    assert option_enabled.process_command("SYST:ERR?").startswith(
         '-200,"Execution error; addressed object does not exist'
     )
 
 
 def test_transform_variants_windows_and_frequency_domain_notch_are_deterministic() -> None:
-    instrument = licensed_vna()
+    instrument = option_enabled_vna()
     baseline = instrument.process_command("CALC:DATA? SDAT")
 
     instrument.process_command("CALC:TRAN:TIME:STAT ON")
@@ -138,7 +138,7 @@ def test_transform_variants_windows_and_frequency_domain_notch_are_deterministic
 
 
 def test_invalid_gate_and_fixture_inputs_report_scpi_errors() -> None:
-    instrument = licensed_vna()
+    instrument = option_enabled_vna()
     instrument.process_command("CALC:FILT:TIME:STAR 1S")
     assert instrument.process_command("CALC:FILT:TIME:STOP 0S") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')

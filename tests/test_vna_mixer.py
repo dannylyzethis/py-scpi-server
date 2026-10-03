@@ -124,7 +124,7 @@ def test_correction_status_is_static_zero_and_reset_semantics_are_preserved() ->
     assert instrument.process_command("SENS:FOM:STAT?") == "0"
 
 
-def test_licenses_ranges_and_sources_report_correct_errors() -> None:
+def test_options_ranges_and_sources_report_correct_errors() -> None:
     strict = SCPIInstrument(
         "Virtual VNA 2 Port",
         "strict",

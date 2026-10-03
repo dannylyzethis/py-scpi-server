@@ -125,7 +125,7 @@ def register_analysis_application_commands(
         channel = state.measurements.channels.get(invocation.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(name: str):
+    def option_enabled(name: str):
         names = {name, name.replace("_", "-")}
         return lambda invocation: bool(names & invocation.capabilities)
 
@@ -143,7 +143,7 @@ def register_analysis_application_commands(
 
     boolean = ParameterSpec(ParameterType.BOOLEAN)
     uncertainty = (sense, HeaderNode("UNCertainty"))
-    uncertainty_license = licensed("measurement_uncertainty")
+    uncertainty_option = option_enabled("measurement_uncertainty")
     for header, attribute, parameter in (
         (
             "CONFidence",
@@ -159,7 +159,7 @@ def register_analysis_application_commands(
                 state.channel(inv.indices["channel"]), name, value
             ),
             parameters=(parameter,),
-            available=uncertainty_license,
+            available=uncertainty_option,
         )
         add(
             path,
@@ -167,7 +167,7 @@ def register_analysis_application_commands(
                 getattr(state.channel(inv.indices["channel"]), name)
             ),
             query=True,
-            available=uncertainty_license,
+            available=uncertainty_option,
         )
     add(
         (*uncertainty, HeaderNode("STATe")),
@@ -175,36 +175,36 @@ def register_analysis_application_commands(
             state.channel(inv.indices["channel"]), "uncertainty_enabled", value
         ),
         parameters=(boolean,),
-        available=uncertainty_license,
+        available=uncertainty_option,
     )
     add(
         (*uncertainty, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).uncertainty_enabled),
         query=True,
-        available=uncertainty_license,
+        available=uncertainty_option,
     )
     add(
         (calculate, HeaderNode("UNCertainty"), HeaderNode("DATA")),
         lambda inv: state.uncertainty_data(inv.indices["channel"]),
         query=True,
-        available=uncertainty_license,
+        available=uncertainty_option,
     )
 
     performance = (sense, HeaderNode("PERFormance"))
-    performance_license = licensed("performance_test")
+    performance_option = option_enabled("performance_test")
     add(
         (*performance, HeaderNode("STATe")),
         lambda inv, value: _set(
             state.channel(inv.indices["channel"]), "performance_enabled", value
         ),
         parameters=(boolean,),
-        available=performance_license,
+        available=performance_option,
     )
     add(
         (*performance, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).performance_enabled),
         query=True,
-        available=performance_license,
+        available=performance_option,
     )
     for header, attribute in (("LOWer", "lower_limit"), ("UPPer", "upper_limit")):
         path = (*performance, HeaderNode("LIMit"), HeaderNode(header))
@@ -212,7 +212,7 @@ def register_analysis_application_commands(
             path,
             lambda inv, value, name=attribute: _set_limit(state, inv, name, value),
             parameters=(ParameterSpec(ParameterType.NUMBER),),
-            available=performance_license,
+            available=performance_option,
         )
         add(
             path,
@@ -220,20 +220,20 @@ def register_analysis_application_commands(
                 getattr(state.channel(inv.indices["channel"]), name)
             ),
             query=True,
-            available=performance_license,
+            available=performance_option,
         )
     calc_performance = (calculate, HeaderNode("PERFormance"))
     add(
         (*calc_performance, HeaderNode("DATA")),
         lambda inv: state.performance_data(inv.indices["channel"]),
         query=True,
-        available=performance_license,
+        available=performance_option,
     )
     add(
         (*calc_performance, HeaderNode("PASS")),
         lambda inv: state.performance_pass(inv.indices["channel"]),
         query=True,
-        available=performance_license,
+        available=performance_option,
     )
 
 

@@ -127,13 +127,13 @@ class VNACapabilities:
         applications = tuple(f"APP-{_token(item)}" for item in self.applications)
         return (f"PORTS-{self.ports}", f"SOURCES-{self.source_count}", *hardware, *applications)
 
-    def license_catalog(self, selection: str) -> tuple[str, ...]:
+    def option_catalog(self, selection: str) -> tuple[str, ...]:
         if selection.upper() == "IGNORED":
             return ()
         return tuple(f"APP-{_token(item)}" for item in self.applications)
 
     @property
-    def license_feature_names(self) -> tuple[str, ...]:
+    def option_feature_names(self) -> tuple[str, ...]:
         return tuple(f"APP-{_token(item)}" for item in self.applications)
 
     def feature_enabled(self, name: str) -> bool:
@@ -375,26 +375,26 @@ def register_capability_commands(registry: CommandRegistry, capabilities: VNACap
     )
     _register_attenuator_queries(registry, hardware, capabilities)
 
-    licenses = (*capability, HeaderNode("LICenses"))
+    options = (*capability, HeaderNode("OPTions"))
     registry.register(
         CommandSpec(
-            path=(*licenses, HeaderNode("CATalog")),
+            path=(*options, HeaderNode("CATalog")),
             parameters=(
                 ParameterSpec(
                     ParameterType.ENUM,
-                    "license selection",
+                    "option selection",
                     choices=("VALID", "ALL", "IGNORED"),
                 ),
             ),
-            handler=lambda invocation, selection: ",".join(capabilities.license_catalog(selection)),
+            handler=lambda invocation, selection: ",".join(capabilities.option_catalog(selection)),
             query=True,
         )
     )
-    feature = (*licenses, HeaderNode("FEATure"))
+    feature = (*options, HeaderNode("FEATure"))
     _register_query(
         registry,
         (*feature, HeaderNode("CATalog")),
-        lambda: ",".join(capabilities.license_feature_names),
+        lambda: ",".join(capabilities.option_feature_names),
     )
     registry.register(
         CommandSpec(

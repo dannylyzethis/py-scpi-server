@@ -145,7 +145,7 @@ def register_active_source_commands(
         channel = state.measurements.channels.get(invocation.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(name: str):
+    def option_enabled(name: str):
         names = {name, name.replace("_", "-")}
         return lambda invocation: bool(names & invocation.capabilities)
 
@@ -162,21 +162,21 @@ def register_active_source_commands(
         )
 
     hot = (sense, HeaderNode("AHP"))
-    hot_license = licensed("active_hot_parameters")
+    hot_option = option_enabled("active_hot_parameters")
     add(
         (*hot, HeaderNode("STATe")),
         lambda inv, value: _set(
             state.channel(inv.indices["channel"]), "hot_parameters_enabled", value
         ),
         parameters=(boolean,),
-        available=hot_license,
+        available=hot_option,
         exists=channel_exists,
     )
     add(
         (*hot, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).hot_parameters_enabled),
         query=True,
-        available=hot_license,
+        available=hot_option,
         exists=channel_exists,
     )
     for header, attribute in (("VOLTage", "bias_voltage"), ("CURRent", "bias_current")):
@@ -187,7 +187,7 @@ def register_active_source_commands(
                 state.channel(inv.indices["channel"]), name, value
             ),
             parameters=(number,),
-            available=hot_license,
+            available=hot_option,
             exists=channel_exists,
         )
         add(
@@ -196,7 +196,7 @@ def register_active_source_commands(
                 getattr(state.channel(inv.indices["channel"]), name)
             ),
             query=True,
-            available=hot_license,
+            available=hot_option,
             exists=channel_exists,
         )
     add(
@@ -207,23 +207,23 @@ def register_active_source_commands(
         ),
         lambda inv: state.hot_parameter_data(inv.indices["channel"]),
         query=True,
-        available=hot_license,
+        available=hot_option,
         exists=channel_exists,
     )
 
     phase = (source, HeaderNode("PHASe"))
-    phase_license = licensed("source_phase_control")
+    phase_option = option_enabled("source_phase_control")
     add(
         (*phase, HeaderNode("STATe")),
         lambda inv, value: _set(state.source(inv.indices["source"]), "enabled", value),
         parameters=(boolean,),
-        available=phase_license,
+        available=phase_option,
     )
     add(
         (*phase, HeaderNode("STATe")),
         lambda inv: _boolean(state.source(inv.indices["source"]).enabled),
         query=True,
-        available=phase_license,
+        available=phase_option,
     )
     add(
         (*phase, HeaderNode("ANGLe")),
@@ -231,43 +231,43 @@ def register_active_source_commands(
         parameters=(
             ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-360), maximum=Decimal(360)),
         ),
-        available=phase_license,
+        available=phase_option,
     )
     add(
         (*phase, HeaderNode("ANGLe")),
         lambda inv: _number(state.source(inv.indices["source"]).angle_degrees),
         query=True,
-        available=phase_license,
+        available=phase_option,
     )
 
     true_mode = (sense, HeaderNode("TMSTimulus"))
-    true_mode_license = licensed("true_mode_stimulus")
+    true_mode_option = option_enabled("true_mode_stimulus")
     add(
         (*true_mode, HeaderNode("STATe")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "true_mode_enabled", value),
         parameters=(boolean,),
-        available=true_mode_license,
+        available=true_mode_option,
         exists=channel_exists,
     )
     add(
         (*true_mode, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).true_mode_enabled),
         query=True,
-        available=true_mode_license,
+        available=true_mode_option,
         exists=channel_exists,
     )
     add(
         (*true_mode, HeaderNode("MODE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "true_mode", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("DIFFerential", "COMMon")),),
-        available=true_mode_license,
+        available=true_mode_option,
         exists=channel_exists,
     )
     add(
         (*true_mode, HeaderNode("MODE")),
         lambda inv: state.channel(inv.indices["channel"]).true_mode,
         query=True,
-        available=true_mode_license,
+        available=true_mode_option,
         exists=channel_exists,
     )
     add(
@@ -276,14 +276,14 @@ def register_active_source_commands(
         parameters=(
             ParameterSpec(ParameterType.NUMBER, minimum=Decimal("0.001"), maximum=Decimal(1000)),
         ),
-        available=true_mode_license,
+        available=true_mode_option,
         exists=channel_exists,
     )
     add(
         (*true_mode, HeaderNode("AMPLitude"), HeaderNode("RATio")),
         lambda inv: _number(state.channel(inv.indices["channel"]).amplitude_ratio),
         query=True,
-        available=true_mode_license,
+        available=true_mode_option,
         exists=channel_exists,
     )
 

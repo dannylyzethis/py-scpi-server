@@ -135,7 +135,7 @@ def test_custom_converter_definition_selects_scalar_and_vector_modes() -> None:
     assert instrument.process_command("SENS1:MIX:CONV:TYPE?") == "VECTor"
 
 
-def test_custom_application_definition_reports_license_and_class_errors() -> None:
+def test_custom_application_definition_reports_option_and_class_errors() -> None:
     strict = SCPIInstrument(
         "Virtual VNA 2 Port",
         "strict-custom",
@@ -241,7 +241,7 @@ def test_wideband_iq_capture_uses_time_axis() -> None:
     assert values(instrument.process_command("CALC:DATA? SDAT")) == (0, 1, 0, -1, 0, 0.5, 0, -0.5)
 
 
-def test_advanced_license_address_cls_and_reset_semantics() -> None:
+def test_advanced_option_address_cls_and_reset_semantics() -> None:
     strict = SCPIInstrument(
         "Virtual VNA 2 Port",
         "strict",

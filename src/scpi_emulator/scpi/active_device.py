@@ -239,11 +239,11 @@ def register_active_device_commands(
         channel = state.measurements.channels.get(inv.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(*names):
+    def option_enabled(*names):
         return lambda inv: bool(set(names) & inv.capabilities)
 
-    gain_license = licensed("gain_compression", "gain-compression")
-    noise_license = licensed("noise_figure", "noise-figure")
+    gain_option = option_enabled("gain_compression", "gain-compression")
+    noise_option = option_enabled("noise_figure", "noise-figure")
 
     def add(path, handler, *, query=False, parameters=(), available=None):
         registry.register(
@@ -261,26 +261,26 @@ def register_active_device_commands(
         (*gc, HeaderNode("STATe")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "enabled", value),
         parameters=(boolean,),
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*gc, HeaderNode("STATe")),
         lambda inv: _bool(state.gain(inv.indices["channel"]).enabled),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     compression = (*gc, HeaderNode("COMPression"))
     add(
         (*compression, HeaderNode("STATe")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "compression_enabled", value),
         parameters=(boolean,),
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("STATe")),
         lambda inv: _bool(state.gain(inv.indices["channel"]).compression_enabled),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("POWer")),
@@ -290,13 +290,13 @@ def register_active_device_commands(
         parameters=(
             ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
         ),
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("POWer")),
         lambda inv: str(state.gain(inv.indices["channel"]).compression_power),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("DB")),
@@ -304,25 +304,25 @@ def register_active_device_commands(
             state.gain(inv.indices["channel"]), "compression_db", float(value.value)
         ),
         parameters=(ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(100)),),
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("DB")),
         lambda inv: str(state.gain(inv.indices["channel"]).compression_db),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("REFerence")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "reference", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("INTernal", "EXTernal")),),
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*compression, HeaderNode("REFerence")),
         lambda inv: state.gain(inv.indices["channel"]).reference,
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     power = (*gc, HeaderNode("POWer"))
     for header, attribute in (("STARt", "power_start"), ("STOP", "power_stop")):
@@ -332,64 +332,64 @@ def register_active_device_commands(
             parameters=(
                 ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
             ),
-            available=gain_license,
+            available=gain_option,
         )
         add(
             (*power, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.gain(inv.indices["channel"]), name)),
             query=True,
-            available=gain_license,
+            available=gain_option,
         )
     add(
         (*gc, HeaderNode("SWEep"), HeaderNode("POINts")),
         lambda inv, value: _set(state.gain(inv.indices["channel"]), "points", value),
         parameters=(ParameterSpec(ParameterType.INTEGER, minimum=2, maximum=100001),),
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*gc, HeaderNode("SWEep"), HeaderNode("POINts")),
         lambda inv: str(state.gain(inv.indices["channel"]).points),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*calc_gc, HeaderNode("DATA")),
         lambda inv, result: state.gain_data(inv.indices["channel"], result),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("IPOW", "OPOW", "GAIN", "COMP")),),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     for header, result in (("PIN", "PIN"), ("POUT", "POUT"), ("GAIN", "GAIN"), ("COMP", "COMP")):
         add(
             (*calc_gc, HeaderNode("RESult"), HeaderNode(header)),
             lambda inv, name=result: state.gain_scalar(inv.indices["channel"], name),
             query=True,
-            available=gain_license,
+            available=gain_option,
         )
     add(
         (*calc_gc, HeaderNode("STATus")),
         lambda inv: state.gain_status(inv.indices["channel"]),
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
     add(
         (*gc, HeaderNode("CALibration"), HeaderNode("STATe")),
         lambda inv: "0",
         query=True,
-        available=gain_license,
+        available=gain_option,
     )
 
     add(
         (*noise, HeaderNode("STATe")),
         lambda inv, value: _set(state.noise(inv.indices["channel"]), "enabled", value),
         parameters=(boolean,),
-        available=noise_license,
+        available=noise_option,
     )
     add(
         (*noise, HeaderNode("STATe")),
         lambda inv: _bool(state.noise(inv.indices["channel"]).enabled),
         query=True,
-        available=noise_license,
+        available=noise_option,
     )
     for path, attribute, parameter in (
         (
@@ -421,13 +421,13 @@ def register_active_device_commands(
             (*noise, *path),
             lambda inv, value, name=attribute: _set_noise(state, inv, name, value),
             parameters=(parameter,),
-            available=noise_license,
+            available=noise_option,
         )
         add(
             (*noise, *path),
             lambda inv, name=attribute: str(getattr(state.noise(inv.indices["channel"]), name)),
             query=True,
-            available=noise_license,
+            available=noise_option,
         )
     add(
         (*calc_noise, HeaderNode("DATA")),
@@ -436,20 +436,20 @@ def register_active_device_commands(
             ParameterSpec(ParameterType.ENUM, choices=("NF", "GAIN", "YFACtor", "TEFFective")),
         ),
         query=True,
-        available=noise_license,
+        available=noise_option,
     )
     for header, result in (("NF", "NF"), ("GAIN", "GAIN")):
         add(
             (*calc_noise, HeaderNode("RESult"), HeaderNode(header)),
             lambda inv, name=result: state.noise_scalar(inv.indices["channel"], name),
             query=True,
-            available=noise_license,
+            available=noise_option,
         )
     add(
         (*noise, HeaderNode("CALibration"), HeaderNode("STATe")),
         lambda inv: "0",
         query=True,
-        available=noise_license,
+        available=noise_option,
     )
 
 

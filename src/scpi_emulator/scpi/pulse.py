@@ -153,13 +153,13 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         channel = state.measurements.channels.get(inv.indices.get("channel", 1))
         return channel is not None and channel.selected in channel.measurements
 
-    def licensed(*names):
+    def option_enabled(*names):
         return lambda inv: bool(set(names) & inv.capabilities)
 
-    basic_license = licensed(
+    basic_option = option_enabled(
         "basic_pulsed_rf", "basic-pulsed-rf", "integrated_pulsed_rf", "integrated-pulsed-rf"
     )
-    integrated_license = licensed("integrated_pulsed_rf", "integrated-pulsed-rf")
+    integrated_option = option_enabled("integrated_pulsed_rf", "integrated-pulsed-rf")
 
     def add(path, handler, *, query=False, parameters=(), available=None):
         registry.register(
@@ -177,7 +177,7 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         (sense, HeaderNode("PULSe"), HeaderNode("CATalog")),
         lambda inv: "Pulse0,Pulse1,Pulse2,Pulse3,Pulse4",
         query=True,
-        available=basic_license,
+        available=basic_option,
     )
 
     for path in (pulse, (*pulse, HeaderNode("STATe"))):
@@ -185,13 +185,13 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
             path,
             lambda inv, value: _set_generator(state, inv, "enabled", value),
             parameters=(boolean,),
-            available=basic_license,
+            available=basic_option,
         )
         add(
             path,
             lambda inv: _bool(_generator(state, inv).enabled),
             query=True,
-            available=basic_license,
+            available=basic_option,
         )
 
     for header, attribute, setter in (
@@ -203,51 +203,51 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
             (*pulse, HeaderNode(header)),
             lambda inv, value, name=attribute, fn=setter: fn(state, inv, name, value),
             parameters=(time_value,),
-            available=basic_license,
+            available=basic_option,
         )
         add(
             (*pulse, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(_generator(state, inv), name)),
             query=True,
-            available=basic_license,
+            available=basic_option,
         )
 
     add(
         (*pulse, HeaderNode("INVert")),
         lambda inv, value: _set_generator(state, inv, "inverted", value),
         parameters=(boolean,),
-        available=basic_license,
+        available=basic_option,
     )
     add(
         (*pulse, HeaderNode("INVert")),
         lambda inv: _bool(_generator(state, inv).inverted),
         query=True,
-        available=basic_license,
+        available=basic_option,
     )
     add(
         (*pulse, HeaderNode("SUBPointtrig")),
         lambda inv, value: _set_subpoint(state, inv, value),
         parameters=(boolean,),
-        available=basic_license,
+        available=basic_option,
     )
     add(
         (*pulse, HeaderNode("SUBPointtrig")),
         lambda inv: _bool(_subpoint(state, inv)),
         query=True,
-        available=basic_license,
+        available=basic_option,
     )
 
     add(
         (sense, HeaderNode("PULSe"), HeaderNode("PERiod")),
         lambda inv, value: _set_period(state, inv, value),
         parameters=(time_value,),
-        available=basic_license,
+        available=basic_option,
     )
     add(
         (sense, HeaderNode("PULSe"), HeaderNode("PERiod")),
         lambda inv: str(state.channel(inv.indices["channel"]).period),
         query=True,
-        available=basic_license,
+        available=basic_option,
     )
     for header, attribute, choices in (
         ("TPOLarity", "trigger_polarity", ("POSitive", "NEGative")),
@@ -259,39 +259,39 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
                 state.channel(inv.indices["channel"]), name, value
             ),
             parameters=(ParameterSpec(ParameterType.ENUM, choices=choices),),
-            available=basic_license,
+            available=basic_option,
         )
         add(
             (sense, HeaderNode("PULSe"), HeaderNode(header)),
             lambda inv, name=attribute: getattr(state.channel(inv.indices["channel"]), name),
             query=True,
-            available=basic_license,
+            available=basic_option,
         )
     pulse4 = (sense, HeaderNode("PULSe", index="pulse", index_default=4), HeaderNode("OPTion"))
     add(
         pulse4,
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "pulse4_adc", value),
         parameters=(boolean,),
-        available=basic_license,
+        available=basic_option,
     )
     add(
         pulse4,
         lambda inv: _bool(state.channel(inv.indices["channel"]).pulse4_adc),
         query=True,
-        available=basic_license,
+        available=basic_option,
     )
 
     add(
         (*integrated, HeaderNode("MODE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "mode", value),
         parameters=(ParameterSpec(ParameterType.ENUM, choices=("OFF", "STD", "PROFile")),),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*integrated, HeaderNode("MODE")),
         lambda inv: state.channel(inv.indices["channel"]).mode,
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
 
     for header, attribute in (
@@ -310,13 +310,13 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
                 state.channel(inv.indices["channel"]), name, value
             ),
             parameters=(boolean,),
-            available=integrated_license,
+            available=integrated_option,
         )
         add(
             (*integrated, HeaderNode(header)),
             lambda inv, name=attribute: _bool(getattr(state.channel(inv.indices["channel"]), name)),
             query=True,
-            available=integrated_license,
+            available=integrated_option,
         )
 
     master = (*integrated, HeaderNode("MASTer"))
@@ -324,37 +324,37 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         (*master, HeaderNode("FREQuency")),
         lambda inv, value: _set_master_frequency(state, inv, value),
         parameters=(frequency,),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*master, HeaderNode("FREQuency")),
         lambda inv: str(state.channel(inv.indices["channel"]).master_frequency),
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*master, HeaderNode("PERiod")),
         lambda inv, value: _set_master_period(state, inv, value),
         parameters=(time_value,),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*master, HeaderNode("PERiod")),
         lambda inv: str(1 / state.channel(inv.indices["channel"]).master_frequency),
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*master, HeaderNode("WIDTh")),
         lambda inv, value: _set_master_width(state, inv, value),
         parameters=(time_value,),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*master, HeaderNode("WIDTh")),
         lambda inv: str(state.channel(inv.indices["channel"]).master_width),
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
 
     profile = (*integrated, HeaderNode("PROFile"))
@@ -363,13 +363,13 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
             (*profile, HeaderNode(header)),
             lambda inv, value, name=attribute: _set_profile(state, inv, name, value),
             parameters=(time_value,),
-            available=integrated_license,
+            available=integrated_option,
         )
         add(
             (*profile, HeaderNode(header)),
             lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
             query=True,
-            available=integrated_license,
+            available=integrated_option,
         )
 
     if_path = (sense, HeaderNode("IF"))
@@ -384,25 +384,25 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
                 state.channel(inv.indices["channel"]), name, value
             ),
             parameters=(boolean,),
-            available=integrated_license,
+            available=integrated_option,
         )
         add(
             (*if_path, *path),
             lambda inv, name=attribute: _bool(getattr(state.channel(inv.indices["channel"]), name)),
             query=True,
-            available=integrated_license,
+            available=integrated_option,
         )
     add(
         (*if_path, HeaderNode("FREQuency")),
         lambda inv, value: _set_if_frequency(state, inv, value),
         parameters=(frequency,),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*if_path, HeaderNode("FREQuency")),
         lambda inv: str(state.channel(inv.indices["channel"]).if_frequency),
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
     stage3 = (*if_path, HeaderNode("FILTer"), HeaderNode("STAGe", index="stage", index_default=3))
     add(
@@ -413,27 +413,27 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
                 ParameterType.ENUM, choices=("RECTangular", "TUKey", "PWINdow", "COEFficient")
             ),
         ),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*stage3, HeaderNode("TYPE")),
         lambda inv: state.channel(inv.indices["channel"]).if_filter_type,
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
     parameter = (*stage3, HeaderNode("PARameter"))
     add(
         parameter,
         lambda inv, name, value: _set_if_parameter(state, inv, name, value),
         parameters=(ParameterSpec(ParameterType.STRING), time_value),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         parameter,
         lambda inv, name: _query_if_parameter(state, inv, name),
         parameters=(ParameterSpec(ParameterType.STRING),),
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
 
     path_element = (sense, HeaderNode("PATH"), HeaderNode("CONFig"), HeaderNode("ELEMent"))
@@ -441,20 +441,20 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         path_element,
         lambda inv, element, value: _set_path_element(state, inv, element, value),
         parameters=(ParameterSpec(ParameterType.STRING), ParameterSpec(ParameterType.STRING)),
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         path_element,
         lambda inv, element: _query_path_element(state, inv, element),
         parameters=(ParameterSpec(ParameterType.STRING),),
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
     add(
         (*integrated, HeaderNode("CALibration"), HeaderNode("STATe")),
         lambda inv: "0",
         query=True,
-        available=integrated_license,
+        available=integrated_option,
     )
 
 

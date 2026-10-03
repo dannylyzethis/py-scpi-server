@@ -25,7 +25,7 @@ The important change is not merely that more commands exist. Commands now intera
 instrument state. Errors affect the Standard Event Status Register. `*OPC` follows pending
 operations. `*ESE` and `*SRE` promote events into the status byte. Trigger commands move acquisition
 channels through defined states. `*CLS` clears status without erasing measurement configuration.
-VNA option queries agree with the selected physical model and installed licenses.
+VNA option queries agree with the selected physical model and enabled options.
 
 That shared behavior is what turns a list of canned responses into an instrument emulator.
 
@@ -51,7 +51,7 @@ Each command was primarily a dictionary entry or regular expression. A callback 
 value, but it had little structured knowledge of the rest of the instrument. This made it difficult
 to express rules such as:
 
-- a command exists only when an application license is installed;
+- a command exists only when its application option is enabled;
 - the number of valid ports depends on the hardware configuration;
 - a sweep remains pending until a trigger arrives;
 - an operation-complete event must update several status layers;
@@ -91,7 +91,7 @@ status behavior.
 ### VNA identity was only a label
 
 The original VNA catalog could select a two-port profile while advertising a 50 GHz range and
-placeholder firmware. Port count, source count, hardware options, application licenses, and command
+placeholder firmware. Port count, source count, hardware options, application options, and command
 availability did not come from a single model definition. This made internally contradictory
 instruments possible.
 
@@ -263,7 +263,7 @@ An immutable runtime profile drives all related queries, including:
 - frequency minimum and maximum;
 - port, source-port, source, and receiver counts;
 - receiver access, low-frequency extension, and attenuator capabilities;
-- installed-license and enabled-feature catalogs.
+- enabled-option and feature catalogs.
 
 Impossible combinations are rejected when the profile is created. For example, a four-port
 application cannot be installed on a two-port model, a two-source application requires two sources,
@@ -272,7 +272,7 @@ and a hardware-gated application requires its semantic hardware feature.
 Omitted hardware and application fields enable every compatible capability. Explicit arrays let a
 test bench remove hardware or applications deliberately. Both forms feed the same typed
 command-availability gates, so a disabled application command is unavailable without making
-hardware, option, or license queries contradictory.
+hardware or option queries contradictory.
 
 Option queries and internal application identifiers are modeled separately. Individual application
 identifiers are intentionally not explained in this documentation.
@@ -312,7 +312,7 @@ documentation snapshot rather than being inferred from a collection of CSV rows.
 | Status byte | Mostly independent values | Derived from queues, events, enables, and operations | Polling behaves like an instrument |
 | Triggering | Canned command responses | Acquisition state machines | Commands affect real pending work |
 | Query output | Direct strings | Byte queue, MAV, partial reads, binary blocks | Realistic client read behavior |
-| VNA identity | Static model string | Validated model/configuration/license profile | Internally consistent capabilities |
+| VNA identity | Static model string | Validated model/configuration/option profile | Internally consistent capabilities |
 | Coverage | Number of configured rows | Versioned documentation-to-code report | Gaps are visible and testable |
 
 ## What is deliberately not finished
@@ -392,12 +392,12 @@ shared scenario and timeline.
 
 For VNA profiles, completion means:
 
-- identity, options, licenses, ports, sources, receivers, and command availability agree;
+- identity, options, ports, sources, receivers, and command availability agree;
 - sweeps and applications produce deterministic but physically meaningful data;
 - synchronization, errors, status registers, and service requests behave consistently under load;
 - ASCII and binary transfers exercise production parsing and read logic;
 - calibration and file workflows retain state across realistic command sequences;
-- unsupported commands fail exactly because of model, firmware, hardware, or license constraints;
+- unsupported commands fail exactly because of model, firmware, hardware, or option constraints;
 - explicit application subsets expose only requested capabilities and their dependencies;
 - omitted selections provide the all-compatible development default;
 - compatibility reports state exactly what has been implemented and validated;
@@ -412,7 +412,7 @@ developer or build agent to have a costly instrument attached.
 
 - **Behavior before command count.** A smaller coherent subsystem is more useful than hundreds of
   unrelated canned responses.
-- **One source of truth.** Identity, hardware, licenses, availability, and query results must derive
+- **One source of truth.** Identity, hardware, options, availability, and query results must derive
   from the same profile.
 - **Real distinctions matter.** `*CLS`, `*RST`, Device Clear, `*OPC`, `*OPC?`, and `*WAI` are not
   interchangeable.
@@ -449,7 +449,7 @@ As of 2026-08-27:
 - Frequency-offset ranges, scalar/vector conversion, mixer segments, source roles, and embedded-LO
   estimation compose with that same trace pipeline; calibration/correction status remains static 0.
 - Gain-compression power sweeps and noise-figure arrays and summaries consume shared scenario
-  streams with license, address-existence, trigger-policy, and malformed-data enforcement.
+  streams with option, address-existence, trigger-policy, and malformed-data enforcement.
 - Basic and Integrated Pulse applications model five generators, point/profile operation, IF
   filters and gate routing, time axes, timing constraints, and shared scenario trigger policies.
 - The catalog-visible Virtual DMM consumes scalar streams through the same player, proving

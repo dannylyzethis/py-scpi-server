@@ -78,9 +78,9 @@ def test_active_source_options_are_gated_and_source_count_is_validated() -> None
         assert strict.process_command(command) == ""
         assert strict.process_command("SYST:ERR?").startswith('-113,"Command unavailable')
 
-    licensed = instrument()
-    assert licensed.process_command("SOUR3:PHAS:STAT ON") == ""
-    assert licensed.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+    option_enabled = instrument()
+    assert option_enabled.process_command("SOUR3:PHAS:STAT ON") == ""
+    assert option_enabled.process_command("SYST:ERR?").startswith('-222,"Data out of range')
 
 
 def test_active_source_state_survives_cls_and_resets_with_rst() -> None:
