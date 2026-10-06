@@ -31,10 +31,10 @@
       "required": 26
     },
     "enhanced_time_domain": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 10,
       "missing_keys": [],
-      "required": 0
+      "required": 10
     },
     "fast_cw": {
       "audit_status": "complete",
@@ -43,10 +43,10 @@
       "required": 8
     },
     "fixture_removal": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 12,
       "missing_keys": [],
-      "required": 0
+      "required": 12
     },
     "frequency_converter": {
       "audit_status": "complete",
@@ -133,10 +133,10 @@
       "required": 0
     },
     "time_domain": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 62,
       "missing_keys": [],
-      "required": 0
+      "required": 62
     },
     "true_mode_stimulus": {
       "audit_status": "complete",
@@ -153,8 +153,6 @@
   },
   "pending_application_names": [
     "differential_iq",
-    "enhanced_time_domain",
-    "fixture_removal",
     "intermodulation_distortion",
     "measurement_uncertainty",
     "modulation_distortion",
@@ -162,17 +160,16 @@
     "performance_test",
     "phase_noise",
     "spectrum_analysis",
-    "time_domain",
     "wideband_iq"
   ],
   "schema_version": 1,
   "summary": {
     "advertised_applications": 25,
-    "audited_applications": 13,
-    "implemented_commands": 427,
+    "audited_applications": 16,
+    "implemented_commands": 511,
     "missing_commands": 0,
-    "pending_applications": 12,
-    "required_commands": 427
+    "pending_applications": 9,
+    "required_commands": 511
   },
   "target": {
     "model": "vna-4-port"

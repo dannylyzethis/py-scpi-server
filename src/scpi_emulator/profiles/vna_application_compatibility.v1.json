@@ -73,7 +73,17 @@
         {"syntax": "SENSE<channel>:MIXER:ELO:TUNING:TOLERANCE", "forms": ["set", "query"]}
       ]
     },
-    "enhanced_time_domain": {"audit_status": "pending", "commands": []},
+    "enhanced_time_domain": {
+      "audit_status": "complete",
+      "scope_note": "Deterministic transform-window, time-range, and gate-shape controls over the shared scenario trace pipeline; calibrated material models and physical interconnect simulation are outside scope.",
+      "commands": [
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:CLIP", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:KBESSEL", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:IMPULSE:WIDTH", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:STEP:RTIME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:SHAPE", "forms": ["set", "query"]}
+      ]
+    },
     "fast_cw": {
       "audit_status": "complete",
       "scope_note": "Bounded deterministic CW acquisition only; unbounded point acquisition and hardware-rate/FIFO behavior are outside scope.",
@@ -84,7 +94,18 @@
         {"syntax": "SENSE<channel>:SWEEP:TYPE:FACW", "forms": ["set", "query"]}
       ]
     },
-    "fixture_removal": {"audit_status": "pending", "commands": []},
+    "fixture_removal": {
+      "audit_status": "complete",
+      "scope_note": "Per-port named fixture references produce stable deterministic embedding and de-embedding factors; external network-file parsing, calibrated correction math, and proprietary state formats are outside scope.",
+      "commands": [
+        {"syntax": "CALCULATE<channel>:FSIMULATOR:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FSIMULATOR:SEND:DEEMBED:PORT<port>:USER:FILENAME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FSIMULATOR:SEND:DEEMBED:PORT<port>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FSIMULATOR:SEND:EMBED:PORT<port>:USER:FILENAME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FSIMULATOR:SEND:EMBED:PORT<port>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FSIMULATOR:BALANCED:TOPOLOGY", "forms": ["set", "query"]}
+      ]
+    },
     "frequency_converter": {
       "audit_status": "complete",
       "scope_note": "Vector conversion selects the complex-data behavior implemented by the shared scalar-mixer setup; calibration math, external-device discovery, and external file formats are outside scope.",
@@ -313,7 +334,43 @@
       ]
     },
     "spectrum_analysis": {"audit_status": "pending", "commands": []},
-    "time_domain": {"audit_status": "pending", "commands": []},
+    "time_domain": {
+      "audit_status": "complete",
+      "scope_note": "Deterministic discrete transforms and time gates over the shared scenario trace pipeline; calibration/correction math and metrology-grade transform algorithms are outside scope.",
+      "commands": [
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:TYPE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:WINDOW", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:START", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:STOP", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:CENTER", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:SPAN", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:STIMULUS", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:CLIP", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:KBESSEL", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:IMPULSE:WIDTH", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:STEP:RTIME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:MARKER:MODE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:TRANSFORM:TIME:MARKER:UNIT", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:START", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:STOP", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:CENTER", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:SPAN", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:TYPE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:TIME:SHAPE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:START", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:STOP", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:CENTER", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:SPAN", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:TYPE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:FILTER:GATE:TIME:SHAPE", "forms": ["set", "query"]}
+      ]
+    },
     "true_mode_stimulus": {
       "audit_status": "complete",
       "scope_note": "Project-owned differential/common stimulus transform only; physical balanced-port routing and calibration are outside scope.",

@@ -15,13 +15,13 @@ The application reports are:
 - `reports/vna-application-coverage-vna-2-port.json`
 - `reports/vna-application-coverage-vna-4-port.json`
 
-At the current checkpoint, 13 applications are audited: gain compression, active hot parameters,
+At the current checkpoint, 16 applications are audited: gain compression, active hot parameters,
 noise figure, frequency offset, scalar mixer, frequency converter, embedded LO, basic and integrated
-pulsed RF, fast CW, arbitrary waveform generation, source phase control, and true-mode stimulus.
-All 427 inventoried forms are implemented on both models. The other 12 advertised applications are
-marked `pending`; they are not represented as complete simply because each has at least one
-option-gated command. CI verifies that completed inventories have no missing commands and that the
-checked-in reports match the live registry.
+pulsed RF, fast CW, arbitrary waveform generation, source phase control, true-mode stimulus, base
+and enhanced time domain, and fixture removal. All 511 inventoried forms are implemented on both
+models. The other 9 advertised applications are marked `pending`; they are not represented as
+complete simply because each has at least one option-gated command. CI verifies that completed
+inventories have no missing commands and that the checked-in reports match the live registry.
 
 The inventory contains normalized command syntax and project-written behavioral metadata only. It
 does not reproduce vendor manual prose or model/option identifiers.

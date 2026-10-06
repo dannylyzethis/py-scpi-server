@@ -1,3 +1,5 @@
+import pytest
+
 from scpi_emulator.instrument import SCPIInstrument
 from scpi_emulator.scenario import (
     EndPolicy,
@@ -146,4 +148,78 @@ def test_invalid_gate_and_fixture_inputs_report_scpi_errors() -> None:
     assert instrument.process_command('CALC:FSIM:SEND:DEEM:PORT1:USER:FIL ""') == ""
     assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
     assert instrument.process_command("CALC:FSIM:SEND:DEEM:PORT3:STAT ON") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+
+
+def test_transform_range_stimulus_and_marker_controls_round_trip() -> None:
+    instrument = option_enabled_vna()
+
+    instrument.process_command("CALC:TRAN:TIME:CENT 5NS")
+    instrument.process_command("CALC:TRAN:TIME:SPAN 2NS")
+    instrument.process_command("CALC:TRAN:TIME:STIM STEP")
+    instrument.process_command("CALC:TRAN:TIME:CLIP OFF")
+    instrument.process_command("CALC:TRAN:TIME:MARK:MODE TRAN")
+    instrument.process_command("CALC:TRAN:TIME:MARK:UNIT FEET")
+    instrument.process_command("CALC:TRAN:TIME:STAT ON")
+
+    assert float(instrument.process_command("CALC:TRAN:TIME:STAR?")) == pytest.approx(4e-9)
+    assert float(instrument.process_command("CALC:TRAN:TIME:STOP?")) == pytest.approx(6e-9)
+    assert float(instrument.process_command("CALC:TRAN:TIME:CENT?")) == pytest.approx(5e-9)
+    assert float(instrument.process_command("CALC:TRAN:TIME:SPAN?")) == pytest.approx(2e-9)
+    assert instrument.process_command("CALC:TRAN:TIME:STIM?") == "STEP"
+    assert instrument.process_command("CALC:TRAN:TIME:TYPE?") == "LPSTep"
+    assert instrument.process_command("CALC:TRAN:TIME?") == "LPSTep"
+    assert instrument.process_command("CALC:TRAN:TIME:CLIP?") == "0"
+    assert instrument.process_command("CALC:TRAN:TIME:MARK:MODE?") == "TRANsmission"
+    assert instrument.process_command("CALC:TRAN:TIME:MARK:UNIT?") == "FEET"
+    axis = tuple(
+        float(value) for value in instrument.process_command("CALC:MEAS:DATA:X?").split(",")
+    )
+    assert axis[0] == pytest.approx(4e-9)
+    assert axis[-1] == pytest.approx(6e-9)
+
+
+def test_enhanced_windows_and_parameters_are_deterministic() -> None:
+    instrument = option_enabled_vna()
+    instrument.process_command("CALC:TRAN:TIME:STAT ON")
+    instrument.process_command("CALC:TRAN:TIME:WIND KAIS")
+    instrument.process_command("CALC:TRAN:TIME:KBES 4")
+    beta_four = instrument.process_command("CALC:DATA? SDAT")
+    instrument.process_command("CALC:TRAN:TIME:KBES 10")
+    beta_ten = instrument.process_command("CALC:DATA? SDAT")
+    instrument.process_command("CALC:TRAN:TIME:IMP:WIDT 1E-9S")
+    instrument.process_command("CALC:TRAN:TIME:STEP:RTIM 2E-9S")
+
+    assert beta_four != beta_ten
+    assert instrument.process_command("CALC:TRAN:TIME:WIND?") == "KAISer"
+    assert instrument.process_command("CALC:TRAN:TIME:KBES?") == "10.0"
+    assert instrument.process_command("CALC:TRAN:TIME:IMP:WIDT?") == "1e-09"
+    assert instrument.process_command("CALC:TRAN:TIME:STEP:RTIM?") == "2e-09"
+
+
+def test_explicit_gate_path_center_span_and_shape_aliases_round_trip() -> None:
+    instrument = option_enabled_vna()
+
+    instrument.process_command("CALC:FILT:GATE:TIME:CENT 4NS")
+    instrument.process_command("CALC:FILT:GATE:TIME:SPAN 2NS")
+    instrument.process_command("CALC:FILT:GATE:TIME:SHAP WIDE")
+    instrument.process_command("CALC:FILT:GATE:TIME BPAS")
+    instrument.process_command("CALC:FILT:GATE:TIME:STAT ON")
+
+    assert float(instrument.process_command("CALC:FILT:GATE:TIME:STAR?")) == pytest.approx(3e-9)
+    assert float(instrument.process_command("CALC:FILT:GATE:TIME:STOP?")) == pytest.approx(5e-9)
+    assert float(instrument.process_command("CALC:FILT:GATE:TIME:CENT?")) == pytest.approx(4e-9)
+    assert float(instrument.process_command("CALC:FILT:GATE:TIME:SPAN?")) == pytest.approx(2e-9)
+    assert instrument.process_command("CALC:FILT:GATE:TIME:SHAP?") == "WIDE"
+    assert instrument.process_command("CALC:FILT:GATE:TIME:TYPE?") == "BPASs"
+    assert instrument.process_command("CALC:FILT:GATE:TIME?") == "BPASs"
+    assert instrument.process_command("CALC:FILT:GATE:TIME:STAT?") == "1"
+
+
+def test_negative_transform_or_gate_span_reports_range_error() -> None:
+    instrument = option_enabled_vna()
+
+    assert instrument.process_command("CALC:TRAN:TIME:SPAN -1S") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+    assert instrument.process_command("CALC:FILT:GATE:TIME:SPAN -1S") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')

@@ -24,10 +24,20 @@ class TimeDomainChannel:
     transform_enabled: bool = False
     transform_type: str = "BANDpass"
     window: str = "NORMal"
+    transform_start: float | None = None
+    transform_stop: float | None = None
+    transform_stimulus: str = "IMPulse"
+    transform_clip: bool = True
+    kaiser_beta: float = 6.0
+    impulse_width: float = 0.0
+    step_rise_time: float = 0.0
+    marker_mode: str = "AUTO"
+    marker_unit: str = "METRs"
     gate_enabled: bool = False
     gate_start: float = 0.0
     gate_stop: float = math.inf
     gate_type: str = "BANDpass"
+    gate_shape: str = "NORMal"
     fixture_enabled: bool = False
     fixture_ports: dict[int, str] = field(default_factory=dict)
     fixture_port_enabled: dict[int, bool] = field(default_factory=dict)
@@ -52,7 +62,7 @@ class VNATimeDomainSystem:
 
     def axis(self, channel: int, stimulus: tuple[float, ...]) -> tuple[float, ...]:
         state = self.channel(channel)
-        return _time_axis(stimulus) if state.transform_enabled else stimulus
+        return _selected_time_axis(state, stimulus) if state.transform_enabled else stimulus
 
     def samples(
         self,
@@ -64,21 +74,21 @@ class VNATimeDomainSystem:
         adjusted = _fixture(samples, state)
         if not (state.transform_enabled or state.gate_enabled):
             return adjusted
-        time_samples = _idft(_window(adjusted, state.window))
+        time_samples = _idft(_window(adjusted, state))
         if state.gate_enabled:
-            axis = _time_axis(stimulus)
+            axis = _selected_time_axis(state, stimulus)
             time_samples = tuple(
                 value if _gate_keeps(state, point) else 0j
                 for point, value in zip(axis, time_samples)
             )
-        if state.transform_type == "STEP":
+        if state.transform_type in {"STEP", "LPSTep"}:
             total = 0j
             integrated = []
             for value in time_samples:
                 total += value
                 integrated.append(total)
             time_samples = tuple(integrated)
-        elif state.transform_type == "LOWPass":
+        elif state.transform_type in {"LOWPass", "LPASs", "LPIMpulse"}:
             time_samples = tuple(complex(value.real, 0.0) for value in time_samples)
         return time_samples if state.transform_enabled else _dft(time_samples)
 
@@ -127,7 +137,10 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
     """Register profile-gated CALCulate time-domain and fixture command families."""
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     transform = (calc, HeaderNode("TRANsform"), HeaderNode("TIME"))
-    gate = (calc, HeaderNode("FILTer"), HeaderNode("TIME"))
+    gate_roots = (
+        (calc, HeaderNode("FILTer"), HeaderNode("TIME")),
+        (calc, HeaderNode("FILTer"), HeaderNode("GATE"), HeaderNode("TIME")),
+    )
     fixture = (calc, HeaderNode("FSIMulator"))
     port = HeaderNode("PORT", index="port", index_default=1)
     boolean = ParameterSpec(ParameterType.BOOLEAN)
@@ -170,7 +183,19 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
         (*transform, HeaderNode("TYPE")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "transform_type", value),
         parameters=(
-            ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "LOWPass", "IMPulse", "STEP")),
+            ParameterSpec(
+                ParameterType.ENUM,
+                choices=(
+                    "BANDpass",
+                    "LOWPass",
+                    "IMPulse",
+                    "STEP",
+                    "BPASs",
+                    "LPASs",
+                    "LPIMpulse",
+                    "LPSTep",
+                ),
+            ),
         ),
         available=time_option,
     )
@@ -181,9 +206,50 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
         available=time_option,
     )
     add(
+        transform,
+        lambda inv, value: _set(state.channel(inv.indices["channel"]), "transform_type", value),
+        parameters=(
+            ParameterSpec(
+                ParameterType.ENUM,
+                choices=(
+                    "BANDpass",
+                    "LOWPass",
+                    "IMPulse",
+                    "STEP",
+                    "BPASs",
+                    "LPASs",
+                    "LPIMpulse",
+                    "LPSTep",
+                ),
+            ),
+        ),
+        available=time_option,
+    )
+    add(
+        transform,
+        lambda inv: state.channel(inv.indices["channel"]).transform_type,
+        query=True,
+        available=time_option,
+    )
+    add(
         (*transform, HeaderNode("WINDow")),
         lambda inv, value: _set(state.channel(inv.indices["channel"]), "window", value),
-        parameters=(ParameterSpec(ParameterType.ENUM, choices=("MINimum", "NORMal", "MAXimum")),),
+        parameters=(
+            ParameterSpec(
+                ParameterType.ENUM,
+                choices=(
+                    "MINimum",
+                    "NORMal",
+                    "MAXimum",
+                    "WIDE",
+                    "KAISer",
+                    "RECTangle",
+                    "HAMMing",
+                    "HANN",
+                    "BOHMan",
+                ),
+            ),
+        ),
         available=time_option,
     )
     add(
@@ -193,43 +259,154 @@ def register_time_domain_commands(registry: CommandRegistry, state: VNATimeDomai
         available=time_option,
     )
 
-    add(
-        (*gate, HeaderNode("STATe")),
-        lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_enabled", value),
-        parameters=(boolean,),
-        available=time_option,
-    )
-    add(
-        (*gate, HeaderNode("STATe")),
-        lambda inv: _bool(state.channel(inv.indices["channel"]).gate_enabled),
-        query=True,
-        available=time_option,
-    )
-    for header, attribute in (("STARt", "gate_start"), ("STOP", "gate_stop")):
+    time_units = frozenset({"S", "MS", "US", "NS"})
+    time_number = ParameterSpec(ParameterType.NUMBER, units=time_units)
+    positive_time = ParameterSpec(ParameterType.NUMBER, minimum=0, units=time_units)
+    for header, attribute in (("STARt", "transform_start"), ("STOP", "transform_stop")):
         add(
-            (*gate, HeaderNode(header)),
-            lambda inv, value, name=attribute: _set_gate(state, inv, name, value),
-            parameters=(ParameterSpec(ParameterType.NUMBER, units=frozenset({"S"})),),
+            (*transform, HeaderNode(header)),
+            lambda inv, value, name=attribute: _set_transform_bound(state, inv, name, value),
+            parameters=(time_number,),
             available=time_option,
         )
         add(
-            (*gate, HeaderNode(header)),
-            lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
+            (*transform, HeaderNode(header)),
+            lambda inv, name=attribute: _optional_number(
+                getattr(state.channel(inv.indices["channel"]), name)
+            ),
             query=True,
             available=time_option,
         )
-    add(
-        (*gate, HeaderNode("TYPE")),
-        lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_type", value),
-        parameters=(ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "NOTCh")),),
-        available=time_option,
-    )
-    add(
-        (*gate, HeaderNode("TYPE")),
-        lambda inv: state.channel(inv.indices["channel"]).gate_type,
-        query=True,
-        available=time_option,
-    )
+    for header, setter, getter in (
+        ("CENTer", _set_transform_center, _transform_center),
+        ("SPAN", _set_transform_span, _transform_span),
+    ):
+        add(
+            (*transform, HeaderNode(header)),
+            lambda inv, value, operation=setter: operation(state, inv, value),
+            parameters=((positive_time if header == "SPAN" else time_number),),
+            available=time_option,
+        )
+        add(
+            (*transform, HeaderNode(header)),
+            lambda inv, operation=getter: str(operation(state.channel(inv.indices["channel"]))),
+            query=True,
+            available=time_option,
+        )
+    for path, attribute, parameter in (
+        (
+            (HeaderNode("STIMulus"),),
+            "transform_stimulus",
+            ParameterSpec(ParameterType.ENUM, choices=("STEP", "IMPulse")),
+        ),
+        ((HeaderNode("CLIP"),), "transform_clip", boolean),
+        (
+            (HeaderNode("KBESsel"),),
+            "kaiser_beta",
+            ParameterSpec(ParameterType.NUMBER, minimum=0, maximum=13),
+        ),
+        ((HeaderNode("IMPulse"), HeaderNode("WIDTh")), "impulse_width", positive_time),
+        ((HeaderNode("STEP"), HeaderNode("RTIMe")), "step_rise_time", positive_time),
+        (
+            (HeaderNode("MARKer"), HeaderNode("MODE")),
+            "marker_mode",
+            ParameterSpec(ParameterType.ENUM, choices=("AUTO", "REFLection", "TRANsmission")),
+        ),
+        (
+            (HeaderNode("MARKer"), HeaderNode("UNIT")),
+            "marker_unit",
+            ParameterSpec(ParameterType.ENUM, choices=("METRs", "FEET", "INCHes")),
+        ),
+    ):
+        add(
+            (*transform, *path),
+            lambda inv, value, name=attribute: _set_transform_setting(state, inv, name, value),
+            parameters=(parameter,),
+            available=time_option,
+        )
+        add(
+            (*transform, *path),
+            lambda inv, name=attribute: _format_setting(
+                getattr(state.channel(inv.indices["channel"]), name)
+            ),
+            query=True,
+            available=time_option,
+        )
+
+    for gate in gate_roots:
+        add(
+            gate,
+            lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_type", value),
+            parameters=(ParameterSpec(ParameterType.ENUM, choices=("BANDpass", "BPASs", "NOTCh")),),
+            available=time_option,
+        )
+        add(
+            gate,
+            lambda inv: state.channel(inv.indices["channel"]).gate_type,
+            query=True,
+            available=time_option,
+        )
+        add(
+            (*gate, HeaderNode("STATe")),
+            lambda inv, value: _set(state.channel(inv.indices["channel"]), "gate_enabled", value),
+            parameters=(boolean,),
+            available=time_option,
+        )
+        add(
+            (*gate, HeaderNode("STATe")),
+            lambda inv: _bool(state.channel(inv.indices["channel"]).gate_enabled),
+            query=True,
+            available=time_option,
+        )
+        for header, attribute in (("STARt", "gate_start"), ("STOP", "gate_stop")):
+            add(
+                (*gate, HeaderNode(header)),
+                lambda inv, value, name=attribute: _set_gate(state, inv, name, value),
+                parameters=(time_number,),
+                available=time_option,
+            )
+            add(
+                (*gate, HeaderNode(header)),
+                lambda inv, name=attribute: str(
+                    getattr(state.channel(inv.indices["channel"]), name)
+                ),
+                query=True,
+                available=time_option,
+            )
+        for header, setter, getter in (
+            ("CENTer", _set_gate_center, _gate_center),
+            ("SPAN", _set_gate_span, _gate_span),
+        ):
+            add(
+                (*gate, HeaderNode(header)),
+                lambda inv, value, operation=setter: operation(state, inv, value),
+                parameters=((positive_time if header == "SPAN" else time_number),),
+                available=time_option,
+            )
+            add(
+                (*gate, HeaderNode(header)),
+                lambda inv, operation=getter: str(operation(state.channel(inv.indices["channel"]))),
+                query=True,
+                available=time_option,
+            )
+        for header, attribute, choices in (
+            ("TYPE", "gate_type", ("BANDpass", "BPASs", "NOTCh")),
+            ("SHAPe", "gate_shape", ("MINimum", "NORMal", "WIDE", "MAXimum")),
+        ):
+            add(
+                (*gate, HeaderNode(header)),
+                lambda inv, value, name=attribute: _set(
+                    state.channel(inv.indices["channel"]), name, value
+                ),
+                parameters=(ParameterSpec(ParameterType.ENUM, choices=choices),),
+                available=time_option,
+            )
+            add(
+                (*gate, HeaderNode(header)),
+                lambda inv, name=attribute: getattr(state.channel(inv.indices["channel"]), name),
+                query=True,
+                available=time_option,
+            )
 
     add(
         (*fixture, HeaderNode("STATe")),
@@ -322,14 +499,117 @@ def _set(target, name: str, value) -> str:
     return ""
 
 
+def _set_transform_setting(state, invocation, name: str, value) -> str:
+    channel = state.channel(invocation.indices["channel"])
+    if isinstance(value, NumericValue):
+        stored = (
+            _seconds(value) if name in {"impulse_width", "step_rise_time"} else float(value.value)
+        )
+    else:
+        stored = value
+    setattr(channel, name, stored)
+    if name == "transform_stimulus":
+        if value == "STEP":
+            channel.transform_type = "LPSTep"
+        elif channel.transform_type in {"STEP", "LPSTep"}:
+            channel.transform_type = "LPIMpulse"
+    return ""
+
+
+def _format_setting(value) -> str:
+    if isinstance(value, bool):
+        return _bool(value)
+    return str(value)
+
+
+def _optional_number(value: float | None) -> str:
+    return str(0.0 if value is None else value)
+
+
+def _set_transform_bound(state, invocation, name: str, value: NumericValue) -> str:
+    seconds = _seconds(value)
+    channel = state.channel(invocation.indices["channel"])
+    other = channel.transform_stop if name == "transform_start" else channel.transform_start
+    if other is not None:
+        invalid = seconds > other if name == "transform_start" else seconds < other
+        if invalid:
+            raise SCPICommandError(-222, f"Data out of range; {name.replace('_', ' ')}")
+    setattr(channel, name, seconds)
+    return ""
+
+
+def _transform_center(channel: TimeDomainChannel) -> float:
+    if channel.transform_start is None and channel.transform_stop is None:
+        return 0.0
+    start = channel.transform_start if channel.transform_start is not None else 0.0
+    stop = channel.transform_stop if channel.transform_stop is not None else 0.0
+    return (start + stop) / 2.0
+
+
+def _transform_span(channel: TimeDomainChannel) -> float:
+    if channel.transform_start is None or channel.transform_stop is None:
+        return 0.0
+    return channel.transform_stop - channel.transform_start
+
+
+def _set_transform_center(state, invocation, value: NumericValue) -> str:
+    channel = state.channel(invocation.indices["channel"])
+    center = _seconds(value)
+    span = _transform_span(channel) or 20e-9
+    channel.transform_start = center - span / 2.0
+    channel.transform_stop = center + span / 2.0
+    return ""
+
+
+def _set_transform_span(state, invocation, value: NumericValue) -> str:
+    channel = state.channel(invocation.indices["channel"])
+    span = _seconds(value)
+    center = _transform_center(channel)
+    channel.transform_start = center - span / 2.0
+    channel.transform_stop = center + span / 2.0
+    return ""
+
+
 def _set_gate(state, invocation, name: str, value: NumericValue) -> str:
-    seconds = float(value.value)
+    seconds = _seconds(value)
     channel = state.channel(invocation.indices["channel"])
     if name == "gate_start" and seconds > channel.gate_stop:
         raise SCPICommandError(-222, "Data out of range; gate start")
     if name == "gate_stop" and seconds < channel.gate_start:
         raise SCPICommandError(-222, "Data out of range; gate stop")
     setattr(channel, name, seconds)
+    return ""
+
+
+def _gate_center(channel: TimeDomainChannel) -> float:
+    if not math.isfinite(channel.gate_stop):
+        return channel.gate_start
+    return (channel.gate_start + channel.gate_stop) / 2.0
+
+
+def _gate_span(channel: TimeDomainChannel) -> float:
+    if not math.isfinite(channel.gate_stop):
+        return math.inf
+    return channel.gate_stop - channel.gate_start
+
+
+def _set_gate_center(state, invocation, value: NumericValue) -> str:
+    channel = state.channel(invocation.indices["channel"])
+    center = _seconds(value)
+    span = _gate_span(channel)
+    if not math.isfinite(span):
+        span = 20e-9
+    channel.gate_start = center - span / 2.0
+    channel.gate_stop = center + span / 2.0
+    return ""
+
+
+def _set_gate_span(state, invocation, value: NumericValue) -> str:
+    channel = state.channel(invocation.indices["channel"])
+    span = _seconds(value)
+    center = _gate_center(channel)
+    channel.gate_start = center - span / 2.0
+    channel.gate_stop = center + span / 2.0
     return ""
 
 
@@ -362,15 +642,31 @@ def _file_factor(filename: str) -> complex:
     return cmath.rect(magnitude, phase)
 
 
-def _window(samples: tuple[complex, ...], kind: str) -> tuple[complex, ...]:
-    if kind == "MINimum" or len(samples) < 2:
+def _window(samples: tuple[complex, ...], state: TimeDomainChannel) -> tuple[complex, ...]:
+    kind = state.window
+    if kind in {"MINimum", "RECTangle"} or len(samples) < 2:
         return samples
     denominator = len(samples) - 1
-    if kind == "MAXimum":
+    if kind in {"MAXimum", "BOHMan"}:
         weights = (
             0.42
             - 0.5 * math.cos(2 * math.pi * index / denominator)
             + 0.08 * math.cos(4 * math.pi * index / denominator)
+            for index in range(len(samples))
+        )
+    elif kind in {"WIDE", "HAMMing"}:
+        weights = (
+            0.54 - 0.46 * math.cos(2 * math.pi * index / denominator)
+            for index in range(len(samples))
+        )
+    elif kind == "KAISer":
+        divisor = _bessel_i0(state.kaiser_beta)
+        weights = (
+            _bessel_i0(
+                state.kaiser_beta
+                * math.sqrt(max(0.0, 1.0 - (2.0 * index / denominator - 1.0) ** 2))
+            )
+            / divisor
             for index in range(len(samples))
         )
     else:
@@ -382,7 +678,40 @@ def _window(samples: tuple[complex, ...], kind: str) -> tuple[complex, ...]:
 
 def _gate_keeps(state: TimeDomainChannel, point: float) -> bool:
     inside = state.gate_start <= point <= state.gate_stop
-    return inside if state.gate_type == "BANDpass" else not inside
+    return inside if state.gate_type in {"BANDpass", "BPASs"} else not inside
+
+
+def _selected_time_axis(state: TimeDomainChannel, stimulus: tuple[float, ...]) -> tuple[float, ...]:
+    natural = _time_axis(stimulus)
+    if not natural:
+        return natural
+    start = state.transform_start
+    stop = state.transform_stop
+    if start is None and stop is None:
+        return natural
+    first = natural[0] if start is None else start
+    last = natural[-1] if stop is None else stop
+    if len(natural) == 1:
+        return (first,)
+    step = (last - first) / (len(natural) - 1)
+    return tuple(first + index * step for index in range(len(natural)))
+
+
+def _bessel_i0(value: float) -> float:
+    total = 1.0
+    term = 1.0
+    squared = value * value / 4.0
+    for index in range(1, 32):
+        term *= squared / (index * index)
+        total += term
+        if term < total * 1e-15:
+            break
+    return total
+
+
+def _seconds(value: NumericValue) -> float:
+    scales = {None: 1.0, "S": 1.0, "MS": 1e-3, "US": 1e-6, "NS": 1e-9}
+    return float(value.value) * scales[value.unit]
 
 
 def _time_axis(stimulus: tuple[float, ...]) -> tuple[float, ...]:
