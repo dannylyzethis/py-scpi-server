@@ -74,6 +74,23 @@ class VNANPortSystem:
             component for value in values for component in (value.real, value.imag)
         )
 
+    def catalog(self, channel: int) -> str:
+        self._require_enabled(channel)
+        return ",".join(
+            self._parameter(receiver, source)
+            for receiver in range(1, self.maximum_ports + 1)
+            for source in range(1, self.maximum_ports + 1)
+        )
+
+    def parameter(self, channel: int, receiver: int, source: int) -> str:
+        self._require_enabled(channel)
+        return self._parameter(receiver, source)
+
+    def delete(self, channel: int, name: str) -> str:
+        self._require_enabled(channel)
+        self.measurements.delete(channel, name)
+        return ""
+
     def _parameter(self, receiver: int, source: int) -> str:
         if not 1 <= receiver <= self.maximum_ports or not 1 <= source <= self.maximum_ports:
             raise SCPICommandError(-222, "Data out of range; N-port address")
@@ -126,6 +143,34 @@ def register_nport_commands(registry: CommandRegistry, state: VNANPortSystem) ->
             (sense, HeaderNode("NPORT"), HeaderNode("STATe")),
             lambda inv, value: _set(state.channel(inv.indices["channel"]), "enabled", value),
             (boolean,),
+            available=available,
+            exists=exists,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (calculate, HeaderNode("NPORT"), HeaderNode("CATalog")),
+            lambda inv: state.catalog(inv.indices["channel"]),
+            query=True,
+            available=available,
+            exists=exists,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (calculate, HeaderNode("NPORT"), HeaderNode("PARameter")),
+            lambda inv, receiver, source: state.parameter(inv.indices["channel"], receiver, source),
+            (integer, integer),
+            query=True,
+            available=available,
+            exists=exists,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            (calculate, HeaderNode("NPORT"), HeaderNode("DELete")),
+            lambda inv, name: state.delete(inv.indices["channel"], name),
+            (string,),
             available=available,
             exists=exists,
         )

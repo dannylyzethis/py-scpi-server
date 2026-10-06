@@ -85,3 +85,69 @@ def test_analysis_state_survives_cls_and_resets_with_rst() -> None:
     vna.process_command("*RST")
     assert vna.process_command("SENS:UNC:STAT?") == "0"
     assert vna.process_command("SENS:PERF:STAT?") == "0"
+
+
+def test_uncertainty_mode_scale_and_summary_queries() -> None:
+    vna = instrument()
+    vna.process_command("SENS:SWE:POIN 3")
+    vna.attach_scenario(
+        ScenarioDefinition(
+            "uncertainty-summary",
+            (
+                ScenarioStream(
+                    "measurement_uncertainty.trace",
+                    StreamKind.TRACE,
+                    (ScenarioSample((0.1, 0.2, 0.3)),),
+                    end=EndPolicy.HOLD_LAST,
+                ),
+            ),
+        )
+    )
+    for command in (
+        "SENS:UNC:MODE ABS",
+        "SENS:UNC:SCAL 2",
+        "SENS:UNC:STAT ON",
+    ):
+        vna.process_command(command)
+
+    assert vna.process_command("SENS:UNC:MODE?") == "ABSolute"
+    assert vna.process_command("SENS:UNC:SCAL?") == "2"
+    assert numbers(vna.process_command("CALC:UNC:DATA?")) == (0.2, 0.4, 0.6)
+    assert vna.process_command("CALC:UNC:MIN?") == "0.2"
+    assert vna.process_command("CALC:UNC:MAX?") == "0.6"
+    assert vna.process_command("CALC:UNC:MEAN?") == "0.4"
+
+
+def test_performance_summaries_fail_count_and_binary_pass_result() -> None:
+    vna = instrument()
+    vna.process_command("SENS:SWE:POIN 3")
+    vna.attach_scenario(
+        ScenarioDefinition(
+            "performance-summary",
+            (
+                ScenarioStream(
+                    "performance_test.trace",
+                    StreamKind.TRACE,
+                    (ScenarioSample((-2.0, 0.0, 3.0)),),
+                    end=EndPolicy.HOLD_LAST,
+                ),
+            ),
+        )
+    )
+    for command in (
+        "SENS:PERF:LIM:LOW -1",
+        "SENS:PERF:LIM:UPP 2",
+        "SENS:PERF:LIM:STAT ON",
+        "SENS:PERF:STAT ON",
+    ):
+        vna.process_command(command)
+
+    assert vna.process_command("CALC:PERF:MIN?") == "-2"
+    assert vna.process_command("CALC:PERF:MAX?") == "3"
+    assert vna.process_command("CALC:PERF:MEAN?") == "0.333333333333"
+    assert vna.process_command("CALC:PERF:FAIL:COUN?") == "2"
+    vna.process_command("FORM:DATA REAL,32")
+    assert vna.process_command("CALC:PERF:PASS?") == "0"
+    vna.process_command("SENS:PERF:LIM:STAT OFF")
+    assert vna.process_command("CALC:PERF:PASS?") == "1"
+    assert vna.process_command("CALC:PERF:FAIL:COUN?") == "0"

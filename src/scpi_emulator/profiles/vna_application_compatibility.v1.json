@@ -288,7 +288,21 @@
         {"syntax": "SENSE<channel>:IMD:HOPRODUCT", "forms": ["query"]}
       ]
     },
-    "measurement_uncertainty": {"audit_status": "pending", "commands": []},
+    "measurement_uncertainty": {
+      "audit_status": "complete",
+      "scope_note": "Project-owned deterministic absolute/relative uncertainty envelopes and scenario results only; calibrated uncertainty budgets, covariance propagation, and metrology claims are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:UNCERTAINTY:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:UNCERTAINTY:CONFIDENCE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:UNCERTAINTY:FLOOR", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:UNCERTAINTY:SCALE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:UNCERTAINTY:MODE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:UNCERTAINTY:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:UNCERTAINTY:MINIMUM", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:UNCERTAINTY:MAXIMUM", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:UNCERTAINTY:MEAN", "forms": ["query"]}
+      ]
+    },
     "modulation_distortion": {
       "audit_status": "complete",
       "scope_note": "Behavioral filter, correlation, DUT-map, power-sweep, marker, and scenario-result configuration only; external modulation files/sources, calibration/correction math, and hardware path discovery are outside scope.",
@@ -323,7 +337,18 @@
         {"syntax": "SENSE<channel>:DISTORTION:SWEEP:POWER:SPARAM:LEVEL", "forms": ["set", "query"]}
       ]
     },
-    "n_port": {"audit_status": "pending", "commands": []},
+    "n_port": {
+      "audit_status": "complete",
+      "scope_note": "Port-count-aware S-parameter creation, cataloging, deletion, and scenario data only; physical switch matrices, external test sets, calibration/correction math, and hardware routing are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:NPORT:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:NPORT:DEFINE", "forms": ["set"]},
+        {"syntax": "CALCULATE<channel>:NPORT:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:NPORT:CATALOG", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:NPORT:PARAMETER", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:NPORT:DELETE", "forms": ["set"]}
+      ]
+    },
     "noise_figure": {
       "audit_status": "complete",
       "scope_note": "Behavioral setup and result commands only; calibration math, external-device discovery, external macro execution, and external file formats are outside the emulator product scope.",
@@ -352,7 +377,22 @@
         {"syntax": "SENSE<channel>:NOISE:TEMPERATURE:SOURCE:VALUE", "forms": ["set", "query"]}
       ]
     },
-    "performance_test": {"audit_status": "pending", "commands": []},
+    "performance_test": {
+      "audit_status": "complete",
+      "scope_note": "Project-owned deterministic limits, summaries, pass/fail counts, and scenario results only; external automation, physical self-test, calibration, and compliance certification are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:PERFORMANCE:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PERFORMANCE:LIMIT:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PERFORMANCE:LIMIT:LOWER", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PERFORMANCE:LIMIT:UPPER", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:PERFORMANCE:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PERFORMANCE:PASS", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PERFORMANCE:MINIMUM", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PERFORMANCE:MAXIMUM", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PERFORMANCE:MEAN", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PERFORMANCE:FAIL:COUNT", "forms": ["query"]}
+      ]
+    },
     "phase_noise": {
       "audit_status": "complete",
       "scope_note": "Behavioral offset/carrier/receiver setup, logarithmic axes, markers, and deterministic scenario traces only; calibrated noise metrology, receiver correction, and hardware routing are outside scope.",

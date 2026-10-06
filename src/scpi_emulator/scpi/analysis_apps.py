@@ -26,7 +26,10 @@ class AnalysisApplicationChannel:
     uncertainty_enabled: bool = False
     confidence_percent: float = 95.0
     uncertainty_floor: float = 0.01
+    uncertainty_mode: str = "ABSolute"
+    uncertainty_scale: float = 1.0
     performance_enabled: bool = False
+    performance_limit_enabled: bool = True
     lower_limit: float = -200.0
     upper_limit: float = 200.0
 
@@ -55,7 +58,7 @@ class VNAAnalysisApplicationSystem:
     def samples(self, channel: int, samples: tuple[complex, ...], stimulus) -> tuple[complex, ...]:
         return samples
 
-    def uncertainty_data(self, channel: int):
+    def uncertainty_values(self, channel: int) -> tuple[float, ...]:
         state = self.channel(channel)
         if not state.uncertainty_enabled:
             raise SCPICommandError(-221, "Settings conflict; uncertainty analysis is disabled")
@@ -67,9 +70,20 @@ class VNAAnalysisApplicationSystem:
                 state.uncertainty_floor + factor * 0.01 * abs(sample)
                 for sample in measurement.samples
             )
-        return self.data_format.encode_values(values)
+        if state.uncertainty_mode == "RELative":
+            values = tuple(
+                100.0 * value / max(abs(sample), 1e-15)
+                for value, sample in zip(values, measurement.samples)
+            )
+        return tuple(state.uncertainty_scale * value for value in values)
 
-    def performance_data(self, channel: int):
+    def uncertainty_data(self, channel: int):
+        return self.data_format.encode_values(self.uncertainty_values(channel))
+
+    def uncertainty_summary(self, channel: int, operation: str) -> str:
+        return _summary(self.uncertainty_values(channel), operation)
+
+    def performance_values(self, channel: int) -> tuple[float, ...]:
         state = self.channel(channel)
         if not state.performance_enabled:
             raise SCPICommandError(-221, "Settings conflict; performance test is disabled")
@@ -80,14 +94,29 @@ class VNAAnalysisApplicationSystem:
                 20.0 * math.log10(abs(sample)) if sample else -200.0
                 for sample in measurement.samples
             )
-        return self.data_format.encode_values(values)
+        return values
+
+    def performance_data(self, channel: int):
+        return self.data_format.encode_values(self.performance_values(channel))
+
+    def performance_summary(self, channel: int, operation: str) -> str:
+        return _summary(self.performance_values(channel), operation)
 
     def performance_pass(self, channel: int) -> str:
         state = self.channel(channel)
-        values = _decode_ascii(self.performance_data(channel))
+        if not state.performance_limit_enabled:
+            return "1"
+        values = self.performance_values(channel)
         return (
             "1" if all(state.lower_limit <= value <= state.upper_limit for value in values) else "0"
         )
+
+    def performance_fail_count(self, channel: int) -> str:
+        state = self.channel(channel)
+        if not state.performance_limit_enabled:
+            return "0"
+        values = self.performance_values(channel)
+        return str(sum(not state.lower_limit <= value <= state.upper_limit for value in values))
 
     def _read(self, requested: str, points: int) -> tuple[float, ...] | None:
         if self.player is None:
@@ -151,6 +180,11 @@ def register_analysis_application_commands(
             ParameterSpec(ParameterType.NUMBER, minimum=Decimal(1), maximum=Decimal(100)),
         ),
         ("FLOOr", "uncertainty_floor", ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0))),
+        (
+            "SCALe",
+            "uncertainty_scale",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0)),
+        ),
     ):
         path = (*uncertainty, HeaderNode(header))
         add(
@@ -169,6 +203,18 @@ def register_analysis_application_commands(
             query=True,
             available=uncertainty_option,
         )
+    add(
+        (*uncertainty, HeaderNode("MODE")),
+        lambda inv, value: _set(state.channel(inv.indices["channel"]), "uncertainty_mode", value),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("ABSolute", "RELative")),),
+        available=uncertainty_option,
+    )
+    add(
+        (*uncertainty, HeaderNode("MODE")),
+        lambda inv: state.channel(inv.indices["channel"]).uncertainty_mode,
+        query=True,
+        available=uncertainty_option,
+    )
     add(
         (*uncertainty, HeaderNode("STATe")),
         lambda inv, value: _set(
@@ -189,6 +235,13 @@ def register_analysis_application_commands(
         query=True,
         available=uncertainty_option,
     )
+    for header, operation in (("MINimum", "minimum"), ("MAXimum", "maximum"), ("MEAN", "mean")):
+        add(
+            (calculate, HeaderNode("UNCertainty"), HeaderNode(header)),
+            lambda inv, name=operation: state.uncertainty_summary(inv.indices["channel"], name),
+            query=True,
+            available=uncertainty_option,
+        )
 
     performance = (sense, HeaderNode("PERFormance"))
     performance_option = option_enabled("performance_test")
@@ -222,6 +275,20 @@ def register_analysis_application_commands(
             query=True,
             available=performance_option,
         )
+    add(
+        (*performance, HeaderNode("LIMit"), HeaderNode("STATe")),
+        lambda inv, value: _set(
+            state.channel(inv.indices["channel"]), "performance_limit_enabled", value
+        ),
+        parameters=(boolean,),
+        available=performance_option,
+    )
+    add(
+        (*performance, HeaderNode("LIMit"), HeaderNode("STATe")),
+        lambda inv: _boolean(state.channel(inv.indices["channel"]).performance_limit_enabled),
+        query=True,
+        available=performance_option,
+    )
     calc_performance = (calculate, HeaderNode("PERFormance"))
     add(
         (*calc_performance, HeaderNode("DATA")),
@@ -232,6 +299,19 @@ def register_analysis_application_commands(
     add(
         (*calc_performance, HeaderNode("PASS")),
         lambda inv: state.performance_pass(inv.indices["channel"]),
+        query=True,
+        available=performance_option,
+    )
+    for header, operation in (("MINimum", "minimum"), ("MAXimum", "maximum"), ("MEAN", "mean")):
+        add(
+            (*calc_performance, HeaderNode(header)),
+            lambda inv, name=operation: state.performance_summary(inv.indices["channel"], name),
+            query=True,
+            available=performance_option,
+        )
+    add(
+        (*calc_performance, HeaderNode("FAIL"), HeaderNode("COUNt")),
+        lambda inv: state.performance_fail_count(inv.indices["channel"]),
         query=True,
         available=performance_option,
     )
@@ -256,10 +336,16 @@ def _set_limit(state, invocation, attribute: str, value: NumericValue) -> str:
     return _set(target, attribute, number)
 
 
-def _decode_ascii(value) -> tuple[float, ...]:
-    if not isinstance(value, str):
-        raise SCPICommandError(-221, "Settings conflict; ASCII format required for pass result")
-    return tuple(float(item) for item in value.split(","))
+def _summary(values: tuple[float, ...], operation: str) -> str:
+    if not values:
+        return "0"
+    if operation == "minimum":
+        result = min(values)
+    elif operation == "maximum":
+        result = max(values)
+    else:
+        result = sum(values) / len(values)
+    return _number(result)
 
 
 def _boolean(value: bool) -> str:

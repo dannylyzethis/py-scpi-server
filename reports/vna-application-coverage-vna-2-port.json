@@ -79,10 +79,10 @@
       "required": 39
     },
     "measurement_uncertainty": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 14,
       "missing_keys": [],
-      "required": 0
+      "required": 14
     },
     "modulation_distortion": {
       "audit_status": "complete",
@@ -91,10 +91,10 @@
       "required": 52
     },
     "n_port": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 7,
       "missing_keys": [],
-      "required": 0
+      "required": 7
     },
     "noise_figure": {
       "audit_status": "complete",
@@ -103,10 +103,10 @@
       "required": 38
     },
     "performance_test": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 14,
       "missing_keys": [],
-      "required": 0
+      "required": 14
     },
     "phase_noise": {
       "audit_status": "complete",
@@ -151,19 +151,15 @@
       "required": 14
     }
   },
-  "pending_application_names": [
-    "measurement_uncertainty",
-    "n_port",
-    "performance_test"
-  ],
+  "pending_application_names": [],
   "schema_version": 1,
   "summary": {
     "advertised_applications": 25,
-    "audited_applications": 22,
-    "implemented_commands": 696,
+    "audited_applications": 25,
+    "implemented_commands": 731,
     "missing_commands": 0,
-    "pending_applications": 3,
-    "required_commands": 696
+    "pending_applications": 0,
+    "required_commands": 731
   },
   "target": {
     "model": "vna-2-port"

@@ -67,3 +67,18 @@ def test_nport_state_survives_cls_and_resets_with_rst() -> None:
     assert vna.process_command("SENS:NPORT:STAT?") == "1"
     vna.process_command("*RST")
     assert vna.process_command("SENS:NPORT:STAT?") == "0"
+
+
+def test_nport_catalog_parameter_and_delete_workflow() -> None:
+    vna = instrument("vna-2-port")
+    vna.process_command("SENS:NPORT:STAT ON")
+
+    assert vna.process_command("CALC:NPORT:CAT?") == "S11,S12,S21,S22"
+    assert vna.process_command("CALC:NPORT:PAR? 2,1") == "S21"
+    vna.process_command('CALC:NPORT:DEF "Forward21",2,1')
+    assert "Forward21,S21" in vna.process_command("CALC:PAR:CAT?")
+    vna.process_command('CALC:NPORT:DEL "Forward21"')
+    assert "Forward21" not in vna.process_command("CALC:PAR:CAT?")
+
+    assert vna.process_command("CALC:NPORT:PAR? 3,1") == ""
+    assert vna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
