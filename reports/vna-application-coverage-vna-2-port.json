@@ -25,10 +25,10 @@
       "required": 0
     },
     "embedded_lo": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 26,
       "missing_keys": [],
-      "required": 0
+      "required": 26
     },
     "enhanced_time_domain": {
       "audit_status": "pending",
@@ -49,16 +49,16 @@
       "required": 0
     },
     "frequency_converter": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 2,
       "missing_keys": [],
-      "required": 0
+      "required": 2
     },
     "frequency_offset": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 61,
       "missing_keys": [],
-      "required": 0
+      "required": 61
     },
     "gain_compression": {
       "audit_status": "complete",
@@ -115,10 +115,10 @@
       "required": 0
     },
     "scalar_mixer": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 93,
       "missing_keys": [],
-      "required": 0
+      "required": 93
     },
     "source_phase_control": {
       "audit_status": "pending",
@@ -155,12 +155,9 @@
     "arbitrary_waveform_generation",
     "basic_pulsed_rf",
     "differential_iq",
-    "embedded_lo",
     "enhanced_time_domain",
     "fast_cw",
     "fixture_removal",
-    "frequency_converter",
-    "frequency_offset",
     "integrated_pulsed_rf",
     "intermodulation_distortion",
     "measurement_uncertainty",
@@ -168,7 +165,6 @@
     "n_port",
     "performance_test",
     "phase_noise",
-    "scalar_mixer",
     "source_phase_control",
     "spectrum_analysis",
     "time_domain",
@@ -178,11 +174,11 @@
   "schema_version": 1,
   "summary": {
     "advertised_applications": 25,
-    "audited_applications": 3,
-    "implemented_commands": 133,
+    "audited_applications": 7,
+    "implemented_commands": 315,
     "missing_commands": 0,
-    "pending_applications": 22,
-    "required_commands": 133
+    "pending_applications": 18,
+    "required_commands": 315
   },
   "target": {
     "model": "vna-2-port"

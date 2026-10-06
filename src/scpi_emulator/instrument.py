@@ -138,6 +138,7 @@ class SCPIInstrument:
                 float(self.vna_capabilities.frequency_minimum),
                 float(self.vna_capabilities.frequency_maximum),
                 self.vna_capabilities.source_count,
+                self.vna_capabilities.ports,
             )
             self.vna_data.add_application(self.vna_mixer)
             register_mixer_commands(self.core_registry, self.vna_mixer)

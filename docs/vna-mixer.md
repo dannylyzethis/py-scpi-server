@@ -17,9 +17,16 @@ the frequency-converter application capability.
 
 ## Supported workflows
 
-- `SENS:FOM:STAT` and numbered `RANG` commands create/delete ranges, set input/output/LO roles,
-  and define coherent start/stop axes.
-- `SENS:MIX:STAT`, `FREQ:FIX`, `FREQ:LO`, `FREQ:IF`, and `MODE` model up/down conversion.
+- `SENS:FOM` / `SENS:FOM:STAT` and numbered `RANG` commands create/delete ranges, name and
+  select them, set input/output/LO roles, and define linear, logarithmic, CW, coupled, or segmented
+  axes. FOM segments store bandwidth, frequency, per-port power, point-count, and sweep-time
+  settings; enabled segments determine the returned axis and data length.
+- The standard `SENS:MIX:INPUT`, `LO`, `IF`, and `OUTPUT` trees store fixed or swept frequency,
+  fractional multiplier, sideband, and power settings. `STAGE` enables one or two independently
+  addressed LOs; `PMAP`, `PHASE`, `REVERSE`, `NORMALIZE:POINT`, and `XAXIS` round-trip their
+  behavioral setup. `APPLY` enables the configured mixer and makes the selected axis drive data.
+- The earlier compact `SENS:MIX:STAT`, `FREQ:FIX`, `FREQ:LO`, `FREQ:IF`, and `MODE` commands remain
+  supported and use the same state.
 - `SENS:MIX:CONV:TYPE` distinguishes scalar and vector conversion. Vector mode requires the vector
   converter application option; unsupported combinations report a SCPI error.
 - Numbered mixer segments have start/stop frequency, power, point count, add/delete/calculate, and
@@ -27,8 +34,9 @@ the frequency-converter application capability.
   always contain matching point counts.
 - Indexed source roles represent RF, LO, IF, and disabled sources, bounded by the selected model's
   physical source count.
-- Embedded-LO state, center, and span produce a repeatable LO estimate that changes translated axes
-  and vector phase.
+- Embedded-LO state, center, span, delta, normalization point, and tuning settings round-trip.
+  Delta/span settings produce a repeatable LO estimate and deterministic vector-phase change;
+  reset commands restore tuning defaults.
 - `SENS:MIX:CAL:STAT?` and `SENS:FOM:CORR:STAT?` always return `0` by product decision. There is no
   calibration state, correction flag, or calibration mathematics in this subsystem.
 
@@ -41,4 +49,5 @@ handlers execute.
 
 The arithmetic is deterministic behavioral emulation intended to exercise ATE control flow, data
 shape, configuration, option branches, and error handling. It does not claim RF conversion or
-calibration accuracy.
+calibration accuracy. External-source discovery/role assignment, hardware diagnostics, calibration
+math, and vendor-specific mixer files are intentionally outside this product scope.
