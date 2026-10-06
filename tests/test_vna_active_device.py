@@ -176,6 +176,47 @@ def test_noise_figure_configuration_and_scenario_results() -> None:
     assert numbers(instrument.process_command("CALC:NOIS:DATA? GAIN")) == (15, 14, 13, 12)
     assert numbers(instrument.process_command("CALC:NOIS:DATA? YFAC")) == (1.6, 1.7, 1.8, 1.9)
     assert instrument.process_command("CALC:NOIS:RES:NF?") == "2.25"
+
+
+def test_standard_noise_figure_setup_round_trips_and_estimates_sweep_time() -> None:
+    instrument = active_device_vna()
+    commands = (
+        'SENS:NOIS:AMPL "virtual-amplifier"',
+        "SENS:NOIS:AVER 4",
+        "SENS:NOIS:AVER:STAT ON",
+        "SENS:NOIS:BWID:RES 2MHz",
+        "SENS:NOIS:GAIN 15",
+        "SENS:NOIS:GAIN:CTC ON",
+        "SENS:NOIS:IMP:COUN 5",
+        "SENS:NOIS:NARR ON",
+        "SENS:NOIS:PMAP 2,3",
+        "SENS:NOIS:PULL ON",
+        "SENS:NOIS:REC NOIS",
+        "SENS:NOIS:SOUR:STAT ON",
+        "SENS:NOIS:TEMP:AMB 295",
+        "SENS:NOIS:TEMP:AMB:AUTO OFF",
+        "SENS:NOIS:TEMP:SOUR:VAL 297",
+        "SENS:NOIS:TEMP:SOUR:AUTO OFF",
+    )
+    for command in commands:
+        assert instrument.process_command(command) == "", command
+
+    assert instrument.process_command("SENS:NOIS:AMPL?") == "virtual-amplifier"
+    assert instrument.process_command("SENS:NOIS:AMPL:CAT?") == ""
+    assert instrument.process_command("SENS:NOIS:GAIN:CAT?") == "-15,0,15,30"
+    assert instrument.process_command("SENS:NOIS:PMAP:INP?") == "2"
+    assert instrument.process_command("SENS:NOIS:PMAP:OUTP?") == "3"
+    assert instrument.process_command("SENS:NOIS:REC?") == "NOISe"
+    assert instrument.process_command("SENS:NOIS:TEMP:SOUR?") == "297"
+    assert instrument.process_command("SENS:NOIS:SWE:TIM?") == "4e-05"
+
+
+def test_standard_noise_figure_setup_rejects_invalid_gain_and_port_map() -> None:
+    instrument = active_device_vna()
+    assert instrument.process_command("SENS:NOIS:GAIN 12") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
+    assert instrument.process_command("SENS:NOIS:PMAP 1,1") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
     assert instrument.process_command("SENS:NOIS:CAL:STAT?") == "0"
 
 

@@ -1,10 +1,10 @@
 {
   "applications": {
     "active_hot_parameters": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 23,
       "missing_keys": [],
-      "required": 0
+      "required": 23
     },
     "arbitrary_waveform_generation": {
       "audit_status": "pending",
@@ -97,10 +97,10 @@
       "required": 0
     },
     "noise_figure": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 38,
       "missing_keys": [],
-      "required": 0
+      "required": 38
     },
     "performance_test": {
       "audit_status": "pending",
@@ -152,7 +152,6 @@
     }
   },
   "pending_application_names": [
-    "active_hot_parameters",
     "arbitrary_waveform_generation",
     "basic_pulsed_rf",
     "differential_iq",
@@ -167,7 +166,6 @@
     "measurement_uncertainty",
     "modulation_distortion",
     "n_port",
-    "noise_figure",
     "performance_test",
     "phase_noise",
     "scalar_mixer",
@@ -180,11 +178,11 @@
   "schema_version": 1,
   "summary": {
     "advertised_applications": 25,
-    "audited_applications": 1,
-    "implemented_commands": 72,
+    "audited_applications": 3,
+    "implemented_commands": 133,
     "missing_commands": 0,
-    "pending_applications": 24,
-    "required_commands": 72
+    "pending_applications": 22,
+    "required_commands": 133
   },
   "target": {
     "model": "vna-2-port"

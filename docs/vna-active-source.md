@@ -16,3 +16,9 @@ do not reproduce a particular commercial instrument or its internal algorithms.
 All three command families are capability-gated. They remain configured across `*CLS`, while
 `*RST` restores their defaults. The phase and true-mode controls compose with scenario-backed
 active hot-parameter data and with the existing VNA data modifiers.
+
+The standard `SENS<channel>:ACTive...` setup hierarchy is also available. It covers display
+interpolation, trace input-power selection, port mapping, phase-point count, power sweep
+start/stop/steps, sweep type, and tuning-tone mode/levels. A `POWer` sweep changes
+`CALC:MEAS:DATA:X?` to the configured power axis and resamples ordinary trace data to the configured
+step count. These commands share the same active-hot-parameter channel state as `SENS:AHP...`.

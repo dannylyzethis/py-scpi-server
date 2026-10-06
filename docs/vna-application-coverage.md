@@ -15,9 +15,10 @@ The application reports are:
 - `reports/vna-application-coverage-vna-2-port.json`
 - `reports/vna-application-coverage-vna-4-port.json`
 
-At the current checkpoint, all 72 inventoried gain-compression setup forms are implemented on both
-models. The other 24 advertised applications are marked `pending`; they are not represented as
-complete simply because each has at least one option-gated command. CI verifies that completed
+At the current checkpoint, three applications are audited: gain compression (72 forms), active hot
+parameters (23 forms), and noise figure (38 forms). All 133 inventoried forms are implemented on
+both models. The other 22 advertised applications are marked `pending`; they are not represented
+as complete simply because each has at least one option-gated command. CI verifies that completed
 inventories have no missing commands and that the checked-in reports match the live registry.
 
 The inventory contains normalized command syntax and project-written behavioral metadata only. It

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import cmath
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from scpi_emulator.scenario import ScenarioError, ScenarioPlayer
@@ -30,6 +30,18 @@ class ActiveSourceChannel:
     true_mode_enabled: bool = False
     true_mode: str = "DIFFerential"
     amplitude_ratio: float = 1.0
+    display_interpolate: bool = False
+    display_input_powers: dict[int, float] = field(default_factory=dict)
+    input_port: int = 1
+    output_port: int = 2
+    phase_points: int = 8
+    power_start: float = -10.0
+    power_steps: int = 201
+    power_stop: float = 0.0
+    sweep_type: str = "LINear"
+    tuning_mode: str = "ABSolute"
+    tuning_absolute: float = -5.0
+    tuning_relative: float = -15.0
 
 
 @dataclass
@@ -46,10 +58,12 @@ class VNAActiveSourceSystem:
         measurements: VNAMeasurementSystem,
         data_format: DataFormat,
         source_count: int,
+        port_count: int = 2,
     ) -> None:
         self.measurements = measurements
         self.data_format = data_format
         self.source_count = source_count
+        self.port_count = port_count
         self.channels: dict[int, ActiveSourceChannel] = {}
         self.sources: dict[int, SourcePhaseState] = {}
         self.player: ScenarioPlayer | None = None
@@ -70,6 +84,9 @@ class VNAActiveSourceSystem:
         return self.sources.setdefault(number, SourcePhaseState())
 
     def axis(self, channel: int, stimulus: tuple[float, ...]) -> tuple[float, ...]:
+        state = self.channel(channel)
+        if state.hot_parameters_enabled and state.sweep_type == "POWer":
+            return _linear(state.power_start, state.power_stop, state.power_steps)
         return stimulus
 
     def samples(
@@ -79,9 +96,14 @@ class VNAActiveSourceSystem:
         stimulus: tuple[float, ...],
     ) -> tuple[complex, ...]:
         state = self.channel(channel)
-        result = samples
+        points = (
+            state.power_steps
+            if state.hot_parameters_enabled and state.sweep_type == "POWer"
+            else len(samples)
+        )
+        result = _resample(samples, points)
         if state.hot_parameters_enabled:
-            scenario = self._scenario_trace(len(samples), advance=True)
+            scenario = self._scenario_trace(points, advance=True)
             if scenario is not None:
                 result = scenario
         phase = sum(source.angle_degrees for source in self.sources.values() if source.enabled)
@@ -162,6 +184,7 @@ def register_active_source_commands(
         )
 
     hot = (sense, HeaderNode("AHP"))
+    active = (sense, HeaderNode("ACTive"))
     hot_option = option_enabled("active_hot_parameters")
     add(
         (*hot, HeaderNode("STATe")),
@@ -172,6 +195,127 @@ def register_active_source_commands(
         available=hot_option,
         exists=channel_exists,
     )
+
+    def active_pair(path, attribute, parameter, transform=lambda value: value):
+        add(
+            (*active, *path),
+            lambda inv, value, name=attribute, convert=transform: _set(
+                state.channel(inv.indices["channel"]), name, convert(value)
+            ),
+            parameters=(parameter,),
+            available=hot_option,
+            exists=channel_exists,
+        )
+        add(
+            (*active, *path),
+            lambda inv, name=attribute: _render(
+                getattr(state.channel(inv.indices["channel"]), name)
+            ),
+            query=True,
+            available=hot_option,
+            exists=channel_exists,
+        )
+
+    active_pair(
+        (HeaderNode("DISPlay"), HeaderNode("INTerpolate")),
+        "display_interpolate",
+        boolean,
+    )
+    display_trace = (
+        *active,
+        HeaderNode("DISPlay"),
+        HeaderNode("TRACe", index="trace", index_default=1),
+        HeaderNode("IPWer"),
+    )
+    add(
+        display_trace,
+        lambda inv, value: _set_display_power(state.channel(inv.indices["channel"]), inv, value),
+        parameters=(ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-10), maximum=Decimal(0)),),
+        available=hot_option,
+        exists=channel_exists,
+    )
+    add(
+        display_trace,
+        lambda inv: _number(
+            state.channel(inv.indices["channel"]).display_input_powers.get(
+                inv.indices["trace"], 0.0
+            )
+        ),
+        query=True,
+        available=hot_option,
+        exists=channel_exists,
+    )
+    port = ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=state.port_count)
+    add(
+        (*active, HeaderNode("PMAP")),
+        lambda inv, input_port, output_port: _set_port_map(
+            state.channel(inv.indices["channel"]), input_port, output_port
+        ),
+        parameters=(port, port),
+        available=hot_option,
+        exists=channel_exists,
+    )
+    for header, attribute in (("INPut", "input_port"), ("OUTPut", "output_port")):
+        add(
+            (*active, HeaderNode("PMAP"), HeaderNode(header)),
+            lambda inv, name=attribute: str(getattr(state.channel(inv.indices["channel"]), name)),
+            query=True,
+            available=hot_option,
+            exists=channel_exists,
+        )
+
+    active_pair(
+        (HeaderNode("SWEep"), HeaderNode("PHASe"), HeaderNode("POINt")),
+        "phase_points",
+        ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=50),
+    )
+    power_sweep = (HeaderNode("SWEep"), HeaderNode("POWer"))
+    for header, attribute in (("STARt", "power_start"), ("STOP", "power_stop")):
+        add(
+            (*active, *power_sweep, HeaderNode(header)),
+            lambda inv, value, name=attribute: _set_power_range(
+                state.channel(inv.indices["channel"]), name, value
+            ),
+            parameters=(
+                ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
+            ),
+            available=hot_option,
+            exists=channel_exists,
+        )
+        add(
+            (*active, *power_sweep, HeaderNode(header)),
+            lambda inv, name=attribute: _number(
+                getattr(state.channel(inv.indices["channel"]), name)
+            ),
+            query=True,
+            available=hot_option,
+            exists=channel_exists,
+        )
+    active_pair(
+        (*power_sweep, HeaderNode("STEP")),
+        "power_steps",
+        ParameterSpec(ParameterType.INTEGER, minimum=2, maximum=20001),
+    )
+    active_pair(
+        (HeaderNode("SWEep"), HeaderNode("TYPE")),
+        "sweep_type",
+        ParameterSpec(
+            ParameterType.ENUM,
+            choices=("LINear", "LOGarithmic", "POWer", "MULTiple"),
+        ),
+    )
+    active_pair(
+        (HeaderNode("TTONe"), HeaderNode("MODE")),
+        "tuning_mode",
+        ParameterSpec(ParameterType.ENUM, choices=("ABSolute", "RELative")),
+    )
+    for header, attribute in (("ABSolute", "tuning_absolute"), ("RELative", "tuning_relative")):
+        active_pair(
+            (HeaderNode("TTONe"), HeaderNode(header)),
+            attribute,
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(-120), maximum=Decimal(50)),
+            _numeric,
+        )
     add(
         (*hot, HeaderNode("STATe")),
         lambda inv: _boolean(state.channel(inv.indices["channel"]).hot_parameters_enabled),
@@ -297,6 +441,40 @@ def _set_numeric(target, attribute: str, value: NumericValue) -> str:
     return _set(target, attribute, float(value.value))
 
 
+def _numeric(value: NumericValue) -> float:
+    return float(value.value)
+
+
+def _render(value) -> str:
+    if isinstance(value, bool):
+        return _boolean(value)
+    if isinstance(value, float):
+        return _number(value)
+    return str(value)
+
+
+def _set_display_power(target: ActiveSourceChannel, invocation, value: NumericValue) -> str:
+    target.display_input_powers[invocation.indices["trace"]] = float(value.value)
+    return ""
+
+
+def _set_port_map(target: ActiveSourceChannel, input_port: int, output_port: int) -> str:
+    if input_port == output_port:
+        raise SCPICommandError(-224, "Illegal parameter value; input and output ports must differ")
+    target.input_port = input_port
+    target.output_port = output_port
+    return ""
+
+
+def _set_power_range(target: ActiveSourceChannel, attribute: str, value: NumericValue) -> str:
+    number = float(value.value)
+    if attribute == "power_start" and number > target.power_stop:
+        raise SCPICommandError(-222, "Data out of range; active power start")
+    if attribute == "power_stop" and number < target.power_start:
+        raise SCPICommandError(-222, "Data out of range; active power stop")
+    return _set(target, attribute, number)
+
+
 def _set_phase(target: SourcePhaseState, value: NumericValue) -> str:
     return _set(target, "angle_degrees", float(value.value))
 
@@ -311,3 +489,18 @@ def _boolean(value: bool) -> str:
 
 def _number(value: float) -> str:
     return f"{value:.12g}"
+
+
+def _linear(start: float, stop: float, points: int) -> tuple[float, ...]:
+    step = (stop - start) / (points - 1)
+    return tuple(start + index * step for index in range(points))
+
+
+def _resample(samples: tuple[complex, ...], points: int) -> tuple[complex, ...]:
+    if len(samples) == points:
+        return samples
+    if not samples:
+        return (0j,) * points
+    return tuple(
+        samples[round(index * (len(samples) - 1) / (points - 1))] for index in range(points)
+    )

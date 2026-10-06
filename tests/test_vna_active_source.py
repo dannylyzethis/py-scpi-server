@@ -51,6 +51,44 @@ def test_active_hot_parameter_scenario_drives_normal_and_application_data() -> N
     assert numbers(vna.process_command("CALC:DATA? SDAT")) == (1, 2, 3, 4, 5, 6)
 
 
+def test_standard_active_parameter_setup_is_stateful_and_drives_power_axis() -> None:
+    vna = instrument()
+    vna.process_command("SENS:SWE:POIN 3")
+    commands = (
+        "SENS:ACT:DISP:INT ON",
+        "SENS:ACT:DISP:TRAC2:IPW -5",
+        "SENS:ACT:PMAP 2,3",
+        "SENS:ACT:SWE:PHAS:POIN 12",
+        "SENS:ACT:SWE:POW:STAR -15",
+        "SENS:ACT:SWE:POW:STOP -5",
+        "SENS:ACT:SWE:POW:STEP 3",
+        "SENS:ACT:SWE:TYPE POW",
+        "SENS:ACT:TTON:MODE REL",
+        "SENS:ACT:TTON:ABS -6",
+        "SENS:ACT:TTON:REL -12",
+        "SENS:AHP:STAT ON",
+    )
+    for command in commands:
+        assert vna.process_command(command) == "", command
+
+    assert vna.process_command("SENS:ACT:DISP:INT?") == "1"
+    assert vna.process_command("SENS:ACT:DISP:TRAC2:IPW?") == "-5"
+    assert vna.process_command("SENS:ACT:PMAP:INP?") == "2"
+    assert vna.process_command("SENS:ACT:PMAP:OUTP?") == "3"
+    assert vna.process_command("SENS:ACT:SWE:TYPE?") == "POWer"
+    assert vna.process_command("SENS:ACT:TTON:MODE?") == "RELative"
+    assert numbers(vna.process_command("CALC:MEAS:DATA:X?")) == (-15, -10, -5)
+    assert len(numbers(vna.process_command("CALC:DATA? SDAT"))) == 6
+
+
+def test_standard_active_parameter_setup_validates_topology_and_ranges() -> None:
+    vna = instrument()
+    assert vna.process_command("SENS:ACT:PMAP 1,1") == ""
+    assert vna.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
+    assert vna.process_command("SENS:ACT:SWE:POW:STAR 1") == ""
+    assert vna.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+
+
 def test_phase_and_true_mode_are_composable_trace_modifiers() -> None:
     vna = instrument()
     vna.process_command("SENS:SWE:POIN 2")

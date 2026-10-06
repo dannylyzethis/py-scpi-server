@@ -25,6 +25,10 @@ def test_completed_application_inventories_have_no_command_gaps() -> None:
         assert completed
         assert all(result["missing_keys"] == [] for result in completed)
         assert report["applications"]["gain_compression"]["required"] == 72
+        assert report["applications"]["active_hot_parameters"]["required"] == 23
+        assert report["applications"]["noise_figure"]["required"] == 38
+        assert report["summary"]["audited_applications"] == 3
+        assert report["summary"]["required_commands"] == 133
 
 
 @pytest.mark.parametrize("model", ["vna-2-port", "vna-4-port"])

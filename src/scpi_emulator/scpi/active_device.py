@@ -72,6 +72,20 @@ class NoiseFigureState:
     bandwidth: float = 1e6
     average_count: int = 1
     temperature: float = 290.0
+    amplifier: str = ""
+    average_enabled: bool = False
+    receiver_gain: float = 30.0
+    compression_check: bool = False
+    impedance_count: int = 4
+    narrowband: bool = False
+    input_port: int = 1
+    output_port: int = 2
+    pull_enabled: bool = False
+    receiver: str = "NORMal"
+    source_enabled: bool = True
+    ambient_temperature: float = 302.0
+    ambient_temperature_auto: bool = True
+    source_temperature_auto: bool = True
 
 
 class VNAActiveDeviceSystem:
@@ -208,6 +222,13 @@ class VNAActiveDeviceSystem:
                 else tuple(max(0.1, 3.0 - value * 0.02) for value in gain)
             )
         return f"{sum(values) / len(values):.12g}" if values else "0"
+
+    def noise_sweep_time(self, channel: int) -> str:
+        configuration = self.noise(channel)
+        points = len(self.measurements.selected(channel).stimulus)
+        averages = configuration.average_count if configuration.average_enabled else 1
+        seconds = points * configuration.impedance_count * averages / configuration.bandwidth
+        return f"{seconds:.12g}"
 
     def _stream(self, application: str, result: str) -> str | None:
         if self.player is None:
@@ -407,6 +428,145 @@ def register_active_device_commands(
         (*noise, HeaderNode("STATe")),
         lambda inv, value: _set(state.noise(inv.indices["channel"]), "enabled", value),
         parameters=(boolean,),
+        available=noise_option,
+    )
+
+    def noise_pair(path, attribute, parameter, transform=lambda value: value):
+        add(
+            (*noise, *path),
+            lambda inv, value, name=attribute, convert=transform: _set(
+                state.noise(inv.indices["channel"]), name, convert(value)
+            ),
+            parameters=(parameter,),
+            available=noise_option,
+        )
+        add(
+            (*noise, *path),
+            lambda inv, name=attribute: _render(getattr(state.noise(inv.indices["channel"]), name)),
+            query=True,
+            available=noise_option,
+        )
+
+    noise_pair(
+        (HeaderNode("AMPLifier"),),
+        "amplifier",
+        ParameterSpec(ParameterType.STRING),
+    )
+    add(
+        (*noise, HeaderNode("AMPLifier"), HeaderNode("CATalog")),
+        lambda inv: "",
+        query=True,
+        available=noise_option,
+    )
+    noise_pair(
+        (HeaderNode("AVERage"),),
+        "average_count",
+        ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=100000),
+    )
+    noise_pair(
+        (HeaderNode("AVERage"), HeaderNode("STATe")),
+        "average_enabled",
+        boolean,
+    )
+    noise_pair(
+        (HeaderNode("BWIDth"), HeaderNode("RESolution")),
+        "bandwidth",
+        ParameterSpec(
+            ParameterType.NUMBER,
+            minimum=Decimal(1),
+            units=frozenset({"HZ", "KHZ", "MHZ", "GHZ"}),
+        ),
+        _frequency,
+    )
+    add(
+        (*noise, HeaderNode("GAIN")),
+        lambda inv, value: _set_noise_gain(state.noise(inv.indices["channel"]), value),
+        parameters=(ParameterSpec(ParameterType.NUMBER),),
+        available=noise_option,
+    )
+    add(
+        (*noise, HeaderNode("GAIN")),
+        lambda inv: _render(state.noise(inv.indices["channel"]).receiver_gain),
+        query=True,
+        available=noise_option,
+    )
+    noise_pair(
+        (HeaderNode("GAIN"), HeaderNode("CTCheck")),
+        "compression_check",
+        boolean,
+    )
+    add(
+        (*noise, HeaderNode("GAIN"), HeaderNode("CATalog")),
+        lambda inv: "-15,0,15,30",
+        query=True,
+        available=noise_option,
+    )
+    noise_pair(
+        (HeaderNode("IMPedance"), HeaderNode("COUNt")),
+        "impedance_count",
+        ParameterSpec(ParameterType.INTEGER, minimum=4, maximum=1000),
+    )
+    noise_pair(
+        (HeaderNode("NARRowband"),),
+        "narrowband",
+        boolean,
+    )
+    noise_port = ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=state.port_count)
+    add(
+        (*noise, HeaderNode("PMAP")),
+        lambda inv, input_port, output_port: _set_noise_port_map(
+            state.noise(inv.indices["channel"]), input_port, output_port
+        ),
+        parameters=(noise_port, noise_port),
+        available=noise_option,
+    )
+    for header, attribute in (("INPut", "input_port"), ("OUTPut", "output_port")):
+        add(
+            (*noise, HeaderNode("PMAP"), HeaderNode(header)),
+            lambda inv, name=attribute: str(getattr(state.noise(inv.indices["channel"]), name)),
+            query=True,
+            available=noise_option,
+        )
+    noise_pair(
+        (HeaderNode("PULL"),),
+        "pull_enabled",
+        boolean,
+    )
+    noise_pair(
+        (HeaderNode("RECeiver"),),
+        "receiver",
+        ParameterSpec(ParameterType.ENUM, choices=("NORMal", "NOISe")),
+    )
+    noise_pair(
+        (HeaderNode("SOURce"), HeaderNode("STATe")),
+        "source_enabled",
+        boolean,
+    )
+    for branch, value_attribute, auto_attribute in (
+        ("AMBient", "ambient_temperature", "ambient_temperature_auto"),
+        ("SOURce", "temperature", "source_temperature_auto"),
+    ):
+        noise_pair(
+            (HeaderNode("TEMPerature"), HeaderNode(branch)),
+            value_attribute,
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(10000)),
+            _numeric,
+        )
+        noise_pair(
+            (HeaderNode("TEMPerature"), HeaderNode(branch), HeaderNode("AUTO")),
+            auto_attribute,
+            boolean,
+        )
+    noise_pair(
+        (HeaderNode("TEMPerature"), HeaderNode("SOURce"), HeaderNode("VALue")),
+        "temperature",
+        ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(10000)),
+        _numeric,
+    )
+    add(
+        (*noise, HeaderNode("SWEep"), HeaderNode("TIMe")),
+        lambda inv: state.noise_sweep_time(inv.indices["channel"]),
+        query=True,
         available=noise_option,
     )
     add(
@@ -748,9 +908,28 @@ def _set_power(state, invocation, name: str, value: NumericValue) -> str:
 
 def _set_noise(state, invocation, name: str, value) -> str:
     if isinstance(value, NumericValue):
-        scale = {None: 1, "HZ": 1, "KHZ": 1e3, "MHZ": 1e6, "GHZ": 1e9}[value.unit]
-        value = float(value.value) * scale
+        value = _frequency(value)
     return _set(state.noise(invocation.indices["channel"]), name, value)
+
+
+def _frequency(value: NumericValue) -> float:
+    scale = {None: 1, "HZ": 1, "KHZ": 1e3, "MHZ": 1e6, "GHZ": 1e9}[value.unit]
+    return float(value.value) * scale
+
+
+def _set_noise_gain(target: NoiseFigureState, value: NumericValue) -> str:
+    gain = float(value.value)
+    if gain not in {-15.0, 0.0, 15.0, 30.0}:
+        raise SCPICommandError(-224, "Illegal parameter value; noise receiver gain")
+    return _set(target, "receiver_gain", gain)
+
+
+def _set_noise_port_map(target: NoiseFigureState, input_port: int, output_port: int) -> str:
+    if input_port == output_port:
+        raise SCPICommandError(-224, "Illegal parameter value; input and output ports must differ")
+    target.input_port = input_port
+    target.output_port = output_port
+    return ""
 
 
 def _gain_result_values(

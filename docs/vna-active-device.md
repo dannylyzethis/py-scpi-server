@@ -54,6 +54,12 @@ measurement through the same application-aware path.
 and application state. `CALC:NOIS:DATA?` returns noise figure, gain, Y-factor, or effective
 temperature arrays. The scalar result queries return average noise figure or gain.
 
+The behavioral setup surface also includes receiver selection and gain, compression checking,
+impedance count, narrowband compensation, port mapping, source-pull state, ambient/source
+temperature controls, and a deterministic sweep-time estimate. External hardware discovery,
+external macro execution, calibration math, and hardware-specific file formats remain outside the
+emulator scope.
+
 Scenario streams can be named `noise_figure.nf`, `noise_figure.gain`,
 `noise_figure.yfactor`, and `noise_figure.teffective`. Each trace must match the selected
 measurement's point count. If an optional result stream is absent, the emulator derives a stable

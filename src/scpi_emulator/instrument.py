@@ -150,6 +150,7 @@ class SCPIInstrument:
                 self.vna_measurements,
                 self.data_format,
                 self.vna_capabilities.source_count,
+                self.vna_capabilities.ports,
             )
             self.vna_data.add_application(self.vna_active_source)
             register_active_source_commands(self.core_registry, self.vna_active_source)
