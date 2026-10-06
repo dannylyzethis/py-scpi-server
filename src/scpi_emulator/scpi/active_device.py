@@ -31,6 +31,38 @@ class GainCompressionState:
     compression_power: float = 0.0
     compression_db: float = 1.0
     reference: str = "INTernal"
+    acquisition_mode: str = "SMARtsweep"
+    compression_algorithm: str = "CFLG"
+    backoff_level: float = 10.0
+    delta_x: float = 10.0
+    delta_y: float = 9.0
+    interpolate: bool = False
+    phase_level: float = 2.0
+    phase_mode: str = "MAGNitude"
+    saturation_level: float = 0.1
+    eos_operation: str = "STANdard"
+    mixer_reference: bool = False
+    input_port: int = 1
+    output_port: int = 2
+    source_override: bool = False
+    linear_input_aperture: float = 5.0
+    linear_input_level: float = -25.0
+    reverse_power_level: float = -5.0
+    safe_coarse_adjustment: float = 3.0
+    safe_dc_limit: float = -5.0
+    safe_dc_parameter: str = ""
+    safe_enabled: bool = False
+    safe_fine_adjustment: float = 1.0
+    safe_fine_threshold: float = 0.5
+    safe_maximum_limit: float = 30.0
+    smart_cdc: bool = False
+    smart_maximum_iterations: int = 20
+    smart_show_iterations: bool = False
+    smart_settling_time: float = 0.0
+    smart_tolerance: float = 0.05
+    frequency_points: int = 201
+    power_smoothing: bool = False
+    power_smoothing_aperture: float = 25.0
 
 
 @dataclass
@@ -45,13 +77,16 @@ class NoiseFigureState:
 class VNAActiveDeviceSystem:
     """Provide trace and scalar application results from shared DUT scenarios."""
 
-    def __init__(self, measurements: VNAMeasurementSystem, data_format: DataFormat) -> None:
+    def __init__(
+        self, measurements: VNAMeasurementSystem, data_format: DataFormat, port_count: int = 2
+    ) -> None:
         self.measurements = measurements
         self.data_format = data_format
         self.gain_channels: dict[int, GainCompressionState] = {}
         self.noise_channels: dict[int, NoiseFigureState] = {}
         self.player: ScenarioPlayer | None = None
         self.bindings: dict[tuple[str, str], str] = {}
+        self.port_count = port_count
 
     def attach(self, player: ScenarioPlayer) -> None:
         self.player = player
@@ -129,21 +164,7 @@ class VNAActiveDeviceSystem:
         gain = self._read_trace("gain_compression", "gain", len(powers))
         if gain is None:
             gain = tuple(12.0 - max(0.0, power - state.compression_power) for power in powers)
-        compression = tuple(max(0.0, gain[0] - value) for value in gain)
-        index = next(
-            (
-                position
-                for position, value in enumerate(compression)
-                if value >= state.compression_db
-            ),
-            len(powers) - 1,
-        )
-        values = {
-            "PIN": powers[index],
-            "POUT": powers[index] + gain[index],
-            "GAIN": gain[index],
-            "COMP": compression[index],
-        }
+        values = _gain_result_values(state, powers, gain)
         return f"{values[result.upper()]:.12g}"
 
     def gain_status(self, channel: int) -> str:
@@ -230,6 +251,7 @@ def register_active_device_commands(
     sense = HeaderNode("SENSe", index="channel", index_default=1)
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     gc = (sense, HeaderNode("GCompression"))
+    gcs = (sense, HeaderNode("GCSetup"))
     calc_gc = (calc, HeaderNode("GCompression"))
     noise = (sense, HeaderNode("NOISe"))
     calc_noise = (calc, HeaderNode("NOISe"))
@@ -379,6 +401,8 @@ def register_active_device_commands(
         available=gain_option,
     )
 
+    _register_gcsetup_commands(add, gcs, state, gain_option)
+
     add(
         (*noise, HeaderNode("STATe")),
         lambda inv, value: _set(state.noise(inv.indices["channel"]), "enabled", value),
@@ -453,6 +477,259 @@ def register_active_device_commands(
     )
 
 
+def _register_gcsetup_commands(add, root, system, available) -> None:
+    """Register the standard gain-compression setup tree over shared state."""
+
+    def number(low, high):
+        return ParameterSpec(
+            ParameterType.NUMBER, minimum=Decimal(str(low)), maximum=Decimal(str(high))
+        )
+
+    def integer(low, high):
+        return ParameterSpec(ParameterType.INTEGER, minimum=low, maximum=high)
+
+    boolean = ParameterSpec(ParameterType.BOOLEAN)
+
+    def state(inv):
+        return system.gain(inv.indices["channel"])
+
+    def value_pair(path, attribute, parameter, transform=lambda value: value):
+        add(
+            (*root, *path),
+            lambda inv, value, name=attribute, convert=transform: _set(
+                state(inv), name, convert(value)
+            ),
+            parameters=(parameter,),
+            available=available,
+        )
+        add(
+            (*root, *path),
+            lambda inv, name=attribute: _render(getattr(state(inv), name)),
+            query=True,
+            available=available,
+        )
+
+    value_pair(
+        (HeaderNode("AMODe"),),
+        "acquisition_mode",
+        ParameterSpec(ParameterType.ENUM, choices=("PFREQuency", "FPOWer", "SMARtsweep")),
+    )
+    compression = (HeaderNode("COMPression"),)
+    value_pair(
+        (*compression, HeaderNode("ALGorithm")),
+        "compression_algorithm",
+        ParameterSpec(ParameterType.ENUM, choices=("CFLG", "CFMG", "BACKoff", "XYCOM", "SAT")),
+    )
+    value_pair(
+        (*compression, HeaderNode("BACKoff"), HeaderNode("LEVel")),
+        "backoff_level",
+        number(1, 99),
+        _numeric,
+    )
+    value_pair(
+        (*compression, HeaderNode("DELTa"), HeaderNode("X")),
+        "delta_x",
+        number(0.01, 10),
+        _numeric,
+    )
+    value_pair(
+        (*compression, HeaderNode("DELTa"), HeaderNode("Y")),
+        "delta_y",
+        number(0.01, 10),
+        _numeric,
+    )
+    value_pair((*compression, HeaderNode("INTerpolate")), "interpolate", boolean)
+    value_pair(
+        (*compression, HeaderNode("LEVel")),
+        "compression_db",
+        number(0.01, 100),
+        _numeric,
+    )
+    value_pair(
+        (*compression, HeaderNode("PHASe"), HeaderNode("LEVel")),
+        "phase_level",
+        number(0.01, 360),
+        _numeric,
+    )
+    value_pair(
+        (*compression, HeaderNode("PHASe"), HeaderNode("MODE")),
+        "phase_mode",
+        ParameterSpec(ParameterType.ENUM, choices=("MAGNitude", "PHASe", "BOTH")),
+    )
+    value_pair(
+        (*compression, HeaderNode("SATuration"), HeaderNode("LEVel")),
+        "saturation_level",
+        number(0.01, 10),
+        _numeric,
+    )
+    value_pair(
+        (HeaderNode("EOSoperation"),),
+        "eos_operation",
+        ParameterSpec(ParameterType.ENUM, choices=("STANdard", "POFF", "PSTArt", "PSTOp")),
+    )
+    value_pair(
+        (HeaderNode("MIXer"), HeaderNode("REFerence")),
+        "mixer_reference",
+        boolean,
+    )
+
+    port = ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=system.port_count)
+    add(
+        (*root, HeaderNode("PMAP")),
+        lambda inv, input_port, output_port: _set_port_map(state(inv), input_port, output_port),
+        parameters=(port, port),
+        available=available,
+    )
+    add(
+        (*root, HeaderNode("PMAP"), HeaderNode("INPut")),
+        lambda inv: str(state(inv).input_port),
+        query=True,
+        available=available,
+    )
+    add(
+        (*root, HeaderNode("PMAP"), HeaderNode("OUTPut")),
+        lambda inv: str(state(inv).output_port),
+        query=True,
+        available=available,
+    )
+    value_pair(
+        (HeaderNode("PMAP"), HeaderNode("SOURce"), HeaderNode("OVERride")),
+        "source_override",
+        boolean,
+    )
+
+    power = (HeaderNode("POWer"),)
+    value_pair(
+        (
+            *power,
+            HeaderNode("LINear"),
+            HeaderNode("INPut"),
+            HeaderNode("COMPute"),
+            HeaderNode("APERture"),
+        ),
+        "linear_input_aperture",
+        number(0, 25),
+        _numeric,
+    )
+    value_pair(
+        (*power, HeaderNode("LINear"), HeaderNode("INPut"), HeaderNode("LEVel")),
+        "linear_input_level",
+        number(-30, 30),
+        _numeric,
+    )
+    value_pair(
+        (*power, HeaderNode("REVerse"), HeaderNode("LEVel")),
+        "reverse_power_level",
+        number(-30, 30),
+        _numeric,
+    )
+    for header, attribute in (("STARt", "power_start"), ("STOP", "power_stop")):
+        add(
+            (*root, *power, HeaderNode(header), HeaderNode("LEVel")),
+            lambda inv, value, name=attribute: _set_power(system, inv, name, value),
+            parameters=(number(-30, 30),),
+            available=available,
+        )
+        add(
+            (*root, *power, HeaderNode(header), HeaderNode("LEVel")),
+            lambda inv, name=attribute: _render(getattr(state(inv), name)),
+            query=True,
+            available=available,
+        )
+
+    safe = (HeaderNode("SAFE"),)
+    for path, attribute, parameter in (
+        ((HeaderNode("CPADjustment"),), "safe_coarse_adjustment", number(0, 6)),
+        ((HeaderNode("DC"), HeaderNode("MLimit")), "safe_dc_limit", number(-1000, 1000)),
+        (
+            (HeaderNode("DC"), HeaderNode("PARameter")),
+            "safe_dc_parameter",
+            ParameterSpec(ParameterType.STRING),
+        ),
+        ((HeaderNode("ENABle"),), "safe_enabled", boolean),
+        ((HeaderNode("FPADjustment"),), "safe_fine_adjustment", number(0, 3)),
+        ((HeaderNode("FTHReshold"),), "safe_fine_threshold", number(0, 3)),
+        ((HeaderNode("MLimit"),), "safe_maximum_limit", number(-100, 100)),
+    ):
+        value_pair(
+            (*safe, *path),
+            attribute,
+            parameter,
+            _numeric if parameter.type is ParameterType.NUMBER else (lambda value: value),
+        )
+
+    add(
+        (*root, HeaderNode("SFAilures")),
+        lambda inv: "",
+        query=True,
+        available=available,
+    )
+    smart = (HeaderNode("SMARt"),)
+    for path, attribute, parameter, transform in (
+        ((HeaderNode("CDC"),), "smart_cdc", boolean, lambda value: value),
+        (
+            (HeaderNode("MITerations"),),
+            "smart_maximum_iterations",
+            integer(1, 500),
+            lambda value: value,
+        ),
+        ((HeaderNode("SITerations"),), "smart_show_iterations", boolean, lambda value: value),
+        ((HeaderNode("STIMe"),), "smart_settling_time", number(0, 1e9), _numeric),
+        ((HeaderNode("TOLerance"),), "smart_tolerance", number(0.01, 10), _numeric),
+    ):
+        value_pair((*smart, *path), attribute, parameter, transform)
+
+    sweep = (HeaderNode("SWEep"),)
+    value_pair(
+        (*sweep, HeaderNode("FREQuency"), HeaderNode("POINts")),
+        "frequency_points",
+        integer(2, 100001),
+    )
+    add(
+        (*root, *sweep, HeaderNode("POWer"), HeaderNode("POINts")),
+        lambda inv, value: _set(state(inv), "points", value),
+        parameters=(integer(2, 100001),),
+        available=available,
+    )
+    add(
+        (*root, *sweep, HeaderNode("POWer"), HeaderNode("POINts")),
+        lambda inv: str(state(inv).points),
+        query=True,
+        available=available,
+    )
+    value_pair(
+        (*sweep, HeaderNode("POWer"), HeaderNode("SMOoth")),
+        "power_smoothing",
+        boolean,
+    )
+    value_pair(
+        (*sweep, HeaderNode("POWer"), HeaderNode("SMOoth"), HeaderNode("APERture")),
+        "power_smoothing_aperture",
+        number(0, 100),
+        _numeric,
+    )
+
+
+def _numeric(value: NumericValue) -> float:
+    return float(value.value)
+
+
+def _render(value) -> str:
+    if isinstance(value, bool):
+        return _bool(value)
+    if isinstance(value, float):
+        return f"{value:.12g}"
+    return str(value)
+
+
+def _set_port_map(target: GainCompressionState, input_port: int, output_port: int) -> str:
+    if input_port == output_port:
+        raise SCPICommandError(-224, "Illegal parameter value; input and output ports must differ")
+    target.input_port = input_port
+    target.output_port = output_port
+    return ""
+
+
 def _set(target, name: str, value) -> str:
     setattr(target, name, value)
     return ""
@@ -474,6 +751,65 @@ def _set_noise(state, invocation, name: str, value) -> str:
         scale = {None: 1, "HZ": 1, "KHZ": 1e3, "MHZ": 1e6, "GHZ": 1e9}[value.unit]
         value = float(value.value) * scale
     return _set(state.noise(invocation.indices["channel"]), name, value)
+
+
+def _gain_result_values(
+    state: GainCompressionState,
+    powers: tuple[float, ...],
+    gains: tuple[float, ...],
+) -> dict[str, float]:
+    """Select a deterministic result point using the configured compression method."""
+    outputs = tuple(power + gain for power, gain in zip(powers, gains))
+    reference_gain = max(gains) if state.compression_algorithm == "CFMG" else gains[0]
+    compression = tuple(max(0.0, reference_gain - gain) for gain in gains)
+
+    if state.compression_algorithm in {"CFLG", "CFMG"}:
+        start = gains.index(max(gains)) if state.compression_algorithm == "CFMG" else 0
+        index = _first_at_least(compression, state.compression_db, start=start)
+        if state.interpolate and index > start and compression[index] > compression[index - 1]:
+            fraction = (state.compression_db - compression[index - 1]) / (
+                compression[index] - compression[index - 1]
+            )
+            pin = _lerp(powers[index - 1], powers[index], fraction)
+            gain = _lerp(gains[index - 1], gains[index], fraction)
+            return {
+                "PIN": pin,
+                "POUT": pin + gain,
+                "GAIN": gain,
+                "COMP": state.compression_db,
+            }
+    elif state.compression_algorithm == "BACKoff":
+        index = _first_at_least(outputs, max(outputs) - state.backoff_level)
+    elif state.compression_algorithm == "SAT":
+        index = _first_at_least(outputs, max(outputs) - state.saturation_level)
+    else:  # XYCOM
+        index = next(
+            (
+                position
+                for position in range(1, len(powers))
+                if powers[position] - powers[0] >= state.delta_x
+                and outputs[position] - outputs[0] <= state.delta_y
+            ),
+            len(powers) - 1,
+        )
+
+    return {
+        "PIN": powers[index],
+        "POUT": outputs[index],
+        "GAIN": gains[index],
+        "COMP": compression[index],
+    }
+
+
+def _first_at_least(values: tuple[float, ...], threshold: float, *, start: int = 0) -> int:
+    return next(
+        (position for position in range(start, len(values)) if values[position] >= threshold),
+        len(values) - 1,
+    )
+
+
+def _lerp(start: float, stop: float, fraction: float) -> float:
+    return start + (stop - start) * fraction
 
 
 def _numeric_trace(value, stream: str, points: int) -> tuple[float, ...]:

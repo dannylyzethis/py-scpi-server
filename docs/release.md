@@ -14,7 +14,8 @@ python tools/verify.py quality
 
 This is the same quality profile called by hosted CI. It checks Ruff formatting, import order, and
 lint; the reviewed commercial-license policy; the complete branch-coverage suite; both VNA
-manifests; an isolated wheel/sdist build; wheel contents; and installed-wheel CLI/bench smoke tests.
+core manifests and application-compatibility reports; an isolated wheel/sdist build; wheel contents;
+and installed-wheel CLI/bench smoke tests.
 For the portable behavior suite alone, use `python tools/verify.py test`; the OS/Python matrix calls
 that exact profile.
 

@@ -2,7 +2,7 @@
 
 The active-device layer models the parts of gain-compression and noise-figure applications that
 ATE software normally controls: configuration, acquisition-shaped data arrays, summary results,
-licensing, and SCPI errors. It is another processor in the shared VNA scenario pipeline; it does
+option gating, and SCPI errors. It is another processor in the shared VNA scenario pipeline; it does
 not create a separate VNA-specific data source.
 
 ## Gain compression
@@ -13,9 +13,28 @@ Create and activate a gain-compression measurement through the normal custom-mea
 CALC1:CUST:DEF 'gain_comp','Gain Compression','S21'
 ```
 
-`SENS:GC` commands configure a per-channel input-power sweep, point count, compression threshold,
-reference, and application state. When enabled, the power sweep becomes the selected trace's X
-axis and the normal `CALC:DATA?` path uses the same gain data as the application.
+The standard setup hierarchy is `SENS<channel>:GCS...` (`GCSetup`). It configures acquisition mode,
+compression method, port mapping, power limits, safe/smart sweep controls, and sweep point counts.
+For example:
+
+```text
+SENS1:GCS:PMAP 1,2
+SENS1:GCS:POW:STAR:LEV -20
+SENS1:GCS:POW:STOP:LEV 0
+SENS1:GCS:SWE:POW:POIN 101
+SENS1:GCS:COMP:LEV 1
+```
+
+The older project-owned `SENS:GC...` compatibility tree remains available and uses the same
+per-channel state. For example, `SENS:GCS:COMP:LEV 1` and `SENS:GC:COMP:DB 1` configure the same
+threshold. The extra hierarchy `SENS:GAIN:GCS...` is not accepted; it returns undefined-header
+error `-113`.
+
+When gain compression is enabled, the configured power sweep becomes the selected trace's X axis
+and the normal `CALC:DATA?` path uses the same gain data as the application. Settings that determine
+the power axis, compression threshold, result selection, and port topology affect the deterministic
+result. Safe/smart controls without a physical hardware equivalent are retained as validated,
+queryable state so automation can configure and inspect them consistently.
 
 `CALC:GC:DATA?` returns input power, output power, gain, or compression arrays. `CALC:GC:RES?`
 queries return input power, output power, gain, and compression at the configured threshold, and

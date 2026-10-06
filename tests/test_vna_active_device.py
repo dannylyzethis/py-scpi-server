@@ -68,6 +68,94 @@ def test_gain_compression_configuration_and_scenario_results() -> None:
     assert len(instrument.process_command("CALC:DATA? SDAT").split(",")) == 10
 
 
+def test_standard_gcsetup_tree_round_trips_and_drives_shared_results() -> None:
+    instrument = active_device_vna(trace("gain_compression.gain", (12, 12, 11.5, 10.5, 9)))
+    commands = (
+        "SENS:GCS:AMOD PFREQ",
+        "SENS:GCS:COMP:ALG CFMG",
+        "SENS:GCS:COMP:BACK:LEV 8",
+        "SENS:GCS:COMP:DELT:X 2",
+        "SENS:GCS:COMP:DELT:Y 3",
+        "SENS:GCS:COMP:INT ON",
+        "SENS:GCS:COMP:LEV 1",
+        "SENS:GCS:COMP:PHAS:LEV 4",
+        "SENS:GCS:COMP:PHAS:MODE BOTH",
+        "SENS:GCS:COMP:SAT:LEV .2",
+        "SENS:GCS:EOS POFF",
+        "SENS:GCS:MIX:REF ON",
+        "SENS:GCS:PMAP 2,3",
+        "SENS:GCS:PMAP:SOUR:OVER ON",
+        "SENS:GCS:POW:LIN:INP:COMP:APER 10",
+        "SENS:GCS:POW:LIN:INP:LEV -20",
+        "SENS:GCS:POW:REV:LEV -10",
+        "SENS:GCS:POW:STAR:LEV -20",
+        "SENS:GCS:POW:STOP:LEV 0",
+        "SENS:GCS:SAFE:CPAD 2",
+        'SENS:GCS:SAFE:DC:PAR "supply"',
+        "SENS:GCS:SAFE:ENAB ON",
+        "SENS:GCS:SAFE:FPAD .5",
+        "SENS:GCS:SAFE:FTHR .25",
+        "SENS:GCS:SAFE:MLIM 20",
+        "SENS:GCS:SMAR:CDC ON",
+        "SENS:GCS:SMAR:MIT 25",
+        "SENS:GCS:SMAR:SIT ON",
+        "SENS:GCS:SMAR:STIM .1",
+        "SENS:GCS:SMAR:TOL .1",
+        "SENS:GCS:SWE:FREQ:POIN 101",
+        "SENS:GCS:SWE:POW:POIN 5",
+        "SENS:GCS:SWE:POW:SMO ON",
+        "SENS:GCS:SWE:POW:SMO:APER 20",
+    )
+    for command in commands:
+        assert instrument.process_command(command) == "", command
+
+    assert instrument.process_command("SENS:GCS:COMP:LEV?") == "1"
+    assert instrument.process_command("SENS:GCS:PMAP:INP?") == "2"
+    assert instrument.process_command("SENS:GCS:PMAP:OUTP?") == "3"
+    assert instrument.process_command("SENS:GCS:SAFE:DC:PAR?") == "supply"
+    assert instrument.process_command("SENS:GCS:SWE:POW:POIN?") == "5"
+    assert numbers(instrument.process_command("CALC:GC:DATA? IPOW")) == (-20, -15, -10, -5, 0)
+    assert instrument.process_command("CALC:GC:RES:GAIN?") == "11"
+
+
+def test_gcsetup_result_algorithms_change_result_selection() -> None:
+    values = (10, 12, 11.5, 10.5, 9)
+
+    first_gain = active_device_vna(trace("gain_compression.gain", values))
+    first_gain.process_command("SENS:GCS:SWE:POW:POIN 5")
+    first_gain.process_command("SENS:GCS:COMP:ALG CFLG")
+    first_gain.process_command("SENS:GCS:COMP:LEV 1")
+    assert first_gain.process_command("CALC:GC:RES:PIN?") == "0"
+
+    maximum_gain = active_device_vna(trace("gain_compression.gain", values))
+    maximum_gain.process_command("SENS:GCS:SWE:POW:POIN 5")
+    maximum_gain.process_command("SENS:GCS:COMP:ALG CFMG")
+    maximum_gain.process_command("SENS:GCS:COMP:LEV 1")
+    assert maximum_gain.process_command("CALC:GC:RES:PIN?") == "-7.5"
+
+    backoff = active_device_vna(trace("gain_compression.gain", values))
+    backoff.process_command("SENS:GCS:SWE:POW:POIN 5")
+    backoff.process_command("SENS:GCS:COMP:ALG BACK")
+    backoff.process_command("SENS:GCS:COMP:BACK:LEV 8")
+    assert backoff.process_command("CALC:GC:RES:PIN?") == "-7.5"
+
+
+def test_gcsetup_validation_gating_reset_and_nonstandard_hierarchy() -> None:
+    instrument = active_device_vna()
+    assert instrument.process_command("SENS:GCS:PMAP 1,1") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
+    assert instrument.process_command("SENS:GCS:COMP:LEV 0") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+    assert instrument.process_command("SENS:GAIN:GCS:COMP:LEV 1") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-113,"Undefined header')
+
+    instrument.process_command("SENS:GCS:COMP:LEV 3")
+    instrument.process_command("*CLS")
+    assert instrument.process_command("SENS:GCS:COMP:LEV?") == "3"
+    instrument.process_command("*RST")
+    assert instrument.process_command("SENS:GCS:COMP:LEV?") == "1"
+
+
 def test_noise_figure_configuration_and_scenario_results() -> None:
     instrument = active_device_vna(
         trace("noise_figure.nf", (2.1, 2.2, 2.3, 2.4)),

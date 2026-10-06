@@ -1,0 +1,192 @@
+{
+  "applications": {
+    "active_hot_parameters": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "arbitrary_waveform_generation": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "basic_pulsed_rf": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "differential_iq": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "embedded_lo": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "enhanced_time_domain": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "fast_cw": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "fixture_removal": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "frequency_converter": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "frequency_offset": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "gain_compression": {
+      "audit_status": "complete",
+      "implemented": 72,
+      "missing_keys": [],
+      "required": 72
+    },
+    "integrated_pulsed_rf": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "intermodulation_distortion": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "measurement_uncertainty": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "modulation_distortion": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "n_port": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "noise_figure": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "performance_test": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "phase_noise": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "scalar_mixer": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "source_phase_control": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "spectrum_analysis": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "time_domain": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "true_mode_stimulus": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    },
+    "wideband_iq": {
+      "audit_status": "pending",
+      "implemented": 0,
+      "missing_keys": [],
+      "required": 0
+    }
+  },
+  "pending_application_names": [
+    "active_hot_parameters",
+    "arbitrary_waveform_generation",
+    "basic_pulsed_rf",
+    "differential_iq",
+    "embedded_lo",
+    "enhanced_time_domain",
+    "fast_cw",
+    "fixture_removal",
+    "frequency_converter",
+    "frequency_offset",
+    "integrated_pulsed_rf",
+    "intermodulation_distortion",
+    "measurement_uncertainty",
+    "modulation_distortion",
+    "n_port",
+    "noise_figure",
+    "performance_test",
+    "phase_noise",
+    "scalar_mixer",
+    "source_phase_control",
+    "spectrum_analysis",
+    "time_domain",
+    "true_mode_stimulus",
+    "wideband_iq"
+  ],
+  "schema_version": 1,
+  "summary": {
+    "advertised_applications": 25,
+    "audited_applications": 1,
+    "implemented_commands": 72,
+    "missing_commands": 0,
+    "pending_applications": 24,
+    "required_commands": 72
+  },
+  "target": {
+    "model": "vna-4-port"
+  }
+}

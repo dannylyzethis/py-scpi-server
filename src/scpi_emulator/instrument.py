@@ -141,7 +141,9 @@ class SCPIInstrument:
             )
             self.vna_data.add_application(self.vna_mixer)
             register_mixer_commands(self.core_registry, self.vna_mixer)
-            self.vna_active_device = VNAActiveDeviceSystem(self.vna_measurements, self.data_format)
+            self.vna_active_device = VNAActiveDeviceSystem(
+                self.vna_measurements, self.data_format, self.vna_capabilities.ports
+            )
             self.vna_data.add_application(self.vna_active_device)
             register_active_device_commands(self.core_registry, self.vna_active_device)
             self.vna_active_source = VNAActiveSourceSystem(
