@@ -22,6 +22,7 @@ from .registry import (
 @dataclass
 class StimulusApplicationChannel:
     fast_cw_enabled: bool = False
+    fast_cw_points: int = 0
     cw_frequency: float = 1e9
     dwell_seconds: float = 0.001
     waveform_enabled: bool = False
@@ -32,8 +33,11 @@ class StimulusApplicationChannel:
 class VNAStimulusApplicationSystem:
     """Apply repeatable CW axes and scenario waveform envelopes to VNA traces."""
 
-    def __init__(self, measurements: VNAMeasurementSystem, minimum: float, maximum: float) -> None:
+    def __init__(
+        self, measurements: VNAMeasurementSystem, sweeps, minimum: float, maximum: float
+    ) -> None:
         self.measurements = measurements
+        self.sweeps = sweeps
         self.minimum = minimum
         self.maximum = maximum
         self.channels: dict[int, StimulusApplicationChannel] = {}
@@ -124,7 +128,7 @@ def register_stimulus_application_commands(
     fast_option = option_enabled("fast_cw")
     add(
         (*fast_cw, HeaderNode("STATe")),
-        lambda inv, value: _set(state.channel(inv.indices["channel"]), "fast_cw_enabled", value),
+        lambda inv, value: _set_fast_cw_state(state, inv, value),
         parameters=(boolean,),
         available=fast_option,
     )
@@ -166,6 +170,25 @@ def register_stimulus_application_commands(
             query=True,
             available=fast_option,
         )
+
+    standard_fast_cw = (
+        sense,
+        HeaderNode("SWEep"),
+        HeaderNode("TYPE"),
+        HeaderNode("FACW"),
+    )
+    add(
+        standard_fast_cw,
+        lambda inv, value: _set_fast_cw_points(state, inv, value),
+        parameters=(ParameterSpec(ParameterType.INTEGER, minimum=-1, maximum=100001),),
+        available=fast_option,
+    )
+    add(
+        standard_fast_cw,
+        lambda inv: str(state.channel(inv.indices["channel"]).fast_cw_points),
+        query=True,
+        available=fast_option,
+    )
 
     waveform = (sense, HeaderNode("AWGeneration"))
     waveform_option = option_enabled("arbitrary_waveform_generation")
@@ -216,7 +239,33 @@ def _set_channel_number(state, invocation, attribute: str, value: NumericValue) 
     number = float(value.value) * scale
     if attribute == "cw_frequency" and not state.minimum <= number <= state.maximum:
         raise SCPICommandError(-222, "Data out of range; fast-CW frequency")
+    if attribute == "cw_frequency":
+        state.sweeps.configure(invocation.indices["channel"], "frequency_cw", number)
+    elif attribute == "dwell_seconds":
+        state.sweeps.configure(invocation.indices["channel"], "dwell", number)
     return _set(state.channel(invocation.indices["channel"]), attribute, number)
+
+
+def _set_fast_cw_points(state, invocation, value: int) -> str:
+    channel_number = invocation.indices["channel"]
+    target = state.channel(channel_number)
+    target.fast_cw_points = value
+    target.fast_cw_enabled = value != 0
+    if value != 0:
+        sweep = state.sweeps.channel(channel_number)
+        state.sweeps.configure(channel_number, "sweep_type", "CW")
+        target.cw_frequency = sweep.frequency_cw
+        if value > 0:
+            state.sweeps.configure(channel_number, "points", value)
+    return ""
+
+
+def _set_fast_cw_state(state, invocation, enabled: bool) -> str:
+    channel_number = invocation.indices["channel"]
+    target = state.channel(channel_number)
+    target.fast_cw_enabled = enabled
+    target.fast_cw_points = state.sweeps.channel(channel_number).points if enabled else 0
+    return ""
 
 
 def _boolean(value: bool) -> str:

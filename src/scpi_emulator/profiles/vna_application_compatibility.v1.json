@@ -20,8 +20,38 @@
         {"syntax": "SENSE<channel>:ACTIVE:TTONE:RELATIVE", "forms": ["set", "query"]}
       ]
     },
-    "arbitrary_waveform_generation": {"audit_status": "pending", "commands": []},
-    "basic_pulsed_rf": {"audit_status": "pending", "commands": []},
+    "arbitrary_waveform_generation": {
+      "audit_status": "complete",
+      "scope_note": "Project-owned scenario-envelope behavior only; external waveform file formats, source downloads, and physical generator discovery are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:AWGENERATION:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:AWGENERATION:SCALE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:AWGENERATION:OFFSET", "forms": ["set", "query"]}
+      ]
+    },
+    "basic_pulsed_rf": {
+      "audit_status": "complete",
+      "scope_note": "Internal virtual pulse generators and deterministic timing only; external generator discovery and hardware propagation diagnostics are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:PULSE:CATALOG", "forms": ["query"]},
+        {"syntax": "SENSE<channel>:PULSE:PERIOD", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE:TPOLARITY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE:TTYPE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:DELAY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:DINCREMENT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:HDELAY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:HDELAY:ADC", "forms": ["query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:HDELAY:MODULATOR", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:INVERT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:MTIMING:DEVICE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:MODE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:OPTION", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:SUBPOINTTRIG", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PULSE<pulse>:WIDTH", "forms": ["set", "query"]}
+      ]
+    },
     "differential_iq": {"audit_status": "pending", "commands": []},
     "embedded_lo": {
       "audit_status": "complete",
@@ -44,7 +74,16 @@
       ]
     },
     "enhanced_time_domain": {"audit_status": "pending", "commands": []},
-    "fast_cw": {"audit_status": "pending", "commands": []},
+    "fast_cw": {
+      "audit_status": "complete",
+      "scope_note": "Bounded deterministic CW acquisition only; unbounded point acquisition and hardware-rate/FIFO behavior are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:FCW:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:FCW:FREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:FCW:DWELL", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:TYPE:FACW", "forms": ["set", "query"]}
+      ]
+    },
     "fixture_removal": {"audit_status": "pending", "commands": []},
     "frequency_converter": {
       "audit_status": "complete",
@@ -138,7 +177,41 @@
         {"syntax": "SENSE<channel>:GCSETUP:SWEEP:POWER:SMOOTH:APERTURE", "forms": ["set", "query"]}
       ]
     },
-    "integrated_pulsed_rf": {"audit_status": "pending", "commands": []},
+    "integrated_pulsed_rf": {
+      "audit_status": "complete",
+      "scope_note": "Behavioral point/profile setup, virtual IF routing, and deterministic scenario traces only; calibration math, physical path discovery, and hardware-only diagnostics are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:MODE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:CWTIME", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:DETECTMODE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:DRIVE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:IFBW", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:IFGAIN", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PRF", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:TIMING", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:SWGATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:WIDEBAND", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:MASTER:FREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:MASTER:PERIOD", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:MASTER:WIDTH", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PRIMARY:CLOCK", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PRIMARY:FREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PRIMARY:PERIOD", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PRIMARY:MEASUREMENT:WIDTH", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PROFILE:START", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:PROFILE:STOP", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:SHAPE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:SHAPE:CATALOG", "forms": ["query"]},
+        {"syntax": "SENSE<channel>:IF:FILTER:AUTO", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IF:FILTER:CMODE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IF:FREQUENCY:AUTO", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IF:FREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IF:FILTER:STAGE<stage>:TYPE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IF:FILTER:STAGE<stage>:PARAMETER", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PATH:CONFIG:ELEMENT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SWEEP:PULSE:CALIBRATION:STATE", "forms": ["query"]}
+      ]
+    },
     "intermodulation_distortion": {"audit_status": "pending", "commands": []},
     "measurement_uncertainty": {"audit_status": "pending", "commands": []},
     "modulation_distortion": {"audit_status": "pending", "commands": []},
@@ -231,10 +304,25 @@
         {"syntax": "SENSE<channel>:MIXER:CALIBRATION:STATE", "forms": ["query"]}
       ]
     },
-    "source_phase_control": {"audit_status": "pending", "commands": []},
+    "source_phase_control": {
+      "audit_status": "complete",
+      "scope_note": "Project-owned virtual-source phase rotation only; closed-loop receiver correction, external-source discovery, and calibration are outside scope.",
+      "commands": [
+        {"syntax": "SOURCE<source>:PHASE:STATE", "forms": ["set", "query"]},
+        {"syntax": "SOURCE<source>:PHASE:ANGLE", "forms": ["set", "query"]}
+      ]
+    },
     "spectrum_analysis": {"audit_status": "pending", "commands": []},
     "time_domain": {"audit_status": "pending", "commands": []},
-    "true_mode_stimulus": {"audit_status": "pending", "commands": []},
+    "true_mode_stimulus": {
+      "audit_status": "complete",
+      "scope_note": "Project-owned differential/common stimulus transform only; physical balanced-port routing and calibration are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:TMSTIMULUS:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:TMSTIMULUS:MODE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:TMSTIMULUS:AMPLITUDE:RATIO", "forms": ["set", "query"]}
+      ]
+    },
     "wideband_iq": {"audit_status": "pending", "commands": []}
   }
 }

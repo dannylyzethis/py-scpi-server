@@ -30,6 +30,22 @@ def test_fast_cw_replaces_x_axis_and_round_trips_settings() -> None:
     assert numbers(vna.process_command("CALC:MEAS:DATA:X?")) == (2.4e9, 2.4e9, 2.4e9)
     assert vna.process_command("SENS:FCW:FREQ?") == "2400000000"
     assert vna.process_command("SENS:FCW:DWEL?") == "0.002"
+    assert vna.process_command("SENS:SWE:TYPE:FACW?") == "3"
+
+
+def test_standard_fast_cw_entry_point_sets_type_points_and_axis() -> None:
+    vna = instrument()
+    vna.process_command("SENS:FREQ:CW 915MHz")
+    assert vna.process_command("SENS:SWE:TYPE:FACW 3") == ""
+
+    assert vna.process_command("SENS:SWE:TYPE:FACW?") == "3"
+    assert vna.process_command("SENS:SWE:TYPE?") == "CW"
+    assert vna.process_command("SENS:SWE:POIN?") == "3"
+    assert numbers(vna.process_command("CALC:MEAS:DATA:X?")) == (915e6, 915e6, 915e6)
+
+    assert vna.process_command("SENS:SWE:TYPE:FACW 0") == ""
+    assert vna.process_command("SENS:SWE:TYPE:FACW?") == "0"
+    assert vna.process_command("SENS:FCW:STAT?") == "0"
 
 
 def test_scenario_waveform_envelope_modifies_normal_trace_data() -> None:

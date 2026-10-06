@@ -157,6 +157,7 @@ class SCPIInstrument:
             register_active_source_commands(self.core_registry, self.vna_active_source)
             self.vna_stimulus_apps = VNAStimulusApplicationSystem(
                 self.vna_measurements,
+                self.vna_sweeps,
                 float(self.vna_capabilities.frequency_minimum),
                 float(self.vna_capabilities.frequency_maximum),
             )

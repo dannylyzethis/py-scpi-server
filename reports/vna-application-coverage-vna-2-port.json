@@ -7,16 +7,16 @@
       "required": 23
     },
     "arbitrary_waveform_generation": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 6,
       "missing_keys": [],
-      "required": 0
+      "required": 6
     },
     "basic_pulsed_rf": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 32,
       "missing_keys": [],
-      "required": 0
+      "required": 32
     },
     "differential_iq": {
       "audit_status": "pending",
@@ -37,10 +37,10 @@
       "required": 0
     },
     "fast_cw": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 8,
       "missing_keys": [],
-      "required": 0
+      "required": 8
     },
     "fixture_removal": {
       "audit_status": "pending",
@@ -67,10 +67,10 @@
       "required": 72
     },
     "integrated_pulsed_rf": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 56,
       "missing_keys": [],
-      "required": 0
+      "required": 56
     },
     "intermodulation_distortion": {
       "audit_status": "pending",
@@ -121,10 +121,10 @@
       "required": 93
     },
     "source_phase_control": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 4,
       "missing_keys": [],
-      "required": 0
+      "required": 4
     },
     "spectrum_analysis": {
       "audit_status": "pending",
@@ -139,10 +139,10 @@
       "required": 0
     },
     "true_mode_stimulus": {
-      "audit_status": "pending",
-      "implemented": 0,
+      "audit_status": "complete",
+      "implemented": 6,
       "missing_keys": [],
-      "required": 0
+      "required": 6
     },
     "wideband_iq": {
       "audit_status": "pending",
@@ -152,33 +152,27 @@
     }
   },
   "pending_application_names": [
-    "arbitrary_waveform_generation",
-    "basic_pulsed_rf",
     "differential_iq",
     "enhanced_time_domain",
-    "fast_cw",
     "fixture_removal",
-    "integrated_pulsed_rf",
     "intermodulation_distortion",
     "measurement_uncertainty",
     "modulation_distortion",
     "n_port",
     "performance_test",
     "phase_noise",
-    "source_phase_control",
     "spectrum_analysis",
     "time_domain",
-    "true_mode_stimulus",
     "wideband_iq"
   ],
   "schema_version": 1,
   "summary": {
     "advertised_applications": 25,
-    "audited_applications": 7,
-    "implemented_commands": 315,
+    "audited_applications": 13,
+    "implemented_commands": 427,
     "missing_commands": 0,
-    "pending_applications": 18,
-    "required_commands": 315
+    "pending_applications": 12,
+    "required_commands": 427
   },
   "target": {
     "model": "vna-2-port"

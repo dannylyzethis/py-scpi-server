@@ -72,6 +72,45 @@ def test_pulse_generator_configuration_round_trips() -> None:
     assert instrument.process_command("SENS:PULS4:OPT?") == "1"
 
 
+def test_standard_pulse_delay_device_and_pulse4_controls_round_trip() -> None:
+    instrument = pulse_vna()
+    commands = (
+        "SENS:PULS1:HDEL ON",
+        "SENS:PULS1:HDEL:MOD 75ns",
+        "SENS:PULS1:MTIM:DEV USR2",
+        "SENS:PULS4:MODE TRAC",
+        "SENS:PULS4:OPT ON",
+    )
+    for command in commands:
+        assert instrument.process_command(command) == "", command
+
+    assert instrument.process_command("SENS:PULS1:HDEL?") == "1"
+    assert float(instrument.process_command("SENS:PULS1:HDEL:MOD?")) == pytest.approx(75e-9)
+    assert instrument.process_command("SENS:PULS1:MTIM:DEV?") == "USR2"
+    assert instrument.process_command("SENS:PULS4:MODE?") == "TRACe"
+    assert instrument.process_command("SENS:PULS4:OPT?") == "1"
+
+    assert instrument.process_command("SENS:PULS3:MODE ALL") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
+
+
+def test_virtual_hardware_delay_changes_profile_gate_fallback() -> None:
+    instrument = pulse_vna()
+    instrument.process_command("SENS:SWE:PULS:PROF:STOP 300us")
+    instrument.process_command("SENS:PULS1:WIDT 150us")
+    instrument.process_command("SENS:PULS1:STAT ON")
+    instrument.process_command("SENS:SWE:PULS:MODE PROF")
+    baseline = values(instrument.process_command("CALC:DATA? SDAT"))
+
+    instrument.process_command("SENS:PULS1:HDEL:MOD 100us")
+    instrument.process_command("SENS:PULS1:HDEL ON")
+    delayed = values(instrument.process_command("CALC:DATA? SDAT"))
+
+    assert baseline != delayed
+    assert baseline[:4] == (1.0, 0.0, 2.0, 0.0)
+    assert delayed[:4] == (0.0, 0.0, 2.0, 0.0)
+
+
 def test_integrated_pulse_profile_changes_axis_and_uses_scenario_trace() -> None:
     instrument = pulse_vna(pulse_trace("pulse.profile", (0j, 1 + 0j, 0.5 + 0.25j, 0j)))
     instrument.process_command("SENS:SWE:PULS:PROF:STAR 0")
@@ -134,6 +173,29 @@ def test_integrated_setup_if_filter_gate_and_master_timing_round_trip() -> None:
     assert float(instrument.process_command('SENS:IF:FILT:STAG3:PAR? "D"')) == pytest.approx(10e-6)
     assert instrument.process_command('SENS:PATH:CONF:ELEM? "IFGateA"') == "Pulse2"
     assert instrument.process_command("SENS:SWE:PULS:CAL:STAT?") == "0"
+
+
+def test_integrated_primary_and_shape_aliases_share_pulse_state() -> None:
+    instrument = pulse_vna()
+    commands = (
+        "SENS:SWE:PULS:IFBW OFF",
+        "SENS:SWE:PULS:PRIM:FREQ 2kHz",
+        "SENS:SWE:PULS:PRIM:MEAS:WIDT 50us",
+        "SENS:SWE:PULS:PRIM:CLOC EXT",
+        "SENS:SWE:PULS:SHAP FAST",
+    )
+    for command in commands:
+        assert instrument.process_command(command) == "", command
+
+    assert instrument.process_command("SENS:SWE:PULS:IFBW?") == "0"
+    assert float(instrument.process_command("SENS:SWE:PULS:PRIM:FREQ?")) == pytest.approx(2e3)
+    assert float(instrument.process_command("SENS:SWE:PULS:PRIM:PER?")) == pytest.approx(5e-4)
+    assert float(instrument.process_command("SENS:SWE:PULS:PRIM:MEAS:WIDT?")) == pytest.approx(
+        50e-6
+    )
+    assert instrument.process_command("SENS:SWE:PULS:PRIM:CLOC?") == "EXTernal"
+    assert instrument.process_command("SENS:SWE:PULS:SHAP?") == "FAST"
+    assert instrument.process_command("SENS:SWE:PULS:SHAP:CAT?") == "NORMal,FAST"
 
 
 def test_pulse_timing_and_scenario_shape_errors_are_scpi_errors() -> None:

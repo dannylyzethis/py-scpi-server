@@ -27,6 +27,9 @@ class PulseGenerator:
     delay_increment: float = 0.0
     inverted: bool = False
     subpoint_trigger: bool = False
+    hardware_delay_enabled: bool = False
+    modulator_delay: float = 50e-9
+    timing_device: str = "USR1"
 
 
 @dataclass
@@ -36,6 +39,7 @@ class PulseChannel:
     trigger_polarity: str = "POSitive"
     trigger_type: str = "LEVel"
     pulse4_adc: bool = False
+    pulse4_mode: str = "ALL"
     mode: str = "OFF"
     master_frequency: float = 1e3
     master_width: float = 100e-6
@@ -45,6 +49,7 @@ class PulseChannel:
     detect_auto: bool = True
     drive_auto: bool = True
     if_gain_auto: bool = True
+    if_bandwidth_auto: bool = True
     prf_auto: bool = True
     timing_auto: bool = True
     software_gate: bool = True
@@ -56,6 +61,8 @@ class PulseChannel:
     if_filter_type: str = "TUKey"
     if_parameters: dict[str, float] = field(default_factory=dict)
     path_elements: dict[str, str] = field(default_factory=dict)
+    primary_clock: str = "INTernal"
+    pulse_shape: str = "NORMal"
 
 
 class VNAPulseSystem:
@@ -224,6 +231,55 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         query=True,
         available=basic_option,
     )
+    hardware_delay = (*pulse, HeaderNode("HDELay"))
+    add(
+        hardware_delay,
+        lambda inv, value: _set_generator(state, inv, "hardware_delay_enabled", value),
+        parameters=(boolean,),
+        available=basic_option,
+    )
+    add(
+        hardware_delay,
+        lambda inv: _bool(_generator(state, inv).hardware_delay_enabled),
+        query=True,
+        available=basic_option,
+    )
+    add(
+        (*hardware_delay, HeaderNode("ADC")),
+        lambda inv: str(state.generator(inv.indices["channel"], 0).delay),
+        query=True,
+        available=basic_option,
+    )
+    add(
+        (*hardware_delay, HeaderNode("MODulator")),
+        lambda inv, value: _set_generator_time(state, inv, "modulator_delay", value),
+        parameters=(time_value,),
+        available=basic_option,
+    )
+    add(
+        (*hardware_delay, HeaderNode("MODulator")),
+        lambda inv: str(_generator(state, inv).modulator_delay),
+        query=True,
+        available=basic_option,
+    )
+    timing_device = (*pulse, HeaderNode("MTIMing"), HeaderNode("DEVice"))
+    add(
+        timing_device,
+        lambda inv, value: _set_generator(state, inv, "timing_device", value),
+        parameters=(
+            ParameterSpec(
+                ParameterType.ENUM,
+                choices=("ADCTrigger", "RFMOdul", "ADCActivity", "USR1", "USR2", "USR3", "USR4"),
+            ),
+        ),
+        available=basic_option,
+    )
+    add(
+        timing_device,
+        lambda inv: _generator(state, inv).timing_device,
+        query=True,
+        available=basic_option,
+    )
     add(
         (*pulse, HeaderNode("SUBPointtrig")),
         lambda inv, value: _set_subpoint(state, inv, value),
@@ -270,13 +326,30 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
     pulse4 = (sense, HeaderNode("PULSe", index="pulse", index_default=4), HeaderNode("OPTion"))
     add(
         pulse4,
-        lambda inv, value: _set(state.channel(inv.indices["channel"]), "pulse4_adc", value),
+        lambda inv, value: _set_pulse4(state, inv, "pulse4_adc", value),
         parameters=(boolean,),
         available=basic_option,
     )
     add(
         pulse4,
-        lambda inv: _bool(state.channel(inv.indices["channel"]).pulse4_adc),
+        lambda inv: _bool(_pulse4(state, inv).pulse4_adc),
+        query=True,
+        available=basic_option,
+    )
+    pulse4_mode = (
+        sense,
+        HeaderNode("PULSe", index="pulse", index_default=4),
+        HeaderNode("MODE"),
+    )
+    add(
+        pulse4_mode,
+        lambda inv, value: _set_pulse4(state, inv, "pulse4_mode", value),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("ALL", "TRACe")),),
+        available=basic_option,
+    )
+    add(
+        pulse4_mode,
+        lambda inv: _pulse4(state, inv).pulse4_mode,
         query=True,
         available=basic_option,
     )
@@ -298,6 +371,7 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         ("CWTime", "cw_time_auto"),
         ("DETectmode", "detect_auto"),
         ("DRIVe", "drive_auto"),
+        ("IFBW", "if_bandwidth_auto"),
         ("IFGain", "if_gain_auto"),
         ("PRF", "prf_auto"),
         ("TIMing", "timing_auto"),
@@ -348,6 +422,76 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
         (*master, HeaderNode("WIDTh")),
         lambda inv, value: _set_master_width(state, inv, value),
         parameters=(time_value,),
+        available=integrated_option,
+    )
+
+    primary = (*integrated, HeaderNode("PRIMary"))
+    add(
+        (*primary, HeaderNode("FREQuency")),
+        lambda inv, value: _set_master_frequency(state, inv, value),
+        parameters=(frequency,),
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("FREQuency")),
+        lambda inv: str(state.channel(inv.indices["channel"]).master_frequency),
+        query=True,
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("PERiod")),
+        lambda inv, value: _set_master_period(state, inv, value),
+        parameters=(time_value,),
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("PERiod")),
+        lambda inv: str(1 / state.channel(inv.indices["channel"]).master_frequency),
+        query=True,
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("MEASurement"), HeaderNode("WIDTh")),
+        lambda inv, value: _set_master_width(state, inv, value),
+        parameters=(time_value,),
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("MEASurement"), HeaderNode("WIDTh")),
+        lambda inv: str(state.channel(inv.indices["channel"]).master_width),
+        query=True,
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("CLOCk")),
+        lambda inv, value: _set(state.channel(inv.indices["channel"]), "primary_clock", value),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("INTernal", "EXTernal")),),
+        available=integrated_option,
+    )
+    add(
+        (*primary, HeaderNode("CLOCk")),
+        lambda inv: state.channel(inv.indices["channel"]).primary_clock,
+        query=True,
+        available=integrated_option,
+    )
+
+    shape = (*integrated, HeaderNode("SHAPe"))
+    add(
+        shape,
+        lambda inv, value: _set(state.channel(inv.indices["channel"]), "pulse_shape", value),
+        parameters=(ParameterSpec(ParameterType.ENUM, choices=("NORMal", "FAST")),),
+        available=integrated_option,
+    )
+    add(
+        shape,
+        lambda inv: state.channel(inv.indices["channel"]).pulse_shape,
+        query=True,
+        available=integrated_option,
+    )
+    add(
+        (*shape, HeaderNode("CATalog")),
+        lambda inv: "NORMal,FAST",
+        query=True,
         available=integrated_option,
     )
     add(
@@ -460,6 +604,16 @@ def register_pulse_commands(registry: CommandRegistry, state: VNAPulseSystem) ->
 
 def _generator(state, invocation) -> PulseGenerator:
     return state.generator(invocation.indices["channel"], invocation.indices.get("pulse", 0))
+
+
+def _pulse4(state, invocation) -> PulseChannel:
+    if invocation.indices.get("pulse", 4) != 4:
+        raise SCPICommandError(-222, "Data out of range; pulse-4 setting")
+    return state.channel(invocation.indices["channel"])
+
+
+def _set_pulse4(state, invocation, name: str, value) -> str:
+    return _set(_pulse4(state, invocation), name, value)
 
 
 def _set(target, name: str, value) -> str:
@@ -610,8 +764,12 @@ def _linear(start: float, stop: float, points: int) -> tuple[float, ...]:
 
 
 def _pulse_on(generator: PulseGenerator, point: float, period: float) -> bool:
+    cycle = max(0, int(point // period))
     offset = point % period
-    active = generator.delay <= offset <= generator.delay + generator.width
+    delay = generator.delay + cycle * generator.delay_increment
+    if generator.hardware_delay_enabled:
+        delay += generator.modulator_delay
+    active = delay <= offset <= delay + generator.width
     return not active if generator.inverted else active
 
 

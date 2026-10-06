@@ -7,11 +7,12 @@ application identifiers are intentionally not explained in this documentation.
 The emulator implements these command groups:
 
 - `SENS:PULS<n>` configures internal generators 0 through 4, including state, delay, width, delay
-  increment, polarity inversion, period, trigger type/polarity, subpoint triggering, and pulse-4 ADC
-  indication.
+  increment, polarity inversion, hardware/modulator delay, timing-device labels, period, trigger
+  type/polarity, subpoint triggering, and pulse-4 ADC indication/mode.
 - `SENS:SWE:PULS` selects standard point-in-pulse or pulse-profile operation and configures automatic
   timing/detection/drive/IF-gain/PRF choices, software gating, wideband mode, master timing, and the
-  profile time window.
+  profile time window. `MASTER` and `PRIMARY` timing paths share state; primary clock and pulse-shape
+  choices are also stored and queryable.
 - `SENS:IF` exposes the pulse-relevant automatic/manual IF path, capture mode, IF frequency, and
   stage-3 pulse-window filter settings.
 - `SENS:PATH:CONF:ELEM` stores pulse modulation and IF-gate routing such as `IFGateA` to `Pulse2`.
@@ -39,3 +40,6 @@ run before a detailed DUT trace has been authored.
 `*CLS` clears errors and status but preserves pulse configuration. `*RST` returns generators,
 Integrated Pulse mode, IF configuration, and routing to their disabled/default state. Pulse
 calibration status is a static `0`; calibration behavior and math remain outside product scope.
+
+External generator discovery, physical propagation-delay diagnostics, hardware path discovery, and
+unbounded hardware acquisition are outside the behavioral emulator scope.
