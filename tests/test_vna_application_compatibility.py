@@ -40,8 +40,14 @@ def test_completed_application_inventories_have_no_command_gaps() -> None:
         assert report["applications"]["enhanced_time_domain"]["required"] == 10
         assert report["applications"]["fixture_removal"]["required"] == 12
         assert report["applications"]["time_domain"]["required"] == 62
-        assert report["summary"]["audited_applications"] == 16
-        assert report["summary"]["required_commands"] == 511
+        assert report["applications"]["differential_iq"]["required"] == 34
+        assert report["applications"]["intermodulation_distortion"]["required"] == 39
+        assert report["applications"]["modulation_distortion"]["required"] == 52
+        assert report["applications"]["phase_noise"]["required"] == 26
+        assert report["applications"]["spectrum_analysis"]["required"] == 20
+        assert report["applications"]["wideband_iq"]["required"] == 14
+        assert report["summary"]["audited_applications"] == 22
+        assert report["summary"]["required_commands"] == 696
 
 
 @pytest.mark.parametrize("model", ["vna-2-port", "vna-4-port"])

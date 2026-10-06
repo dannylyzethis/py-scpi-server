@@ -269,3 +269,105 @@ def test_bad_advanced_trace_shape_reports_scpi_data_error() -> None:
     instrument.process_command("SENS:SA:STAT ON")
     assert instrument.process_command("CALC:DATA? SDAT") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-230,"Data corrupt or stale')
+
+
+def test_extended_imd_frequency_mapping_and_axis_round_trip() -> None:
+    instrument = advanced_vna()
+    for command in (
+        "SENS:IMD:SWE:TYPE SEGM",
+        "SENS:IMD:FREQ:STAR 1GHz",
+        "SENS:IMD:FREQ:STOP 2GHz",
+        "SENS:IMD:FREQ:CW 1.5GHz",
+        "SENS:IMD:FREQ:F1 1.1GHz",
+        "SENS:IMD:FREQ:F2 1.2GHz",
+        "SENS:IMD:NORM:MODE ON",
+        "SENS:IMD:PMAP:INP 1",
+        "SENS:IMD:PMAP:OUTP 4",
+        "SENS:IMD:STAT ON",
+    ):
+        instrument.process_command(command)
+
+    assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+    assert float(instrument.process_command("SENS:IMD:FREQ:CW?")) == 1.5e9
+    assert float(instrument.process_command("SENS:IMD:FREQ:F2?")) == 1.2e9
+    assert instrument.process_command("SENS:IMD:NORM:MODE?") == "1"
+    assert instrument.process_command("SENS:IMD:PMAP:OUTP?") == "4"
+    assert values(instrument.process_command("CALC:MEAS:DATA:X?")) == pytest.approx(
+        (1e9, 1.333333333333e9, 1.666666666667e9, 2e9)
+    )
+
+
+def test_extended_distortion_setup_drives_power_axis() -> None:
+    instrument = advanced_vna()
+    commands = (
+        "SENS:DIST:MEAS:FILT:ALPH 0.25",
+        "SENS:DIST:MEAS:FILT:SRAT:AUTO OFF",
+        "SENS:DIST:MEAS:CORR:APER 12",
+        "SENS:DIST:MEAS:CORR:APER:AUTO OFF",
+        "SENS:DIST:MOD:SOUR 'virtual-modulation'",
+        "SENS:DIST:PATH:DUT:PMAP:INP 1",
+        "SENS:DIST:PATH:DUT:PMAP:OUTP 2",
+        "SENS:DIST:PATH:DUT:NOM:GAIN 15",
+        "SENS:DIST:PATH:DUT:NOM:NF 4",
+        "SENS:DIST:SWE:POW:STAR -30",
+        "SENS:DIST:SWE:POW:STOP 0",
+        "SENS:DIST:SWE:POW:POIN 4",
+        "SENS:DIST:SWE:SPAR ON",
+        "SENS:DIST:SWE:SPAR:REUS ON",
+        "SENS:DIST:SWE:SPAR:BWID 2kHz",
+        "SENS:DIST:SWE:SPAR:STEP 2MHz",
+        "SENS:DIST:SWE:POW:SPAR:LEV -35",
+        "SENS:DIST:SWE:TYPE POW",
+        "SENS:DIST:STAT ON",
+    )
+    for command in commands:
+        instrument.process_command(command)
+
+    assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+    assert instrument.process_command("SENS:DIST:MEAS:FILT:SRAT:AUTO?") == "0"
+    assert instrument.process_command("SENS:DIST:MOD:SOUR?") == "virtual-modulation"
+    assert instrument.process_command("SENS:DIST:SWE:SPAR?") == "1"
+    assert float(instrument.process_command("SENS:DIST:SWE:SPAR:STEP?")) == 2e6
+    assert values(instrument.process_command("CALC:MEAS:DATA:X?")) == (-30, -20, -10, 0)
+
+
+def test_phase_noise_extended_controls_round_trip() -> None:
+    instrument = advanced_vna()
+    instrument.process_command("SENS:PN:BWID:RAT 8")
+    instrument.process_command("SENS:PN:FAV:FACT 12")
+    instrument.process_command("SENS:PN:REC 'b1'")
+
+    assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+    assert instrument.process_command("SENS:PN:BWID:RAT?") == "8.0"
+    assert instrument.process_command("SENS:PN:FAV:FACT?") == "12"
+    assert instrument.process_command("SENS:PN:REC?") == "b1"
+
+
+def test_diq_coupling_parameters_and_frequency_axis() -> None:
+    instrument = advanced_vna()
+    instrument.process_command("SENS:DIQ:FREQ:RANG:ADD")
+    instrument.process_command("SENS:DIQ:FREQ:RANG1:STAR 1GHz")
+    instrument.process_command("SENS:DIQ:FREQ:RANG1:STOP 2GHz")
+    instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:STAT ON")
+    instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:ID 1")
+    instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:OFFS 20MHz")
+    instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:UCON OFF")
+    instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:MULT 2")
+    instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:DIV 3")
+    instrument.process_command("SENS:DIQ:PAR:DEF 'GainF1','b2_F1/a1_F1'")
+    instrument.process_command("SENS:DIQ:STAT ON")
+
+    assert instrument.process_command("SYST:ERR?") == '0,"No error"'
+    assert instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:STAT?") == "1"
+    assert float(instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:OFFS?")) == 20e6
+    assert instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:UCON?") == "0"
+    assert instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:MULT?") == "2"
+    assert instrument.process_command("SENS:DIQ:PAR:CAT?") == '"GainF1:b2_F1/a1_F1"'
+    assert values(instrument.process_command("CALC:MEAS:DATA:X?")) == pytest.approx(
+        (1e9, 1.333333333333e9, 1.666666666667e9, 2e9)
+    )
+
+    instrument.process_command("SENS:DIQ:PAR:DEL 'GainF1'")
+    assert instrument.process_command("SENS:DIQ:PAR:CAT?") == ""
+    assert instrument.process_command("SENS:DIQ:FREQ:RANG2:COUP:DIV 0") == ""
+    assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')

@@ -39,10 +39,13 @@ class instead of layering unrelated applications on one trace.
 | Differential I/Q | `SENS:DIQ` | `differential_iq.trace` | `differential_iq.phase` |
 | Wideband I/Q | `SENS:IQ` | `wideband_iq.trace` | `wideband_iq.phase` |
 
-The documented setup subset includes SA resolution/video bandwidth, detector and averaging; IMD
-sweep, tone, frequency, and IF-bandwidth controls; modulation-distortion carrier and symbol-rate
-controls; phase-noise carrier, noise type, offsets, and averaging; and DIQ frequency-range creation,
-editing, counting, and deletion.
+The audited setup surface includes SA resolution/video bandwidth, detector and averaging; IMD
+sweep, tone, frequency, normalization, port mapping, and IF-bandwidth controls; and
+modulation-distortion carrier, filter, correlation, DUT-map, power-sweep, and linear-reference
+settings. Phase-noise supports carrier, noise type, offset range, receiver, resolution-bandwidth
+ratio, and averaging. DIQ supports frequency-range creation/editing/deletion, coupling metadata,
+and project-owned parameter expressions. External configuration files are intentionally not read or
+written by these workflows.
 
 `CALC:<class>:DATA? <result>` returns a named scenario result in the current ASCII or binary data
 format. Normal `CALC:DATA?` also returns the active application's main trace. A stream must be a
@@ -50,10 +53,11 @@ scalar or contain exactly the selected measurement's point count; corrupt types 
 SCPI `-230`. Stable derived values are used when an optional result stream is absent so setup code
 can run before a detailed DUT model is authored.
 
-Phase-noise measurements expose a logarithmic offset-frequency X axis. DIQ and wideband-I/Q
-captures expose a time axis. Swept IMD uses its configured center and span. Application markers can
-set/query X, query Y, and find the maximum. Marker reads use scenario `peek`, so inspecting a marker
-does not consume a queued DUT case.
+Phase-noise measurements expose a logarithmic offset-frequency X axis. DIQ uses its first configured
+frequency range, while wideband-I/Q captures expose a bounded time axis. Swept IMD uses center/span
+or start/stop according to its sweep mode. Modulation-distortion power sweeps expose the configured
+power range. Application markers can set/query X, query Y, and find the maximum. Marker reads use
+scenario `peek`, so inspecting a marker does not consume a queued DUT case.
 
 Wideband I/Q availability is controlled by the selected emulator capability profile. `SENS:IQ` is
 a project-defined extension for sample-rate and capture-time scenario control.
@@ -67,3 +71,5 @@ a project-defined extension for sample-rate and capture-time scenario control.
 - `*RST` disables advanced classes and restores all setup defaults.
 - Calibration/correction status is the static value `0`; calibration behavior and math are outside
   the product scope.
+- Hardware FIFO/shared-memory export, external source discovery, continuous streaming, and
+  manufacturer-specific setup files are outside the product scope.

@@ -66,6 +66,19 @@ class AdvancedMarker:
 
 
 @dataclass
+class DIQRange:
+    start: float = 10.5e6
+    stop: float = 26.5e9
+    if_bandwidth: float = 1e3
+    coupled: bool = False
+    coupling_id: int = 1
+    offset: float = 0.0
+    upconvert: bool = True
+    multiplier: int = 1
+    divisor: int = 1
+
+
+@dataclass
 class AdvancedChannel:
     active: str | None = None
     resolution_bandwidth: float = 100e3
@@ -80,17 +93,44 @@ class AdvancedChannel:
     tone1_power: float = -20.0
     tone2_power: float = -20.0
     imd_bandwidth: float = 1e3
+    imd_cw: float = 1e9
+    imd_start: float = 10.5e6
+    imd_stop: float = 26.5e9
+    imd_f1: float = 1e9
+    imd_f2: float = 1.01e9
+    imd_normalized_mode: bool = False
+    imd_input_port: int = 1
+    imd_output_port: int = 2
     carrier_frequency: float = 1e9
     carrier_power: float = -20.0
     symbol_rate: float = 10e6
+    distortion_filter_alpha: float = 0.35
+    distortion_filter_auto: bool = True
+    distortion_correlation_aperture: float = 10.0
+    distortion_correlation_auto: bool = True
+    distortion_modulation_source: str = ""
+    distortion_input_port: int = 1
+    distortion_output_port: int = 2
+    distortion_nominal_gain: float = 0.0
+    distortion_nominal_nf: float = 0.0
+    distortion_power_start: float = -30.0
+    distortion_power_stop: float = 0.0
+    distortion_power_points: int = 11
+    distortion_sparam_enabled: bool = False
+    distortion_sparam_reuse: bool = False
+    distortion_sparam_bandwidth: float = 1e3
+    distortion_sparam_step: float = 1e6
+    distortion_sparam_level: float = -30.0
     noise_type: str = "PNOise"
     offset_start: float = 10.0
     offset_stop: float = 10e6
+    phase_noise_bandwidth_ratio: float = 10.0
+    phase_noise_average_factor: int = 1
+    phase_noise_receiver: str = "b2"
     sample_rate: float = 100e6
     capture_time: float = 10e-6
-    diq_ranges: list[tuple[float, float, float]] = field(
-        default_factory=lambda: [(10.5e6, 26.5e9, 1e3)]
-    )
+    diq_ranges: list[DIQRange] = field(default_factory=lambda: [DIQRange()])
+    diq_parameters: dict[str, str] = field(default_factory=dict)
     markers: dict[tuple[str, int], AdvancedMarker] = field(default_factory=dict)
 
 
@@ -154,10 +194,17 @@ class VNAAdvancedSystem:
         points = len(stimulus)
         if state.active == "phase_noise":
             return _logspace(state.offset_start, state.offset_stop, points)
-        if state.active in {"diq", "wideband_iq"}:
+        if state.active == "wideband_iq":
             return _linear(0.0, state.capture_time, points)
+        if state.active == "diq":
+            selected = state.diq_ranges[0]
+            return _linear(selected.start, selected.stop, points)
         if state.active == "imd":
-            return _linear(state.center - state.span / 2, state.center + state.span / 2, points)
+            if state.sweep_type == "FCENter":
+                return _linear(state.center - state.span / 2, state.center + state.span / 2, points)
+            return _linear(state.imd_start, state.imd_stop, points)
+        if state.active == "distortion" and state.sweep_type == "POWer":
+            return _linear(state.distortion_power_start, state.distortion_power_stop, points)
         return stimulus
 
     def samples(
@@ -451,6 +498,44 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
             state,
         )
     add((*imd, HeaderNode("HOPRoduct")), lambda inv: "9", query=True, available=options["imd"])
+    for path, attribute in (
+        ((HeaderNode("FREQuency"), HeaderNode("CW")), "imd_cw"),
+        ((HeaderNode("FREQuency"), HeaderNode("STARt")), "imd_start"),
+        ((HeaderNode("FREQuency"), HeaderNode("STOP")), "imd_stop"),
+    ):
+        _register_value(add, imd, path, attribute, frequency, options["imd"], state)
+    imd_frequency = HeaderNode("F", index="imd_frequency", index_default=1)
+    add(
+        (*imd, HeaderNode("FREQuency"), imd_frequency),
+        lambda inv, value: _set_imd_frequency(state, inv, value),
+        parameters=(frequency,),
+        available=options["imd"],
+    )
+    add(
+        (*imd, HeaderNode("FREQuency"), imd_frequency),
+        lambda inv: str(_imd_frequency(state, inv)),
+        query=True,
+        available=options["imd"],
+    )
+    _register_value(
+        add,
+        imd,
+        (HeaderNode("NORMalized"), HeaderNode("MODE")),
+        "imd_normalized_mode",
+        boolean,
+        options["imd"],
+        state,
+    )
+    for leaf, attribute in (("INPut", "imd_input_port"), ("OUTPut", "imd_output_port")):
+        _register_value(
+            add,
+            imd,
+            (HeaderNode("PMAP"), HeaderNode(leaf)),
+            attribute,
+            ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=999),
+            options["imd"],
+            state,
+        )
 
     distortion = (sense, HeaderNode("DISTortion"))
     _register_value(
@@ -462,6 +547,109 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         options["distortion"],
         state,
     )
+    for path, attribute, parameter in (
+        (
+            (HeaderNode("MEASure"), HeaderNode("FILTer"), HeaderNode("ALPHa")),
+            "distortion_filter_alpha",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(1)),
+        ),
+        (
+            (
+                HeaderNode("MEASure"),
+                HeaderNode("FILTer"),
+                HeaderNode("SRATe"),
+                HeaderNode("AUTO"),
+            ),
+            "distortion_filter_auto",
+            boolean,
+        ),
+        (
+            (HeaderNode("MEASure"), HeaderNode("CORRelation"), HeaderNode("APERture")),
+            "distortion_correlation_aperture",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(100)),
+        ),
+        (
+            (
+                HeaderNode("MEASure"),
+                HeaderNode("CORRelation"),
+                HeaderNode("APERture"),
+                HeaderNode("AUTO"),
+            ),
+            "distortion_correlation_auto",
+            boolean,
+        ),
+        (
+            (HeaderNode("MODulate"), HeaderNode("SOURce")),
+            "distortion_modulation_source",
+            ParameterSpec(ParameterType.STRING),
+        ),
+        (
+            (HeaderNode("PATH"), HeaderNode("DUT"), HeaderNode("PMAP"), HeaderNode("INPut")),
+            "distortion_input_port",
+            ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=999),
+        ),
+        (
+            (HeaderNode("PATH"), HeaderNode("DUT"), HeaderNode("PMAP"), HeaderNode("OUTPut")),
+            "distortion_output_port",
+            ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=999),
+        ),
+        (
+            (HeaderNode("PATH"), HeaderNode("DUT"), HeaderNode("NOMinal"), HeaderNode("GAIN")),
+            "distortion_nominal_gain",
+            number,
+        ),
+        (
+            (HeaderNode("PATH"), HeaderNode("DUT"), HeaderNode("NOMinal"), HeaderNode("NF")),
+            "distortion_nominal_nf",
+            number,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("POWer"), HeaderNode("STARt")),
+            "distortion_power_start",
+            number,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("POWer"), HeaderNode("STOP")),
+            "distortion_power_stop",
+            number,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("POWer"), HeaderNode("POINts")),
+            "distortion_power_points",
+            positive_integer,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("SPARam")),
+            "distortion_sparam_enabled",
+            boolean,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("SPARam"), HeaderNode("REUSe")),
+            "distortion_sparam_reuse",
+            boolean,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("SPARam"), HeaderNode("BWIDth")),
+            "distortion_sparam_bandwidth",
+            frequency,
+        ),
+        (
+            (HeaderNode("SWEep"), HeaderNode("SPARam"), HeaderNode("STEP")),
+            "distortion_sparam_step",
+            frequency,
+        ),
+        (
+            (
+                HeaderNode("SWEep"),
+                HeaderNode("POWer"),
+                HeaderNode("SPARam"),
+                HeaderNode("LEVel"),
+            ),
+            "distortion_sparam_level",
+            number,
+        ),
+    ):
+        _register_value(add, distortion, path, attribute, parameter, options["distortion"], state)
     _register_value(
         add,
         distortion,
@@ -500,6 +688,24 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         options["phase_noise"],
         state,
     )
+    for path, attribute, parameter in (
+        (
+            (HeaderNode("BWIDth"), HeaderNode("RATio")),
+            "phase_noise_bandwidth_ratio",
+            ParameterSpec(ParameterType.NUMBER, minimum=Decimal(0), maximum=Decimal(100)),
+        ),
+        (
+            (HeaderNode("FAVerage"), HeaderNode("FACTor")),
+            "phase_noise_average_factor",
+            ParameterSpec(ParameterType.INTEGER, minimum=1, maximum=10000),
+        ),
+        (
+            (HeaderNode("RECeiver"),),
+            "phase_noise_receiver",
+            ParameterSpec(ParameterType.STRING),
+        ),
+    ):
+        _register_value(add, pn, path, attribute, parameter, options["phase_noise"], state)
     _register_value(
         add,
         pn,
@@ -556,10 +762,60 @@ def register_advanced_commands(registry: CommandRegistry, state: VNAAdvancedSyst
         )
         add(
             (*diq, HeaderNode("FREQuency"), range_node, HeaderNode(leaf)),
-            lambda inv, item=offset: str(_diq_range(state, inv)[item]),
+            lambda inv, item=offset: str(_diq_range_value(state, inv, item)),
             query=True,
             available=options["diq"],
         )
+    for path, attribute, parameter in (
+        ((HeaderNode("COUPle"), HeaderNode("STATe")), "coupled", boolean),
+        (
+            (HeaderNode("COUPle"), HeaderNode("ID")),
+            "coupling_id",
+            ParameterSpec(ParameterType.INTEGER, minimum=1),
+        ),
+        ((HeaderNode("COUPle"), HeaderNode("OFFSet")), "offset", frequency),
+        ((HeaderNode("COUPle"), HeaderNode("UCONvert")), "upconvert", boolean),
+        (
+            (HeaderNode("COUPle"), HeaderNode("MULTiplier")),
+            "multiplier",
+            ParameterSpec(ParameterType.INTEGER),
+        ),
+        (
+            (HeaderNode("COUPle"), HeaderNode("DIVisor")),
+            "divisor",
+            ParameterSpec(ParameterType.INTEGER),
+        ),
+    ):
+        add(
+            (*diq, HeaderNode("FREQuency"), range_node, *path),
+            lambda inv, value, name=attribute: _diq_set_attribute(state, inv, name, value),
+            parameters=(parameter,),
+            available=options["diq"],
+        )
+        add(
+            (*diq, HeaderNode("FREQuency"), range_node, *path),
+            lambda inv, name=attribute: _format_value(getattr(_diq_range(state, inv), name)),
+            query=True,
+            available=options["diq"],
+        )
+    add(
+        (*diq, HeaderNode("PARameter"), HeaderNode("DEFine")),
+        lambda inv, name, expression: _diq_define_parameter(state, inv, name, expression),
+        parameters=(ParameterSpec(ParameterType.STRING), ParameterSpec(ParameterType.STRING)),
+        available=options["diq"],
+    )
+    add(
+        (*diq, HeaderNode("PARameter"), HeaderNode("DELete")),
+        lambda inv, name: _diq_delete_parameter(state, inv, name),
+        parameters=(ParameterSpec(ParameterType.STRING),),
+        available=options["diq"],
+    )
+    add(
+        (*diq, HeaderNode("PARameter"), HeaderNode("CATalog")),
+        lambda inv: _diq_parameter_catalog(state, inv),
+        query=True,
+        available=options["diq"],
+    )
 
     iq = (sense, HeaderNode("IQ"))
     _register_value(
@@ -684,7 +940,7 @@ def _register_value(add, root, path, attribute, parameter, available, state) -> 
     )
     add(
         (*root, *path),
-        lambda inv: str(getattr(state.channel(inv.indices["channel"]), attribute)),
+        lambda inv: _format_value(getattr(state.channel(inv.indices["channel"]), attribute)),
         query=True,
         available=available,
     )
@@ -697,7 +953,7 @@ def _set_channel_value(state, invocation, attribute: str, value) -> str:
 
 
 def _diq_add(state, invocation) -> str:
-    state.channel(invocation.indices["channel"]).diq_ranges.append((10.5e6, 26.5e9, 1e3))
+    state.channel(invocation.indices["channel"]).diq_ranges.append(DIQRange())
     return ""
 
 
@@ -716,7 +972,22 @@ def _set_imd_tone_power(state, invocation, value: NumericValue) -> str:
     return _set(state.channel(invocation.indices["channel"]), attribute, float(value.value))
 
 
-def _diq_range(state, invocation) -> tuple[float, float, float]:
+def _imd_frequency(state, invocation) -> float:
+    tone = invocation.indices.get("imd_frequency", 1)
+    if tone not in (1, 2):
+        raise SCPICommandError(-222, "Data out of range; IMD tone frequency")
+    target = state.channel(invocation.indices["channel"])
+    return target.imd_f1 if tone == 1 else target.imd_f2
+
+
+def _set_imd_frequency(state, invocation, value: NumericValue) -> str:
+    tone = invocation.indices.get("imd_frequency", 1)
+    _imd_frequency(state, invocation)
+    attribute = "imd_f1" if tone == 1 else "imd_f2"
+    return _set(state.channel(invocation.indices["channel"]), attribute, _scaled(value))
+
+
+def _diq_range(state, invocation) -> DIQRange:
     ranges = state.channel(invocation.indices["channel"]).diq_ranges
     number = invocation.indices.get("range", 1)
     if not 1 <= number <= len(ranges):
@@ -725,14 +996,53 @@ def _diq_range(state, invocation) -> tuple[float, float, float]:
 
 
 def _diq_set(state, invocation, offset: int, value: NumericValue) -> str:
-    ranges = state.channel(invocation.indices["channel"]).diq_ranges
-    number = invocation.indices.get("range", 1)
-    current = list(_diq_range(state, invocation))
-    current[offset] = _scaled(value)
-    if current[0] > current[1]:
+    current = _diq_range(state, invocation)
+    attributes = ("start", "stop", "if_bandwidth")
+    updated = _scaled(value)
+    start = updated if offset == 0 else current.start
+    stop = updated if offset == 1 else current.stop
+    if start > stop:
         raise SCPICommandError(-222, "Data out of range; DIQ frequency range")
-    ranges[number - 1] = tuple(current)
+    setattr(current, attributes[offset], updated)
     return ""
+
+
+def _diq_range_value(state, invocation, offset: int) -> float:
+    return getattr(_diq_range(state, invocation), ("start", "stop", "if_bandwidth")[offset])
+
+
+def _diq_set_attribute(state, invocation, attribute: str, value) -> str:
+    selected = _diq_range(state, invocation)
+    if isinstance(value, NumericValue):
+        value = _scaled(value)
+    if attribute == "divisor" and value == 0:
+        raise SCPICommandError(-222, "Data out of range; DIQ coupling divisor")
+    if attribute == "coupling_id":
+        ranges = state.channel(invocation.indices["channel"]).diq_ranges
+        if value > len(ranges):
+            raise SCPICommandError(-222, "Data out of range; DIQ coupling range")
+    setattr(selected, attribute, value)
+    return ""
+
+
+def _diq_define_parameter(state, invocation, name: str, expression: str) -> str:
+    if not name.strip() or "_" in name or not expression.strip():
+        raise SCPICommandError(-224, "Illegal parameter value; DIQ parameter")
+    state.channel(invocation.indices["channel"]).diq_parameters[name.strip()] = expression.strip()
+    return ""
+
+
+def _diq_delete_parameter(state, invocation, name: str) -> str:
+    parameters = state.channel(invocation.indices["channel"]).diq_parameters
+    if name not in parameters:
+        raise SCPICommandError(-224, "Illegal parameter value; DIQ parameter")
+    del parameters[name]
+    return ""
+
+
+def _diq_parameter_catalog(state, invocation) -> str:
+    parameters = state.channel(invocation.indices["channel"]).diq_parameters
+    return ",".join(f'"{name}:{expression}"' for name, expression in sorted(parameters.items()))
 
 
 def _diq_delete(state, invocation) -> str:
@@ -748,6 +1058,12 @@ def _diq_delete(state, invocation) -> str:
 def _set(target, name: str, value) -> str:
     setattr(target, name, value)
     return ""
+
+
+def _format_value(value) -> str:
+    if isinstance(value, bool):
+        return _bool(value)
+    return str(value)
 
 
 def _scaled(value: NumericValue) -> float:

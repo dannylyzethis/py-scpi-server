@@ -52,7 +52,34 @@
         {"syntax": "SENSE<channel>:PULSE<pulse>:WIDTH", "forms": ["set", "query"]}
       ]
     },
-    "differential_iq": {"audit_status": "pending", "commands": []},
+    "differential_iq": {
+      "audit_status": "complete",
+      "scope_note": "Behavioral frequency ranges, coupling metadata, project-owned parameter expressions, markers, and scenario traces only; external setup-file formats, physical source routing, match correction, and calibration are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:DIQ:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:CALIBRATION:STATE", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:DIQ:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:DIQ:MARKER<marker>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:DIQ:MARKER<marker>:X", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:DIQ:MARKER<marker>:Y", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:DIQ:MARKER<marker>:MAXIMUM", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE:ADD", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE:COUNT", "forms": ["query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:DELETE", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:START", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:STOP", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:IFBW", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:COUPLE:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:COUPLE:ID", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:COUPLE:OFFSET", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:COUPLE:UCONVERT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:COUPLE:MULTIPLIER", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:FREQUENCY:RANGE<range>:COUPLE:DIVISOR", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DIQ:PARAMETER:DEFINE", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:DIQ:PARAMETER:DELETE", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:DIQ:PARAMETER:CATALOG", "forms": ["query"]}
+      ]
+    },
     "embedded_lo": {
       "audit_status": "complete",
       "scope_note": "Behavioral tuning and deterministic LO-offset effects only; hardware discovery, diagnostics, calibration math, and external file formats are outside the emulator product scope.",
@@ -233,9 +260,69 @@
         {"syntax": "SENSE<channel>:SWEEP:PULSE:CALIBRATION:STATE", "forms": ["query"]}
       ]
     },
-    "intermodulation_distortion": {"audit_status": "pending", "commands": []},
+    "intermodulation_distortion": {
+      "audit_status": "complete",
+      "scope_note": "Behavioral sweep/tone configuration, port mapping, markers, and deterministic scenario results only; calibration math, hardware source discovery, and physical spur optimization are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:IMD:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:CALIBRATION:STATE", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:IMD:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:IMD:MARKER<marker>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:IMD:MARKER<marker>:X", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:IMD:MARKER<marker>:Y", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:IMD:MARKER<marker>:MAXIMUM", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:IMD:SWEEP:TYPE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:FCENTER:CENTER", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:FCENTER:SPAN", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:DFREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:CW", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:START", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:STOP", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:FREQUENCY:F<imd_frequency>", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:TPOWER:F<tone>", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:IFBWIDTH:MAIN", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:IFBWIDTH:IMTONE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:NORMALIZED:MODE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:PMAP:INPUT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:PMAP:OUTPUT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IMD:HOPRODUCT", "forms": ["query"]}
+      ]
+    },
     "measurement_uncertainty": {"audit_status": "pending", "commands": []},
-    "modulation_distortion": {"audit_status": "pending", "commands": []},
+    "modulation_distortion": {
+      "audit_status": "complete",
+      "scope_note": "Behavioral filter, correlation, DUT-map, power-sweep, marker, and scenario-result configuration only; external modulation files/sources, calibration/correction math, and hardware path discovery are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:DISTORTION:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:CALIBRATION:STATE", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:DISTORTION:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:DISTORTION:MARKER<marker>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:DISTORTION:MARKER<marker>:X", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:DISTORTION:MARKER<marker>:Y", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:DISTORTION:MARKER<marker>:MAXIMUM", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:TYPE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:FREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:CARRIER:LEVEL", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:MEASURE:FILTER:SRATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:MEASURE:FILTER:SRATE:AUTO", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:MEASURE:FILTER:ALPHA", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:MEASURE:CORRELATION:APERTURE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:MEASURE:CORRELATION:APERTURE:AUTO", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:MODULATE:SOURCE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:PATH:DUT:PMAP:INPUT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:PATH:DUT:PMAP:OUTPUT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:PATH:DUT:NOMINAL:GAIN", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:PATH:DUT:NOMINAL:NF", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:POWER:START", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:POWER:STOP", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:POWER:POINTS", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:SPARAM", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:SPARAM:REUSE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:SPARAM:BWIDTH", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:SPARAM:STEP", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:DISTORTION:SWEEP:POWER:SPARAM:LEVEL", "forms": ["set", "query"]}
+      ]
+    },
     "n_port": {"audit_status": "pending", "commands": []},
     "noise_figure": {
       "audit_status": "complete",
@@ -266,7 +353,27 @@
       ]
     },
     "performance_test": {"audit_status": "pending", "commands": []},
-    "phase_noise": {"audit_status": "pending", "commands": []},
+    "phase_noise": {
+      "audit_status": "complete",
+      "scope_note": "Behavioral offset/carrier/receiver setup, logarithmic axes, markers, and deterministic scenario traces only; calibrated noise metrology, receiver correction, and hardware routing are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:PN:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:CALIBRATION:STATE", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PN:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PN:MARKER<marker>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:PN:MARKER<marker>:X", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:PN:MARKER<marker>:Y", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:PN:MARKER<marker>:MAXIMUM", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:PN:NTYPE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:SWEEP:CARRIER:FREQUENCY", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:OFFSET:START", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:OFFSET:STOP", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:AVERAGE:COUNT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:BWIDTH:RATIO", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:FAVERAGE:FACTOR", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:PN:RECEIVER", "forms": ["set", "query"]}
+      ]
+    },
     "scalar_mixer": {
       "audit_status": "complete",
       "scope_note": "Behavioral converter setup, deterministic axes, data transforms, port mapping, and local segments only; calibration math, external roles/devices, and vendor file formats are outside scope.",
@@ -333,7 +440,24 @@
         {"syntax": "SOURCE<source>:PHASE:ANGLE", "forms": ["set", "query"]}
       ]
     },
-    "spectrum_analysis": {"audit_status": "pending", "commands": []},
+    "spectrum_analysis": {
+      "audit_status": "complete",
+      "scope_note": "Behavioral receiver bandwidth, detector, averaging, marker, and deterministic scenario-trace workflows only; hardware FIFO/shared-memory export, coherence hardware, and external-source discovery are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:SA:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SA:CALIBRATION:STATE", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:SA:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:SA:MARKER<marker>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:SA:MARKER<marker>:X", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:SA:MARKER<marker>:Y", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:SA:MARKER<marker>:MAXIMUM", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:SA:BANDWIDTH:RESOLUTION", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SA:BANDWIDTH:VIDEO", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SA:DETECTOR:FUNCTION", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SA:AVERAGE:COUNT", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:SA:REFERENCE:LEVEL", "forms": ["set", "query"]}
+      ]
+    },
     "time_domain": {
       "audit_status": "complete",
       "scope_note": "Deterministic discrete transforms and time gates over the shared scenario trace pipeline; calibration/correction math and metrology-grade transform algorithms are outside scope.",
@@ -380,6 +504,20 @@
         {"syntax": "SENSE<channel>:TMSTIMULUS:AMPLITUDE:RATIO", "forms": ["set", "query"]}
       ]
     },
-    "wideband_iq": {"audit_status": "pending", "commands": []}
+    "wideband_iq": {
+      "audit_status": "complete",
+      "scope_note": "Bounded deterministic I/Q capture over scenario streams only; continuous acquisition, hardware FIFO/shared memory, external waveform files, and physical receiver timing are outside scope.",
+      "commands": [
+        {"syntax": "SENSE<channel>:IQ:STATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IQ:CALIBRATION:STATE", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:IQ:DATA", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:IQ:MARKER<marker>:STATE", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:IQ:MARKER<marker>:X", "forms": ["set", "query"]},
+        {"syntax": "CALCULATE<channel>:IQ:MARKER<marker>:Y", "forms": ["query"]},
+        {"syntax": "CALCULATE<channel>:IQ:MARKER<marker>:MAXIMUM", "forms": ["set"]},
+        {"syntax": "SENSE<channel>:IQ:SRATE", "forms": ["set", "query"]},
+        {"syntax": "SENSE<channel>:IQ:CAPTURE:TIME", "forms": ["set", "query"]}
+      ]
+    }
   }
 }
