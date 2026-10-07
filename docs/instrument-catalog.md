@@ -1,6 +1,6 @@
 # Instrument catalog and bench configuration reference
 
-This is the complete inventory of repository-owned instrument profiles. Version 4.0.0 uses only
+This is the complete inventory of repository-owned instrument profiles. Version 4.1.0 uses only
 generic project-owned selectors and requires bench schema version 2. External JSON and CSV files may
 provide their own reported identity without changing the selected behavior profile.
 
@@ -25,7 +25,7 @@ The built-in catalog contains 7 models across 3 drivers.
 
 ### `virtual-dmm` — Virtual DMM
 
-Driver version: `4.0.0`.
+Driver version: `4.1.0`.
 
 Transports:
 
@@ -52,7 +52,7 @@ Configuration fields: none.
 
 ### `virtual-ps` — Virtual power supply
 
-Driver version: `4.0.0`.
+Driver version: `4.1.0`.
 
 Transports:
 
@@ -104,7 +104,7 @@ Configuration fields: none.
 
 ### `virtual-vna` — Virtual Vector Network Analyzer
 
-Driver version: `4.0.0`.
+Driver version: `4.1.0`.
 
 Transports:
 

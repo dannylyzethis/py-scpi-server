@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-10-07
+
+### Added
+
+- A neutral compatibility inventory covering all 25 advertised virtual VNA application families
+  and 731 stateful set/query command forms on both two-port and four-port profiles.
+- Expanded deterministic, scenario-backed behavior for gain compression, active-device, converter,
+  mixer, pulse, stimulus, time-domain, fixture, advanced-analysis, uncertainty, performance-test,
+  and generic N-port workflows.
+- Per-model application coverage reports and a strict release gate that rejects pending
+  applications, missing registry commands, or stale checked-in reports.
+
+### Changed
+
+- The built-in driver catalog, package metadata, runtime version, and CLI now report version 4.1.0.
+- Application configuration consistently uses project-owned option terminology and generic virtual
+  instrument identities.
+
+### Fixed
+
+- Updated the commercial-use dependency review for MIT-licensed iniconfig 2.3.1 and
+  BSD-3-Clause-licensed MarkupSafe 3.0.4.
+
 ## [4.0.0] - 2026-08-28
 
 ### Added

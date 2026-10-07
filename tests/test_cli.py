@@ -11,7 +11,7 @@ from scpi_emulator.runtime import SCPIEmulatorManager
 
 
 def test_package_version_is_exposed() -> None:
-    assert __version__ == "4.0.0"
+    assert __version__ == "4.1.0"
 
 
 def test_parser_accepts_create_example() -> None:
