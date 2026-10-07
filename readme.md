@@ -138,6 +138,39 @@ If PowerShell policy prevents activation, use the environment's executable expli
 .\.venv\Scripts\scpi-emulator.exe --version
 ```
 
+### Uninstalling an older installation on Windows
+
+The executable command and Python distribution deliberately have different names:
+
+- Run the emulator with `scpi-emulator`.
+- Install, inspect, or uninstall the distribution as `scpi-instrument-emulator`.
+
+Therefore, `py -m pip uninstall scpi-emulator` is the wrong command and reports that the package is
+not installed. Use:
+
+```powershell
+py -m pip show scpi-instrument-emulator
+py -m pip uninstall scpi-instrument-emulator
+```
+
+After uninstalling, check whether another Python environment still provides an older launcher:
+
+```powershell
+where.exe scpi-emulator
+Get-Command scpi-emulator -All | Select-Object Source
+```
+
+If a path remains, use the `python.exe` belonging to that same environment. For a repository-local
+environment, the explicit command is:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip uninstall scpi-instrument-emulator
+```
+
+An uninstall message saying `Skipping scpi-instrument-emulator as it is not installed` means the
+selected Python interpreter does not own the launcher you are seeing; it does not prove that every
+Python environment has been uninstalled.
+
 ### Git checkout
 
 ```bash
