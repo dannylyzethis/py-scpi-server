@@ -12,6 +12,10 @@ REPOSITORY_ROOT = Path(__file__).parents[1]
 def test_inventory_exactly_covers_advertised_applications() -> None:
     inventory = load_inventory()
     assert set(inventory["applications"]) == set(VNA_APPLICATION_CONTRACTS)
+    assert all(
+        application["audit_status"] == "complete"
+        for application in inventory["applications"].values()
+    )
 
 
 def test_completed_application_inventories_have_no_command_gaps() -> None:
@@ -52,6 +56,9 @@ def test_completed_application_inventories_have_no_command_gaps() -> None:
         assert report["summary"]["audited_applications"] == 25
         assert report["summary"]["pending_applications"] == 0
         assert report["summary"]["required_commands"] == 731
+        assert report["summary"]["implemented_commands"] == 731
+        assert report["summary"]["missing_commands"] == 0
+        assert report["pending_application_names"] == []
 
 
 @pytest.mark.parametrize("model", ["vna-2-port", "vna-4-port"])

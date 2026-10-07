@@ -22,7 +22,9 @@ time domain, fixture removal, spectrum analysis, intermodulation distortion, mod
 phase noise, differential I/Q, wideband I/Q, measurement uncertainty, N-port, and performance test.
 All 731 inventoried forms are implemented on both virtual models, with zero pending applications and
 zero registry gaps. CI verifies that every completed inventory has no missing commands and that the
-checked-in reports match the live registry.
+checked-in reports match the live registry. The release-quality profile invokes
+`tools/vna_application_coverage.py` for both models without `--allow-pending`, so either a pending
+application or a missing command is a hard CI failure rather than an informational checkpoint.
 
 The inventory contains normalized command syntax and project-written behavioral metadata only. It
 does not reproduce vendor manual prose or model/option identifiers.

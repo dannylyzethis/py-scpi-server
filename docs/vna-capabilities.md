@@ -65,12 +65,13 @@ model reports with:
 ```powershell
 python tools/vna_manifest.py --model vna-2-port --firmware E.1.0
 python tools/vna_manifest.py --model vna-4-port --firmware E.1.0
-python tools/vna_application_coverage.py --model vna-2-port --allow-pending
-python tools/vna_application_coverage.py --model vna-4-port --allow-pending
+python tools/vna_application_coverage.py --model vna-2-port
+python tools/vna_application_coverage.py --model vna-4-port
 ```
 
 The first report pair checks the project-owned core command contract. The second pair checks the
-separate syntax inventory for advertised applications; `--allow-pending` is required while an
-application audit is still explicitly in progress. See [VNA application coverage](vna-application-coverage.md)
+separate syntax inventory for advertised applications. The audit is complete, so the standard
+quality profile runs these commands without a pending-work exception: any pending application or
+missing registered command now fails verification. See [VNA application coverage](vna-application-coverage.md)
 for the distinction. Coverage describes implemented emulator behavior. It is not a claim of
 physical-product fidelity.
