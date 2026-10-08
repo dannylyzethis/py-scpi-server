@@ -25,10 +25,10 @@ SENS1:GCS:SWE:POW:POIN 101
 SENS1:GCS:COMP:LEV 1
 ```
 
-The older project-owned `SENS:GC...` compatibility tree remains available and uses the same
-per-channel state. For example, `SENS:GCS:COMP:LEV 1` and `SENS:GC:COMP:DB 1` configure the same
-threshold. The extra hierarchy `SENS:GAIN:GCS...` is not accepted; it returns undefined-header
-error `-113`.
+The project-owned `SENS:GC...` compatibility tree and the
+`SENS:GAIN:GCS...` hierarchy remain available and use the same per-channel
+state. For example, `SENS:GCS:COMP:LEV 1`, `SENS:GAIN:GCS:COMP:LEV 1`, and
+`SENS:GC:COMP:DB 1` configure the same threshold.
 
 When gain compression is enabled, the configured power sweep becomes the selected trace's X axis
 and the normal `CALC:DATA?` path uses the same gain data as the application. Settings that determine

@@ -34,3 +34,9 @@ def register_common_commands(
             query=True,
         )
     )
+    registry.register(
+        CommandSpec(
+            path=(HeaderNode("SYSTem"), HeaderNode("PRESet")),
+            handler=lambda invocation: reset(),
+        )
+    )

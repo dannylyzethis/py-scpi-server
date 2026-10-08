@@ -119,7 +119,11 @@ class SCPIInstrument:
         register_common_commands(self.core_registry, lambda: self.identification, self._reset)
         register_status_commands(self.core_registry, self.status)
         register_operation_commands(self.core_registry, self.operation_manager)
-        register_acquisition_commands(self.core_registry, self.acquisition)
+        register_acquisition_commands(
+            self.core_registry,
+            self.acquisition,
+            include_sweep_time=self.vna_capabilities is None,
+        )
         register_format_commands(self.core_registry, self.data_format)
         if self.vna_capabilities is not None:
             register_capability_commands(self.core_registry, self.vna_capabilities)

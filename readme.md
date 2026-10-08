@@ -86,6 +86,8 @@ This release is an alpha foundation, not a complete instrument simulation. In pa
 
 See [TODO.md](TODO.md) and `bd ready` for the implementation backlog.
 VNA state semantics are described in [VNA measurement workflows](docs/vna-measurements.md).
+The independently measured core-command gaps and completion rules are tracked in
+[VNA command-completeness audit](docs/vna-command-completeness.md).
 Scenario trace mapping is described in [VNA scenario data](docs/vna-scenario-data.md).
 Scalar/DMM playback is described in [DMM scenario data](docs/dmm-scenario-data.md).
 Time-domain and fixture behavior is described in

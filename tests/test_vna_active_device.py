@@ -140,16 +140,17 @@ def test_gcsetup_result_algorithms_change_result_selection() -> None:
     assert backoff.process_command("CALC:GC:RES:PIN?") == "-7.5"
 
 
-def test_gcsetup_validation_gating_reset_and_nonstandard_hierarchy() -> None:
+def test_gcsetup_validation_gating_reset_and_gain_hierarchy_alias() -> None:
     instrument = active_device_vna()
     assert instrument.process_command("SENS:GCS:PMAP 1,1") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-224,"Illegal parameter value')
     assert instrument.process_command("SENS:GCS:COMP:LEV 0") == ""
     assert instrument.process_command("SYST:ERR?").startswith('-222,"Data out of range')
     assert instrument.process_command("SENS:GAIN:GCS:COMP:LEV 1") == ""
-    assert instrument.process_command("SYST:ERR?").startswith('-113,"Undefined header')
+    assert instrument.process_command("SENS:GAIN:GCS:COMP:LEV?") == "1"
+    assert instrument.process_command("SENS:GCS:COMP:LEV?") == "1"
 
-    instrument.process_command("SENS:GCS:COMP:LEV 3")
+    instrument.process_command("SENS:GAIN:GCS:COMP:LEV 3")
     instrument.process_command("*CLS")
     assert instrument.process_command("SENS:GCS:COMP:LEV?") == "3"
     instrument.process_command("*RST")

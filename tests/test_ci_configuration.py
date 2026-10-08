@@ -31,6 +31,7 @@ def test_quality_profile_enforces_formatting_and_import_order() -> None:
     assert "--no-isolation" not in verification
     assert "::error title=Verification command failed::" in verification
     assert 'run("tools/vna_application_coverage.py", "--model", model)' in verification
+    assert 'run("tools/vna_core_coverage.py", "--model", model)' in verification
     assert '"--allow-pending"' not in verification
 
     configuration = (REPOSITORY_ROOT / "pyproject.toml").read_text(encoding="utf-8")

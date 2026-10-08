@@ -273,6 +273,7 @@ def register_active_device_commands(
     calc = HeaderNode("CALCulate", index="channel", index_default=1)
     gc = (sense, HeaderNode("GCompression"))
     gcs = (sense, HeaderNode("GCSetup"))
+    gain_gcs = (sense, HeaderNode("GAIN"), HeaderNode("GCSetup"))
     calc_gc = (calc, HeaderNode("GCompression"))
     noise = (sense, HeaderNode("NOISe"))
     calc_noise = (calc, HeaderNode("NOISe"))
@@ -423,6 +424,7 @@ def register_active_device_commands(
     )
 
     _register_gcsetup_commands(add, gcs, state, gain_option)
+    _register_gcsetup_commands(add, gain_gcs, state, gain_option)
 
     add(
         (*noise, HeaderNode("STATe")),

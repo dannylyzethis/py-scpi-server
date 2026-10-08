@@ -15,6 +15,7 @@ from .registry import (
     HeaderNode,
     ParameterSpec,
     ParameterType,
+    SCPICommandError,
 )
 from .status import StatusSystem
 
@@ -78,11 +79,13 @@ class AcquisitionChannel:
     group_count: int = 1
     averaging_enabled: bool = False
     averaging_count: int = 1
+    averaging_mode: str = "SWEep"
     averages_completed: int = 0
     trigger_received: bool = False
     operation: OperationHandle | None = None
     generation: int = 0
     scheduled: list[ScheduledCall] = field(default_factory=list, repr=False)
+    auxiliary: dict[int, TriggerAuxiliary] = field(default_factory=dict)
 
     @property
     def active(self) -> bool:
@@ -92,6 +95,19 @@ class AcquisitionChannel:
             AcquisitionState.SWEEPING,
             AcquisitionState.PROCESSING,
         }
+
+
+@dataclass
+class TriggerAuxiliary:
+    enabled: bool = False
+    delay: float = 0.0
+    duration: float = 0.001
+    handshake: bool = False
+    interval: float = 0.0
+    input_polarity: str = "POSitive"
+    output_polarity: str = "POSitive"
+    position: str = "BEFore"
+    trigger_type: str = "EDGE"
 
 
 class AcquisitionController:
@@ -112,6 +128,13 @@ class AcquisitionController:
         self._channels: dict[int, AcquisitionChannel] = {}
         self._default_trigger_source = TriggerSource.INTERNAL
         self._default_trigger_delay = 0.0
+        self.trigger_scope = "ALL"
+        self.trigger_slope = "POSitive"
+        self.trigger_type = "EDGE"
+        self.trigger_route_input = "MAIN"
+        self.trigger_route_ready = "MAIN"
+        self.trigger_ready_polarity = "POSitive"
+        self.trigger_preference_ai_global = False
         self._lock = RLock()
         self._trigger_listeners = []
         self._completion_listeners = []
@@ -222,6 +245,17 @@ class AcquisitionController:
                 if number is None
                 else self.channel(number).trigger_delay
             )
+
+    def auxiliary(self, channel: int, index: int) -> TriggerAuxiliary:
+        if not 1 <= index <= 2:
+            raise SCPICommandError(-222, "Data out of range; auxiliary trigger index")
+        return self.channel(channel).auxiliary.setdefault(index, TriggerAuxiliary())
+
+    def trigger_ready(self) -> bool:
+        return all(
+            channel.state not in {AcquisitionState.SWEEPING, AcquisitionState.PROCESSING}
+            for channel in self._channels.values()
+        )
 
     def set_sweep_time(self, number: int, duration: float) -> None:
         if duration < 0:
@@ -432,7 +466,10 @@ class AcquisitionController:
 
 
 def register_acquisition_commands(
-    registry: CommandRegistry, acquisition: AcquisitionController
+    registry: CommandRegistry,
+    acquisition: AcquisitionController,
+    *,
+    include_sweep_time: bool = True,
 ) -> None:
     """Register common VNA acquisition, trigger, timing, and averaging commands."""
     channel_node = HeaderNode("INITiate", index="channel", index_default=1)
@@ -458,6 +495,12 @@ def register_acquisition_commands(
         lambda channel, value: acquisition.set_averaging(channel, value),
         lambda channel: acquisition.channel(channel).averaging_enabled,
     )
+    _register_channel_boolean(
+        registry,
+        (sense_node, HeaderNode("AVERage"), HeaderNode("STATe")),
+        lambda channel, value: acquisition.set_averaging(channel, value),
+        lambda channel: acquisition.channel(channel).averaging_enabled,
+    )
     _register_channel_integer(
         registry,
         (sense_node, HeaderNode("AVERage"), HeaderNode("COUNt")),
@@ -466,14 +509,47 @@ def register_acquisition_commands(
         1,
         65536,
     )
-    _register_channel_number(
-        registry,
-        (sense_node, HeaderNode("SWEep"), HeaderNode("TIME")),
-        lambda channel, value: acquisition.set_sweep_time(channel, float(value.value)),
-        lambda channel: acquisition.channel(channel).sweep_time,
-        0,
-        1_000_000,
+    average_mode_path = (sense_node, HeaderNode("AVERage"), HeaderNode("MODE"))
+    registry.register(
+        CommandSpec(
+            path=average_mode_path,
+            parameters=(
+                ParameterSpec(
+                    ParameterType.ENUM,
+                    choices=("SWEep", "POINt"),
+                ),
+            ),
+            handler=lambda invocation, value: _empty(
+                setattr(acquisition.channel(invocation.indices["channel"]), "averaging_mode", value)
+            ),
+        )
     )
+    registry.register(
+        CommandSpec(
+            path=average_mode_path,
+            handler=lambda invocation: (
+                acquisition.channel(invocation.indices["channel"]).averaging_mode
+            ),
+            query=True,
+        )
+    )
+    registry.register(
+        CommandSpec(
+            path=(sense_node, HeaderNode("AVERage"), HeaderNode("CLEar")),
+            handler=lambda invocation: _clear_average(
+                acquisition.channel(invocation.indices["channel"])
+            ),
+        )
+    )
+    if include_sweep_time:
+        _register_channel_number(
+            registry,
+            (sense_node, HeaderNode("SWEep"), HeaderNode("TIME")),
+            lambda channel, value: acquisition.set_sweep_time(channel, float(value.value)),
+            lambda channel: acquisition.channel(channel).sweep_time,
+            0,
+            1_000_000,
+        )
     sweep_mode_path = (sense_node, HeaderNode("SWEep"), HeaderNode("MODE"))
     registry.register(
         CommandSpec(
@@ -508,11 +584,48 @@ def register_acquisition_commands(
         65536,
     )
     _register_trigger_commands(registry, acquisition)
+    for path, mode in (
+        ((HeaderNode("SYSTem"), HeaderNode("CHANnels"), HeaderNode("HOLD")), SweepMode.HOLD),
+        (
+            (HeaderNode("SYSTem"), HeaderNode("CHANnels"), HeaderNode("RESume")),
+            SweepMode.CONTINUOUS,
+        ),
+    ):
+        registry.register(
+            CommandSpec(
+                path=path,
+                handler=lambda invocation, value=mode: _set_all_sweep_modes(acquisition, value),
+            )
+        )
+    for path in (
+        (HeaderNode("SYSTem"), HeaderNode("CHANnels"), HeaderNode("SINGle")),
+        (
+            HeaderNode("SYSTem"),
+            HeaderNode("CHANnels"),
+            HeaderNode("SINGle"),
+            HeaderNode("COMBine"),
+        ),
+    ):
+        registry.register(
+            CommandSpec(path=path, handler=lambda invocation: _single_all(acquisition))
+        )
 
 
 def _register_trigger_commands(
     registry: CommandRegistry, acquisition: AcquisitionController
 ) -> None:
+    def pair(path, reader, setter, parameter):
+        registry.register(
+            CommandSpec(
+                path=path,
+                parameters=(parameter,),
+                handler=lambda invocation, value: _empty(setter(invocation, value)),
+            )
+        )
+        registry.register(
+            CommandSpec(path=path, handler=lambda invocation: reader(invocation), query=True)
+        )
+
     source_parameters = (
         ParameterSpec(ParameterType.ENUM, "trigger source", choices=("INT", "MAN", "EXT", "BUS")),
     )
@@ -559,6 +672,112 @@ def _register_trigger_commands(
             query=True,
         )
     )
+    boolean = ParameterSpec(ParameterType.BOOLEAN)
+    second = ParameterSpec(
+        ParameterType.NUMBER,
+        minimum=Decimal(0),
+        maximum=Decimal(3600),
+        units=frozenset({"S"}),
+    )
+    trigger = HeaderNode("TRIGger")
+    sequence = HeaderNode("SEQuence")
+
+    pair(
+        (trigger, HeaderNode("PREFerence"), HeaderNode("AIGLobal")),
+        lambda inv: _bool(acquisition.trigger_preference_ai_global),
+        lambda inv, value: setattr(acquisition, "trigger_preference_ai_global", value),
+        boolean,
+    )
+    pair(
+        (trigger, HeaderNode("READy"), HeaderNode("POLarity")),
+        lambda inv: acquisition.trigger_ready_polarity,
+        lambda inv, value: setattr(acquisition, "trigger_ready_polarity", value),
+        ParameterSpec(ParameterType.ENUM, choices=("POSitive", "NEGative")),
+    )
+    registry.register(
+        CommandSpec(
+            path=(trigger, HeaderNode("STATus"), HeaderNode("READy")),
+            handler=lambda inv: _bool(acquisition.trigger_ready()),
+            query=True,
+        )
+    )
+    for prefix in ((trigger,), (trigger, sequence)):
+        for suffix, attribute, choices in (
+            ((HeaderNode("SCOPe"),), "trigger_scope", ("ALL", "ACTive", "CHANnel")),
+            ((HeaderNode("SLOPe"),), "trigger_slope", ("POSitive", "NEGative")),
+            ((HeaderNode("TYPE"),), "trigger_type", ("EDGE", "LEVel")),
+            (
+                (HeaderNode("ROUTe"), HeaderNode("INPut")),
+                "trigger_route_input",
+                ("MAIN", "AUXiliary"),
+            ),
+            (
+                (HeaderNode("ROUTe"), HeaderNode("READy")),
+                "trigger_route_ready",
+                ("MAIN", "AUXiliary"),
+            ),
+        ):
+            pair(
+                (*prefix, *suffix),
+                lambda inv, attr=attribute: getattr(acquisition, attr),
+                lambda inv, value, attr=attribute: setattr(acquisition, attr, value),
+                ParameterSpec(ParameterType.ENUM, choices=choices),
+            )
+
+    registry.register(
+        CommandSpec(
+            path=(trigger, HeaderNode("AUXiliary"), HeaderNode("COUNt")),
+            handler=lambda inv: "2",
+            query=True,
+        )
+    )
+    trigger_channel = HeaderNode("CHANnel", index="channel", index_default=1)
+    auxiliary = HeaderNode("AUXiliary", index="auxiliary", index_default=1)
+
+    def auxiliary_state(invocation) -> TriggerAuxiliary:
+        return acquisition.auxiliary(invocation.indices["channel"], invocation.indices["auxiliary"])
+
+    for path in (
+        (trigger, trigger_channel, auxiliary),
+        (trigger, trigger_channel, auxiliary, HeaderNode("ENABle")),
+    ):
+        pair(
+            path,
+            lambda inv: _bool(auxiliary_state(inv).enabled),
+            lambda inv, value: setattr(auxiliary_state(inv), "enabled", value),
+            boolean,
+        )
+    for header, attribute in (
+        ("DELay", "delay"),
+        ("DURation", "duration"),
+        ("INTerval", "interval"),
+    ):
+        pair(
+            (trigger, trigger_channel, auxiliary, HeaderNode(header)),
+            lambda inv, attr=attribute: str(getattr(auxiliary_state(inv), attr)),
+            lambda inv, value, attr=attribute: setattr(
+                auxiliary_state(inv), attr, float(value.value)
+            ),
+            second,
+        )
+    pair(
+        (trigger, trigger_channel, auxiliary, HeaderNode("HANDshake")),
+        lambda inv: _bool(auxiliary_state(inv).handshake),
+        lambda inv, value: setattr(auxiliary_state(inv), "handshake", value),
+        boolean,
+    )
+    for header, attribute, choices in (
+        ("IPOLarity", "input_polarity", ("POSitive", "NEGative")),
+        ("OPOLarity", "output_polarity", ("POSitive", "NEGative")),
+        ("POSition", "position", ("BEFore", "AFTer")),
+        ("TYPE", "trigger_type", ("EDGE", "LEVel")),
+    ):
+        pair(
+            (trigger, trigger_channel, auxiliary, HeaderNode(header)),
+            lambda inv, attr=attribute: getattr(auxiliary_state(inv), attr),
+            lambda inv, value, attr=attribute: setattr(auxiliary_state(inv), attr, value),
+            ParameterSpec(ParameterType.ENUM, choices=choices),
+        )
     registry.register(
         CommandSpec(
             path=(HeaderNode("TRIGger"), HeaderNode("IMMediate")),
@@ -638,8 +857,32 @@ def _trigger_response(accepted: int) -> str:
     return ""
 
 
+def _clear_average(channel: AcquisitionChannel) -> str:
+    channel.averages_completed = 0
+    return ""
+
+
+def _set_all_sweep_modes(acquisition: AcquisitionController, mode: SweepMode) -> str:
+    channels = tuple(acquisition._channels) or (1,)
+    for number in channels:
+        acquisition.set_sweep_mode(number, mode)
+    return ""
+
+
+def _single_all(acquisition: AcquisitionController) -> str:
+    channels = tuple(acquisition._channels) or (1,)
+    for number in channels:
+        acquisition.set_sweep_mode(number, SweepMode.SINGLE)
+        acquisition.initiate(number)
+    return ""
+
+
 def _empty(value) -> str:
     return ""
+
+
+def _bool(value: bool) -> str:
+    return "1" if value else "0"
 
 
 def _channel_number(value: int) -> int:

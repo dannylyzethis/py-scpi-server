@@ -209,3 +209,79 @@ def test_registry_exposes_channel_defaults_trigger_modes_timing_and_averaging() 
     assert acquisition.channel(2).trigger_received is True
     acquisition.delay_elapsed(2)
     assert acquisition.channel(2).state is AcquisitionState.SWEEPING
+
+
+def test_average_aliases_and_all_channel_sweep_controls_are_stateful() -> None:
+    acquisition, operations, status = controller()
+    registry = CommandRegistry()
+    register_status_commands(registry, status)
+    register_operation_commands(registry, operations)
+    register_acquisition_commands(registry, acquisition)
+
+    acquisition.channel(1).averages_completed = 7
+    assert dispatch(registry, "SENS1:AVER:STAT ON") == ""
+    assert dispatch(registry, "SENS1:AVER:STAT?") == "1"
+    assert dispatch(registry, "SENS1:AVER:MODE POIN") == ""
+    assert dispatch(registry, "SENS1:AVER:MODE?") == "POINt"
+    assert dispatch(registry, "SENS1:AVER:CLE") == ""
+    assert acquisition.channel(1).averages_completed == 0
+
+    acquisition.channel(2)
+    assert dispatch(registry, "SYST:CHAN:HOLD") == ""
+    assert {acquisition.channel(number).sweep_mode for number in (1, 2)} == {SweepMode.HOLD}
+    assert dispatch(registry, "SYST:CHAN:RES") == ""
+    assert {acquisition.channel(number).sweep_mode for number in (1, 2)} == {SweepMode.CONTINUOUS}
+    assert dispatch(registry, "SYST:CHAN:SING:COMB") == ""
+    assert all(acquisition.channel(number).operation is not None for number in (1, 2))
+
+
+def test_trigger_routing_scope_readiness_and_auxiliary_metadata_round_trip() -> None:
+    acquisition, operations, status = controller()
+    registry = CommandRegistry()
+    register_status_commands(registry, status)
+    register_operation_commands(registry, operations)
+    register_acquisition_commands(registry, acquisition)
+
+    for command in (
+        "TRIG:SEQ:SCOP CHAN",
+        "TRIG:SEQ:SLOP NEG",
+        "TRIG:SEQ:TYPE LEV",
+        "TRIG:SEQ:ROUT:INP AUX",
+        "TRIG:SEQ:ROUT:READ AUX",
+        "TRIG:READ:POL NEG",
+        "TRIG:PREF:AIGL ON",
+    ):
+        assert dispatch(registry, command) == ""
+
+    assert dispatch(registry, "TRIG:SCOP?") == "CHANnel"
+    assert dispatch(registry, "TRIG:SLOP?") == "NEGative"
+    assert dispatch(registry, "TRIG:TYPE?") == "LEVel"
+    assert dispatch(registry, "TRIG:ROUT:INP?") == "AUXiliary"
+    assert dispatch(registry, "TRIG:ROUT:READ?") == "AUXiliary"
+    assert dispatch(registry, "TRIG:READ:POL?") == "NEGative"
+    assert dispatch(registry, "TRIG:PREF:AIGL?") == "1"
+    assert dispatch(registry, "TRIG:STAT:READ?") == "1"
+    assert dispatch(registry, "TRIG:AUX:COUN?") == "2"
+
+    for command in (
+        "TRIG:CHAN2:AUX1:ENAB ON",
+        "TRIG:CHAN2:AUX1:DEL 0.1S",
+        "TRIG:CHAN2:AUX1:DUR 0.2S",
+        "TRIG:CHAN2:AUX1:INT 0.3S",
+        "TRIG:CHAN2:AUX1:HAND ON",
+        "TRIG:CHAN2:AUX1:IPOL NEG",
+        "TRIG:CHAN2:AUX1:OPOL NEG",
+        "TRIG:CHAN2:AUX1:POS AFT",
+        "TRIG:CHAN2:AUX1:TYPE LEV",
+    ):
+        assert dispatch(registry, command) == ""
+
+    assert dispatch(registry, "TRIG:CHAN2:AUX1?") == "1"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:DEL?") == "0.1"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:DUR?") == "0.2"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:INT?") == "0.3"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:HAND?") == "1"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:IPOL?") == "NEGative"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:OPOL?") == "NEGative"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:POS?") == "AFTer"
+    assert dispatch(registry, "TRIG:CHAN2:AUX1:TYPE?") == "LEVel"

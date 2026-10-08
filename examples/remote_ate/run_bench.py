@@ -9,7 +9,6 @@ from pathlib import Path
 from scpi_emulator.bench import BenchComposer, load_bench
 from scpi_emulator.drivers import build_driver_catalog
 
-
 HERE = Path(__file__).resolve().parent
 
 

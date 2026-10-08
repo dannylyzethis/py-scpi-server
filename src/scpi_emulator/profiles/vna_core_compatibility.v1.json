@@ -1,0 +1,3322 @@
+{
+  "schema_version": 1,
+  "snapshot": {
+    "date": "2026-10-08",
+    "contract_revision": "1.0"
+  },
+  "sources": {
+    "independent_command_tree_review": {
+      "title": "Independent VNA command-tree review (command syntax only)"
+    }
+  },
+  "commands": [
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA:CUSTom",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA:CUSTom:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA:MFData?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA:SNP:PORTs:SAVE",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA:SNP:PORTs?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA:SNP?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:DATA<data>:MSData?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_data",
+      "syntax": "CALCulate<channel>:MEASure<measurement>:RDATa?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:DATA?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:DOMain:USER:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:DOMain:USER:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:DOMain:USER[:RANGe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:EXECute",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:STATistics[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_function",
+      "syntax": "CALCulate<channel>:FUNCtion:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_group_delay",
+      "syntax": "CALCulate<channel>:GDELay:FREQuency",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_group_delay",
+      "syntax": "CALCulate<channel>:GDELay:PERCent",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_group_delay",
+      "syntax": "CALCulate<channel>:GDELay:POINts",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_hold",
+      "syntax": "CALCulate<channel>:HOLD:CLEar",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_hold",
+      "syntax": "CALCulate<channel>:HOLD:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:DATA",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:DATA:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:DISPlay[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:FAIL?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:REPort:ALL?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:REPort:POINts?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:REPort[:DATA]?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SEGMent:COUNt?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SEGMent<segment>:AMPLitude:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SEGMent<segment>:AMPLitude:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SEGMent<segment>:STIMulus:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SEGMent<segment>:STIMulus:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SEGMent<segment>:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit:SOUNd[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_limit",
+      "syntax": "CALCulate<channel>:LIMit[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer:AOFF",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer:BWIDth",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer:REFerence:X",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer:REFerence:Y?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer:REFerence[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<index>:BUCKet",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:COMPression:LEVel",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:COMPression:PIN?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:COMPression:POUT?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:COUPling:METHod",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:COUPling[:STATe]<ON|OFF>",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:DELTa",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:DISCrete",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:DISTance",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FORMat",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:APEak:EXCursion",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:APEak:THReshold",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:DOMain:USER:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:DOMain:USER:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:DOMain:USER[:RANGe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:EXECute",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion:TRACking",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:FUNCtion[:SELect]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:SET",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:TARGet[:VALue]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:X",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>:Y?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_marker",
+      "syntax": "CALCulate<channel>:MARKer<marker>[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_math",
+      "syntax": "CALCulate<channel>:MATH:FUNCtion",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_math",
+      "syntax": "CALCulate<channel>:MATH:INTerpolate",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_math",
+      "syntax": "CALCulate<channel>:MATH:MEMorize",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate:PARameter:DELete:ALL",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:CATalog:EXTended?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:COUNt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:DELete[:NAME]",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:MNUMber[:SELect]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:MODify",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:MODify:EXTended",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:SELect",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:TAG:NEXT?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:TNUMber?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter:WNUMber?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter[:DEFine]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "calculate_parameter",
+      "syntax": "CALCulate<channel>:PARameter[:DEFine]:EXTended",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_smoothing",
+      "syntax": "CALCulate<channel>:SMOothing:APERture",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_smoothing",
+      "syntax": "CALCulate<channel>:SMOothing:POINts",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_smoothing",
+      "syntax": "CALCulate<channel>:SMOothing[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_x_axis",
+      "syntax": "CALCulate<channel>:X:AXiS",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_x_axis",
+      "syntax": "CALCulate<channel>:X:AXIS:DOMain",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "calculate_x_axis",
+      "syntax": "CALCulate<channel>:X[:VALues]?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:ANNotation:FREQuency[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:ANNotation:MESSage:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:ANNotation[:STATus]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:ARRange",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:ENABle",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:FSIGn",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:GUI:POWer:SPIN:RESolution",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:FEED",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:MEMory[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:MOVE",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:SELect",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:TITLe:DATA",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:TITLe[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:Y[:SCALe]:AUTO",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:Y[:SCALe]:PDIVision",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:Y[:SCALe]:RLEVel",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>:Y[:SCALe]:RPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:MEASure<measurement>[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:SHEet<index>:ARRange",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:SHEet<index>:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:SHEet<index>:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:SHEet<index>:TITLe:DATA",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:SPLit",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:STATus:LOG:CLEar",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TMAX",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:CSET[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:ENTRy[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:EXTensions[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:KEYS[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:MARKer[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:MEASurement[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:STIMulus[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:SWEep[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:TOOLbar:TRANsform[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:UPDate:IMMediate",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:UPDate[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:VISible",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow:ANNotation:MARKer:MEASure<measurement>:XPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow:ANNotation:MARKer:MEASure<measurement>:YPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow:TRACe:GRATicule:GRID:LTYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow:TRACe:Y[:SCALe]:COUPle:METHod",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:LIMit:XPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:LIMit:YPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:COUPle[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:NUMBer",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:RESolution:RESPonse",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:RESolution:STIMulus",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:SINGle[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:SIZE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:SYMBol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:SYMBol:ABOVe[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:VISible",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:XPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer:YPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation:MARKer[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ANNotation[:TRACe][:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:ENABle",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:FEED",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:NEXT[:NUMBer]?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:SIZE",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_front_panel"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TABLe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TITLe:DATA",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TITLe[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe:NEXT[:NUMBer]?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe:Y[:SCALe]:COUPle[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:FEED",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:FEED:MNUMber",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:MEMory[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:MOVE",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:SELect",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:TITLe:DATA",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:TITLe[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:Y[:SCALe]:AUTO",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:Y[:SCALe]:PDIVision",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:Y[:SCALe]:RLEVel",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>:Y[:SCALe]:RPOSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:TRACe<trace>[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:Y:AUTO",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>:Y[:SCALe]:DIVisions",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay:WINDow<window>[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "display",
+      "syntax": "DISPlay[:TILE]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "initiate",
+      "syntax": "INITiate:CONTinuous",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "initiate",
+      "syntax": "INITiate<channel>[:IMMediate]",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:CATalog[:<char>]?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:CDIRectory",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:COPY",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:DATE?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:LOAD:LIMit",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:LOAD:RLIMit",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:LOAD[:<char>]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:MDIRectory",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:MOVE",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:RDIRectory",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:CITifile:DATA",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:CITifile:FORMat",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:DATA",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:ENR",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:LIMit",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:RLIMit",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:SSCReen",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:TRACe:CONTents:CITifile",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:TRACe:FORMat:CITifile",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe:TRACe:FORMat:SNP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:STORe[:<char>]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:TIME?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "memory",
+      "syntax": "MMEMory:TRANsfer",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_file_io"
+    },
+    {
+      "family": "output",
+      "syntax": "OUTPut:MANual:NOISe[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "output",
+      "syntax": "OUTPut[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_average",
+      "syntax": "SENSe<channel>:AVERage:CLEar",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_average",
+      "syntax": "SENSe<channel>:AVERage:COUNt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_average",
+      "syntax": "SENSe<channel>:AVERage:MODE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_average",
+      "syntax": "SENSe<channel>:AVERage[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_bandwidth",
+      "syntax": "SENSe<channel>:BANDwidth|BWIDth[:RESolution]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_class",
+      "syntax": "SENSe<channel>:CLASs:NAME?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_couple",
+      "syntax": "SENSe<channel>:COUPle",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_couple",
+      "syntax": "SENSe<channel>:COUPle:PARameter[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_frequency",
+      "syntax": "SENSe<channel>:FREQuency:CENTer",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_frequency",
+      "syntax": "SENSe<channel>:FREQuency:SPAN",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_frequency",
+      "syntax": "SENSe<channel>:FREQuency:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_frequency",
+      "syntax": "SENSe<channel>:FREQuency:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_frequency",
+      "syntax": "SENSe<channel>:FREQuency[:CW|:FIXed]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:ARBitrary",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:BANDwidth|BWIDth:PORT<port>[:RESolution]:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:BWIDth[:RESolution]:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:COUNt?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:DELete:ALL",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:LIST",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:POWer:ATTenuation:RECeiver:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:POWer[:LEVel]:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:SWEep:TIME:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent:X:SPACing",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:ADD",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:BWIDth:PORT<port>[:RESolution]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:BWIDth[:RESolution]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:FREQuency:CENTer",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:FREQuency:SPAN",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:FREQuency:START",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:FREQuency:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:POWer<port>:ATTenuation:RECeiver:REFerence",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:POWer<port>:ATTenuation:RECeiver:TEST",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:POWer[<port>][:LEVel]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SHLO",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SHLO:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:DELay",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:DELay:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:DWELl",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:DWELl:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:GENeration",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:GENeration:CONTrol",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:POINts",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:POINts:TOTal?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:TIME",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>:SWEep:TIME:TOTal?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_segment",
+      "syntax": "SENSe<channel>:SEGMent<segment>[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:BLOCked?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:DWELl",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:DWELl:AUTO",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:DWELl:SDELay",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:GENeration",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:GENeration:POINtsweep",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:GROups:COUNt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:LFEXtension:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:MODE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:POINts",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:SLOCal:MAXimum",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:SLOCal:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:SPEed",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:SRCPort",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:STEP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TIME",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TIME:AUTO",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TRIGger:DELay",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TRIGger:MODE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TRIGger:POINt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_sweep",
+      "syntax": "SENSe<channel>:SWEep:TYPE:FACW",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "sense_x_axis",
+      "syntax": "SENSe<channel>:X[:VALues]?",
+      "forms": [
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:PORT:NUMber?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer:DETector",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:ALC[:MODE]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:ALC[:MODE]:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:ATTenuation",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:ATTenuation:AUTO",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:ATTenuation:RECeiver:REFerence",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:ATTenuation:RECeiver:TEST",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:CENTer",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:COUPle",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:MODE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:PORT:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:PORT:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:SPAN",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:STARt",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>:STOP",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>[:LEVel]:SLOPe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>[:LEVel]:SLOPe:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "source",
+      "syntax": "SOURce<channel>:POWer<port>[:LEVel][:IMMediate][:AMPLitude]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ABORt:THReshold",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ACTive:CHANnel?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ACTive:MEASurement:NUMBer?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ACTive:MEASurement?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ACTive:SHEet?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:BEEPer:COMPlete:IMMediate",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:BEEPer:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:BEEPer:VOLume",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:BEEPer:WARNing:IMMediate",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:BLIGht<index>",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:COUPle:GROup",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:COUPle:PARallel:STATe?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:COUPle:PARallel[:ENABle]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:COUPle[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:HOLD",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:NOISe:PARallel:GROup",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:NOISe:PARallel:GROup:LIST",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:NOISe:PARallel:STATe?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:NOISe:PARallel[:ENABle]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:RESume",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:SINGle",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CHANnels:SINGle:COMBine",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CLOCk[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CONFigure",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CONFigure:BIT?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CONFigure:DIRectory?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CONFigure:REVision:CPU?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CONFigure:REVision:DSP?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CONFigure:REVision:DSPFpga?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:CORRection:WIZard[:IMMediate]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_calibration"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:DATE?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:DISK:REVision?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ERRor:COUNt?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ERRor:REPort:SUNLeveled",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ERRor?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:FCORrection:CHANnel<channel>:COUPler[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_calibration"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:FPReset",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:ISPContol[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MACRo:COPY:CHANnel<channel>[:TO]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MACRo:COPY:CHANnel<fromChan>:SOURce",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MACRo:COPY:CHANnel<fromChannel>:STATe",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MCLass:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MCLass:PARameter:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MEASure<index>:WINDow?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MEASurement:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MEASurement<index>:NAME?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:MEASurement<index>:TRACe?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:PERSona:MANufacturer",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_identity_override"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:PERSona:MANufacturer:DEFault",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_identity_override"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:PERSona:MODel",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_identity_override"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:PERSona:MODel:DEFault",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_identity_override"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:POFF",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:POWer:LIMit:LOCK",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:POWer<port>:LIMit",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:POWer<port>:LIMit:STATe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:PRESet",
+      "forms": [
+        "set"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SECurity[:LEVel]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SET",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SHEets:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SHORtcut<index>:ARGuments<string>",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SHORtcut<index>:DELete",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SHORtcut<index>:EXECute",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SHORtcut<index>:PATH",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:SHORtcut<index>:TITLe<string>",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_legacy_control"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:TIME?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:TOUChscreen[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:UPReset",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:UPReset:FPANel[:STATe]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:UPReset:LOAD[:FILE]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:UPReset:SAVE[:STATe]",
+      "forms": [
+        "set"
+      ],
+      "classification": "excluded_physical_hardware"
+    },
+    {
+      "family": "system",
+      "syntax": "SYSTem:WINDows:CATalog?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:AUXiliary:COUNt?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:DELay",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:DURation",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:HANDshake",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:INTerval",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:IPOLarity",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:OPOLarity",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:POSition",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:CHANnel<channel>:AUXiliary<index>[:ENABle]",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:DELay",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:PREFerence:AIGLobal",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:READy:POLarity",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger:STATus:READy?",
+      "forms": [
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:LEVel",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "excluded_obsolete"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:ROUTE:INPut",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:ROUTE:READy",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:SCOPe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:SLOPe",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:SOURce",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    },
+    {
+      "family": "trigger",
+      "syntax": "TRIGger[:SEQuence]:TYPE",
+      "forms": [
+        "set",
+        "query"
+      ],
+      "classification": "review_required"
+    }
+  ]
+}

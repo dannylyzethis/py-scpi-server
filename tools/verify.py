@@ -92,6 +92,7 @@ def run_quality_profile() -> None:
     for model in ("vna-2-port", "vna-4-port"):
         run("tools/vna_manifest.py", "--model", model, "--firmware", "E.1.0")
         run("tools/vna_application_coverage.py", "--model", model)
+        run("tools/vna_core_coverage.py", "--model", model)
 
     with tempfile.TemporaryDirectory(prefix="scpi-verify-") as temporary:
         root = Path(temporary)

@@ -8,7 +8,6 @@ import socket
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-
 HERE = Path(__file__).resolve().parent
 
 

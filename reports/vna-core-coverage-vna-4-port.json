@@ -1,0 +1,320 @@
+{
+  "families": {
+    "calculate_data": {
+      "excluded_forms": 3,
+      "excluded_obsolete_forms": 3,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 5,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 5,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 5
+    },
+    "calculate_function": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 12,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 12,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 12
+    },
+    "calculate_group_delay": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 6,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 6,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 6
+    },
+    "calculate_hold": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 3,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 3,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 3
+    },
+    "calculate_limit": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 24,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 24,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 24
+    },
+    "calculate_marker": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 50,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 50,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 50
+    },
+    "calculate_math": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 5,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 5,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 5
+    },
+    "calculate_parameter": {
+      "excluded_forms": 3,
+      "excluded_obsolete_forms": 3,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 14,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 14,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 14
+    },
+    "calculate_smoothing": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 6,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 6,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 6
+    },
+    "calculate_x_axis": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 5,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 5,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 5
+    },
+    "display": {
+      "excluded_forms": 64,
+      "excluded_obsolete_forms": 9,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 79,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 79,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 79
+    },
+    "initiate": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 3,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 3,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 3
+    },
+    "memory": {
+      "excluded_forms": 26,
+      "excluded_obsolete_forms": 6,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 2,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 2,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 2
+    },
+    "output": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 4,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 4,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 4
+    },
+    "sense_average": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 7,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 7,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 7
+    },
+    "sense_bandwidth": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 2,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 2,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 2
+    },
+    "sense_class": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 1,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 1,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 1
+    },
+    "sense_couple": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 4,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 4,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 4
+    },
+    "sense_frequency": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 10,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 10,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 10
+    },
+    "sense_segment": {
+      "excluded_forms": 0,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 60,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 60,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 60
+    },
+    "sense_sweep": {
+      "excluded_forms": 4,
+      "excluded_obsolete_forms": 4,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 39,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 39,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 39
+    },
+    "sense_x_axis": {
+      "excluded_forms": 1,
+      "excluded_obsolete_forms": 1,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 0,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 0,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 0
+    },
+    "source": {
+      "excluded_forms": 2,
+      "excluded_obsolete_forms": 2,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 35,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 35,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 35
+    },
+    "system": {
+      "excluded_forms": 47,
+      "excluded_obsolete_forms": 0,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 47,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 47,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 47
+    },
+    "trigger": {
+      "excluded_forms": 2,
+      "excluded_obsolete_forms": 2,
+      "expanded_header_forms_missing": 0,
+      "expanded_header_forms_present": 38,
+      "minimum_header_forms_missing": 0,
+      "minimum_header_forms_present": 38,
+      "missing_expanded_keys": [],
+      "missing_minimum_keys": [],
+      "review_required_forms": 38
+    }
+  },
+  "inventory_snapshot": {
+    "contract_revision": "1.0",
+    "date": "2026-10-08"
+  },
+  "runtime_probe": {
+    "attempted_registry_forms": 590,
+    "full_mnemonic_failures": [],
+    "full_mnemonic_outcomes": {
+      "passed": 590
+    },
+    "minimum_mnemonic_failures": [],
+    "minimum_mnemonic_outcomes": {
+      "passed": 590
+    }
+  },
+  "schema_version": 1,
+  "summary": {
+    "classification_forms": {
+      "excluded_calibration": 3,
+      "excluded_file_io": 20,
+      "excluded_front_panel": 55,
+      "excluded_identity_override": 4,
+      "excluded_legacy_control": 8,
+      "excluded_obsolete": 30,
+      "excluded_physical_hardware": 32,
+      "review_required": 461
+    },
+    "command_forms": 613,
+    "command_headers": 385,
+    "excluded_forms": 152,
+    "excluded_obsolete_forms": 30,
+    "expanded_header_forms_missing": 0,
+    "expanded_header_forms_present": 461,
+    "in_scope_forms": 461,
+    "minimum_header_forms_missing": 0,
+    "minimum_header_forms_present": 461,
+    "review_required_forms": 461
+  },
+  "target": {
+    "model": "vna-4-port"
+  }
+}
