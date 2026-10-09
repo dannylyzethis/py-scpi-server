@@ -25,6 +25,18 @@ def test_standard_identity_and_version_are_available(instrument: SCPIInstrument)
     assert instrument.process_command("SYST:VERS?") == "1999.0"
 
 
+def test_device_clear_preserves_lifetime_command_telemetry(instrument: SCPIInstrument) -> None:
+    instrument.process_command("*IDN?")
+    instrument.process_command("SYST:VERS?")
+    count = instrument.command_count
+
+    instrument.visa_device_clear()
+
+    assert instrument.command_count == count
+    instrument.process_command("*TST?")
+    assert instrument.command_count == count + 1
+
+
 def test_set_query_pair_persists_validated_state(instrument: SCPIInstrument) -> None:
     assert instrument.process_command("VOLT 7.5") == "OK"
     assert instrument.process_command("VOLT?") == "7.5"

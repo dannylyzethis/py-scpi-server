@@ -209,6 +209,9 @@ def test_dashboard_template_escapes_history_and_uses_text_for_live_updates() -> 
     assert "escapeHtml(cmd.command)" in javascript
     assert "escapeHtml(cmd.response)" in javascript
     assert "newLine.innerHTML" not in javascript
+    assert "function renderCommandStream(commands)" in javascript
+    assert "renderCommandStream(commandsData)" in javascript
+    assert "commandText.textContent=command.command" in javascript
     assert "io(" not in javascript and "socket.on" not in javascript
     assert "setInterval(refreshStatus,1000)" in javascript
     assert ".instrument-card" in stylesheet

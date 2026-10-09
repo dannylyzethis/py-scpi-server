@@ -235,7 +235,6 @@ class SCPIInstrument:
         self.status.clear_status()
         self.output_queue.clear()
         self.last_command = ""
-        self.command_count = 0
         self.csv_compatibility.link_stateful_commands()
 
     def _reset(self):
